@@ -1,0 +1,72 @@
+// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+
+#ifndef OSGPANGO_TEXT
+#define OSGPANGO_TEXT
+
+#include <iostream>
+#include <osg/Geode>
+#include <osgPango/String>
+#include <osgPango/Font>
+
+namespace osgPango {
+
+class Text;
+
+struct Renderer {
+	PangoRenderer parent_instance;
+	Text*         text;
+	unsigned int  count;
+};
+
+struct RendererClass {
+	PangoRendererClass class_instance;
+};
+
+class Text: public osg::Geode {
+public:
+	Text(const std::string& = "");
+
+	~Text() {
+		g_object_unref(_layout);
+	}
+
+	void setText(const std::string&);
+
+	Font* getFont() {
+		return _font.get();
+	}
+
+	const Font* getFont() const {
+		return _font.get();
+	}
+
+	static void drawGlyphs    (PangoRenderer*, PangoFont*, PangoGlyphString*, int, int);
+	static void drawRectangle (PangoRenderer*, PangoRenderPart, int, int, int, int);
+
+	static void drawTrapezoid(
+		PangoRenderer*,
+		PangoRenderPart,
+		double,
+		double,
+		double,
+		double,
+		double,
+		double
+	);
+
+	static void cleanup() {
+		g_object_unref(_renderer);
+	}
+
+private:
+	static Renderer* _renderer;
+
+	osg::ref_ptr<Font> _font;
+	String             _text;
+	PangoLayout*       _layout;
+	GlyphPositionList  _pos;
+};
+
+}
+
+#endif

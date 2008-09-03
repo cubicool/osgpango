@@ -1,0 +1,66 @@
+PROJECT(osgPango)
+
+INCLUDE(FindPkgConfig)
+
+PKG_CHECK_MODULES(CAIRO REQUIRED cairo)
+PKG_CHECK_MODULES(PANGO REQUIRED pango)
+PKG_CHECK_MODULES(PANGOCAIRO REQUIRED pangocairo)
+
+SET(SRC_FILES
+	src/Glyph.cpp
+	src/Font.cpp
+	src/Text.cpp
+)
+
+SET(HEADER_FILES
+	${osgPango_SOURCE_DIR}/include/osgPango/Glyph
+	${osgPango_SOURCE_DIR}/include/osgPango/Font
+	${osgPango_SOURCE_DIR}/include/osgPango/Text
+	${osgPango_SOURCE_DIR}/include/osgPango/String
+	${osgPango_SOURCE_DIR}/include/osgPango/Util
+)
+
+SET(CMAKE_INCLUDE_PATH /usr/local/include CACHE STRING "Put your OSG include dir here...")
+SET(CMAKE_LIBRARY_PATH /usr/local/lib CACHE STRING "Put your OSG lib dir here...")
+
+INCLUDE_DIRECTORIES(include
+	${CMAKE_INCLUDE_PATH}
+	${CAIRO_INCLUDE_DIRS}
+	${PANGO_INCLUDE_DIRS}
+	${PANGOCAIRO_INCLUDE_DIRS}
+)
+
+LINK_DIRECTORIES(
+	${CMAKE_LIBRARY_PATH}
+	${CAIRO_LIBRARY_DIRS}
+	${PANGO_LIBRARY_DIRS}
+	${PANGOCAIRO_LIBRARY_DIRS}
+)
+
+LINK_LIBRARIES(osg osgUtil osgViewer osgCairo pango-1.0 pangocairo-1.0)
+
+ADD_LIBRARY(osgPango SHARED ${SRC_FILES} ${HEADER_FILES})
+
+INSTALL(TARGETS osgPango DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+
+FOREACH(INCLUDEFILE ${HEADER_FILES})
+	FILE(RELATIVE_PATH REL_INCLUDEFILE ${osgPango_SOURCE_DIR}/include/osgPango ${INCLUDEFILE})
+	GET_FILENAME_COMPONENT(REL_INCLUDE_PATH ${REL_INCLUDEFILE} PATH)
+	INSTALL(
+		FILES ${INCLUDEFILE}
+		DESTINATION ${CMAKE_INSTALL_PREFIX}/include/osgPango/${REL_INCLUDE_PATH}
+	)
+ENDFOREACH(INCLUDEFILE)
+
+ADD_SUBDIRECTORY(examples/osgpangoviewer)
+ADD_SUBDIRECTORY(examples/osgpangofonts)
+
+CONFIGURE_FILE(
+	"${CMAKE_CURRENT_SOURCE_DIR}/etc/uninstall.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake"
+	IMMEDIATE @ONLY
+)
+
+ADD_CUSTOM_TARGET(uninstall
+	"${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake"
+)

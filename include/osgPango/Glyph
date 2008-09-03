@@ -1,0 +1,100 @@
+// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+
+#ifndef OSGPANGO_GLYPHCACHE
+#define OSGPANGO_GLYPHCACHE
+
+#include <map>
+#include <osg/Geometry>
+#include <osgCairo/SurfaceImage>
+
+namespace osgPango {
+
+const unsigned int DEFAULT_GCW = 512;
+const unsigned int DEFAULT_GCH = 512;
+
+struct CachedGlyph {
+	CachedGlyph(
+		unsigned int     = 0,
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2()
+	);
+
+	unsigned int img;
+	osg::Vec2    origin;
+	osg::Vec2    size;
+	osg::Vec2    bl;
+	osg::Vec2    br;
+	osg::Vec2    ur;
+	osg::Vec2    ul;
+};
+
+typedef std::pair<unsigned int, osg::Vec2> GlyphPositionPair;
+typedef std::list<GlyphPositionPair>       GlyphPositionList;
+
+// There is one GlyphCache object PER FONT object.
+class GlyphCache: public osg::Referenced {
+public:
+	typedef std::map<unsigned int, CachedGlyph>                GlyphMap;
+	typedef std::vector<osg::ref_ptr<osgCairo::SurfaceImage> > ImageVector;
+
+	GlyphCache(unsigned int = DEFAULT_GCW, unsigned int = DEFAULT_GCH);
+
+	const CachedGlyph* getCachedGlyph    (unsigned int);
+	const CachedGlyph* createCachedGlyph (PangoFont*, PangoGlyphInfo*);
+
+	osgCairo::SurfaceImage* getImage(unsigned int index) {
+		return _getImage(index);
+	}
+
+	const osgCairo::SurfaceImage* getImage(unsigned int index) const {
+		return _getImage(index);
+	}
+
+	unsigned int getNumImages() const {
+		return _images.size();
+	}
+
+	void writeImagesAsFiles(const std::string&) const;
+
+private:
+	bool                    _newImage ();
+	osgCairo::SurfaceImage* _getImage (unsigned int) const;
+
+	// A container of texture image data where the glyphs are cached.
+	ImageVector _images;
+
+	// A map of external Pango glyph indexes to their internally CachedGlyph data
+	// structures.
+	GlyphMap _glyphs;
+
+	double       _x;
+	double       _y;
+	double       _h;
+	unsigned int _img;
+	unsigned int _imgWidth;
+	unsigned int _imgHeight;
+};
+
+class GlyphGeometry: public osg::Geometry {
+public:
+	GlyphGeometry();
+
+	bool finalize          (osg::Image*);
+	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&);
+
+private:
+	static osg::ref_ptr<osg::Vec3Array> _norms;
+	static osg::ref_ptr<osg::Vec4Array> _cols;
+
+	unsigned int _numQuads;
+};
+
+typedef std::vector<GlyphGeometry*> GlyphGeometryVector;
+
+}
+
+#endif

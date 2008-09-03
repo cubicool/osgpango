@@ -1,0 +1,79 @@
+// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+
+#ifndef OSGPANGO_FONT
+#define OSGPANGO_FONT
+
+#include <pango/pangocairo.h>
+
+#include <osgPango/Glyph>
+
+namespace osgPango {
+
+const std::string OSGPANGO_DEFAULT_FONT = "Sans 6";
+
+class Font: public osg::Referenced {
+public:
+	typedef std::map<const std::string, osg::ref_ptr<Font> > FontMap;
+	typedef std::list<std::string>                           FontList;
+
+	static Font* create(const std::string& = "");
+
+	static bool init(
+		unsigned int                 = 72,
+		osgCairo::CairoAntialias     = CAIRO_ANTIALIAS_SUBPIXEL,
+		osgCairo::CairoHintStyle     = CAIRO_HINT_STYLE_FULL,
+		osgCairo::CairoSubpixelOrder = CAIRO_SUBPIXEL_ORDER_RGB
+	);
+
+	static Font*        getFont     (const std::string&);
+	static unsigned int getFontList (FontList&);
+
+	static void cleanup() {
+		g_object_unref(_map);
+		g_object_unref(_context);
+	}
+
+	static FontMap& getFontMap() {
+		return _fonts;
+	}
+
+	static PangoFontMap* getPangoFontMap() {
+		return _map;
+	}
+
+	static PangoContext* getPangoContext() {
+		return _context;
+	}
+
+	PangoFontDescription* getDescription() {
+		return _descr;
+	}
+
+	const PangoFontDescription* getDescription() const {
+		return _descr;
+	}
+
+	GlyphCache* getGlyphCache() {
+		return _cache.get();
+	}
+
+	const GlyphCache* getGlyphCache() const {
+		return _cache.get();
+	}
+
+private:
+	Font  (const std::string&);
+	~Font ();
+
+	static FontMap       _fonts;
+	static PangoFontMap* _map;
+	static PangoContext* _context;
+
+	PangoFontDescription* _descr;
+
+	osg::ref_ptr<GlyphCache> _cache;
+};
+
+}
+
+#endif
