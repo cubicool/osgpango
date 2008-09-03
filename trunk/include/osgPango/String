@@ -1,0 +1,10 @@
+// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+
+#ifndef OSGPANGO_STRING
+#define OSGPANGO_STRING
+
+#include <osgText/String>
+
+typedef osgText::String String;
+
+#endif
