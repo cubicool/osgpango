@@ -65,14 +65,15 @@ osg::Camera* createOrthoCamera(unsigned int width, unsigned int height) {
 }
 
 int main(int argc, char** argv) {
-	osgPango::Font::init(132);
+	osgPango::Font::init();
 
-	const std::string font("URW Chancery L 100");
+	const std::string font("Sans 28");
+
+	osgPango::Font::create(font, 512, 64);
 
 	osgPango::Text* t = new osgPango::Text(font);
 
-	// t->setText(LOREM_IPSUM);
-	t->setText("JEREMYMOLES");
+	t->setText(LOREM_IPSUM);
 	
 	osgPango::GlyphCache* gc = osgPango::Font::getFont(font)->getGlyphCache();
 	
@@ -84,7 +85,7 @@ int main(int argc, char** argv) {
 	osg::Geode*  cairo  = new osg::Geode();
 	
 	osg::MatrixTransform* mt = new osg::MatrixTransform(
-		osg::Matrix::translate(10.0f, 600.0f, 0.0f)
+		osg::Matrix::translate(10.0f, 800.0f, 0.0f)
 	);
 
 	cairo->addDrawable(createGeometry(gc->getImage(0)));
