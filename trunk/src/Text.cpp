@@ -15,20 +15,15 @@ G_DEFINE_TYPE(Renderer, renderer, PANGO_TYPE_RENDERER);
 static GObjectClass* _pangoClass = 0;
 
 void renderer_finalize(GObject* object) {
-	std::cout << "renderer_finalize" << std::endl;
-
 	Renderer* priv = RENDERER(object);
 
 	G_OBJECT_CLASS(_pangoClass)->finalize(object);
 }
 
 void renderer_init(Renderer* priv) {
-	std::cout << "renderer_init" << std::endl;
 }
 
 void renderer_class_init(RendererClass* klass) {
-	std::cout << "renderer_class_init" << std::endl;
-
 	GObjectClass*       object_class   = G_OBJECT_CLASS(klass);
 	PangoRendererClass* renderer_class = PANGO_RENDERER_CLASS(klass);
 
@@ -60,8 +55,8 @@ void Text::setText(const std::string& str) {
 	_pos.clear();
 
 	pango_layout_set_text(_layout, utf8.c_str(), -1);
-	//pango_layout_set_width(_layout, 300 * PANGO_SCALE);
-	//pango_layout_set_justify(_layout, true);
+	// pango_layout_set_width(_layout, 300 * PANGO_SCALE);
+	// pango_layout_set_justify(_layout, true);
 	
 	_renderer->text  = const_cast<Text*>(this);
 	_renderer->count = 0;
@@ -94,8 +89,6 @@ void Text::drawGlyphs(
 	int               x,
 	int               y
 ) {
-	std::cout << "Text::drawGlyphs (start)" << std::endl;
-
 	Renderer* r = RENDERER(renderer);
 
 	if(!r || !r->text) return;
@@ -137,8 +130,6 @@ void Text::drawGlyphs(
 		
 		layoutPos += osg::Vec2(gi->geometry.width / PANGO_SCALE, 0.0f);
 	}
-
-	std::cout << "Text::drawGlyphs (finish)" << std::endl;
 }
 
 void Text::drawRectangle(PangoRenderer*, PangoRenderPart, int, int, int, int) {

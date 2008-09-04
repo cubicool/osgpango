@@ -10,7 +10,7 @@ PangoFontMap* Font::_map     = 0;
 PangoContext* Font::_context = 0;
 Font::FontMap Font::_fonts;
 
-Font* Font::create(const std::string& descr) {
+Font* Font::create(const std::string& descr, unsigned int w, unsigned int h) {
 	std::string s = descr;
 
 	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
@@ -21,7 +21,7 @@ Font* Font::create(const std::string& descr) {
 
 	if(f != _fonts.end()) return f->second.get();
 	
-	Font* font = new Font(s);
+	Font* font = new Font(s, w, h);
 
 	if(!font) return 0;
 
@@ -30,10 +30,10 @@ Font* Font::create(const std::string& descr) {
 	return font;
 }
 
-Font::Font(const std::string& descr):
+Font::Font(const std::string& descr, unsigned int w, unsigned int h):
 _descr(0) {
 	_descr = pango_font_description_from_string(descr.c_str());
-	_cache = new GlyphCache();
+	_cache = new GlyphCache(w, h);
 }
 
 Font::~Font() {

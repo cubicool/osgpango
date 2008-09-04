@@ -41,7 +41,7 @@ public:
 	typedef std::map<unsigned int, CachedGlyph>                GlyphMap;
 	typedef std::vector<osg::ref_ptr<osgCairo::SurfaceImage> > ImageVector;
 
-	GlyphCache(unsigned int = DEFAULT_GCW, unsigned int = DEFAULT_GCH);
+	GlyphCache(unsigned int = 0, unsigned int = 0);
 
 	const CachedGlyph* getCachedGlyph    (unsigned int);
 	const CachedGlyph* createCachedGlyph (PangoFont*, PangoGlyphInfo*);

@@ -32,8 +32,8 @@ _x         (1.0f),
 _y         (1.0f),
 _h         (1.0f),
 _img       (0),
-_imgWidth  (width),
-_imgHeight (height) {
+_imgWidth  (width ? width : DEFAULT_GCW),
+_imgHeight (height ? height : DEFAULT_GCH) {
 	_newImage();
 }
 
@@ -59,11 +59,6 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	pango_font_get_glyph_extents(font, glyph, &r, 0);
 	pango_extents_to_pixels(&r, 0);
 
-	cairo_scaled_font_t*    sf = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
-	osgCairo::SurfaceImage* si = _images[_img].get();
-
-	cairo_set_scaled_font(si->getContext(), sf);
-
 	g.x     = -r.x;
 	g.y     = -r.y;
 	g.index = glyph;
@@ -71,21 +66,32 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	double w = r.width;
 	double h = r.height;
 
+	cairo_scaled_font_t*    sf = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
+	osgCairo::SurfaceImage* si = _images[_img].get();
+
+	if(_y + h >= _imgHeight) {
+		// std::cout << "Need to jump image. " << gi->glyph << std::endl;
+
+		_x = 1.0f;
+		_y = 1.0f;
+		_h = 1.0f;
+
+		if(!_newImage()) return false;
+
+		_img++;
+
+		si = _images[_img].get();
+	}
+
+	cairo_set_scaled_font(si->getContext(), sf);
+
 	// If our remaining space isn't enough to accomodate another glyph, jump to
 	// another "row."
 	if(_x + w >= _imgWidth) {
-		std::cout
-			<< "Need to jump rows on; _imgWidth is: " << _imgWidth
-			<< " and necessary space is: " << _x + w << std::endl
-		;
-
 		_x  = 1.0f;
 		_y += _h + 1.0f;
 
 		si->identityMatrix();
-
-		std::cout << "Translating to: " << _x << " " << _y << std::endl;
-
 		si->translate(_x, _y);
 	}
 
@@ -128,6 +134,12 @@ void GlyphCache::writeImagesAsFiles(const std::string& prefix) const {
 		ss << prefix << num << ".png";
 
 		i->get()->writeToPNG(ss.str().c_str());
+
+		std::cout 
+			<< "Wrote " << ss.str()
+			<< "; " << i->get()->getImageSizeInBytes() / 1024.0f
+			<< " KB internally." << std::endl
+		;
 
 		num++;
 	}
