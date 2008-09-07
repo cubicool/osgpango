@@ -55,7 +55,7 @@ void Text::setText(const std::string& str) {
 	_pos.clear();
 
 	pango_layout_set_text(_layout, utf8.c_str(), -1);
-	// pango_layout_set_width(_layout, 300 * PANGO_SCALE);
+	pango_layout_set_width(_layout, 1100 * PANGO_SCALE);
 	// pango_layout_set_justify(_layout, true);
 	
 	_renderer->text  = const_cast<Text*>(this);

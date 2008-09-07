@@ -9,6 +9,8 @@
 
 namespace osgPango {
 
+class Font;
+
 const unsigned int DEFAULT_GCW = 512;
 const unsigned int DEFAULT_GCH = 512;
 
@@ -41,6 +43,12 @@ public:
 	typedef std::map<unsigned int, CachedGlyph>                GlyphMap;
 	typedef std::vector<osg::ref_ptr<osgCairo::SurfaceImage> > ImageVector;
 
+	enum GlyphCacheMethod {
+		GCM_NORMAL,
+		GCM_OUTLINE,
+		GCM_SHADOW
+	};
+
 	GlyphCache(unsigned int = 0, unsigned int = 0);
 
 	const CachedGlyph* getCachedGlyph    (unsigned int);
@@ -61,22 +69,31 @@ public:
 	void writeImagesAsFiles(const std::string&) const;
 
 private:
-	bool                    _newImage ();
-	osgCairo::SurfaceImage* _getImage (unsigned int) const;
+	friend class Font;
+
+	bool _newImage                        ();
+	bool _confirmHorizontalSpaceAvailable (unsigned int);
+	bool _confirmVerticalSpaceAvailable   (unsigned int);
+	void _calculateInitialOrigin          ();
+
+	osgCairo::SurfaceImage* _getImage(unsigned int) const;
 
 	// A container of texture image data where the glyphs are cached.
 	ImageVector _images;
+	ImageVector _outlines;
 
-	// A map of external Pango glyph indexes to their internally CachedGlyph data
-	// structures.
-	GlyphMap _glyphs;
+	// A map of external Pango glyph indexes to their internally CachedGlyph data structures.
+	GlyphMap         _glyphs;
+	GlyphCacheMethod _gcm;
 
 	double       _x;
 	double       _y;
 	double       _h;
+	double       _outlineSize;
 	unsigned int _img;
 	unsigned int _imgWidth;
 	unsigned int _imgHeight;
+	unsigned int _shadowOffset;
 };
 
 class GlyphGeometry: public osg::Geometry {
