@@ -47,30 +47,46 @@ osg::Geometry* createGeometry(osg::Image* image) {
 	return geom;
 }
 
-osg::Camera* createOrthoCamera(unsigned int width, unsigned int height) {
+osg::Matrix createInvertedYOrthoProjectionMatrix(float width, float height) {
+	osg::Matrix m = osg::Matrix::ortho2D(0.0f, width, 0.0f, height);
+	osg::Matrix s = osg::Matrix::scale(1.0f, -1.0f, 1.0f);
+	osg::Matrix t = osg::Matrix::translate(0.0f, -height, 0.0f);
+
+	return t * s * m;
+}
+
+osg::Camera* createOrthoCamera(float width, float height) {
 	osg::Camera* camera = new osg::Camera();
 
 	camera->getOrCreateStateSet()->setMode(
 		GL_LIGHTING,
 		osg::StateAttribute::PROTECTED | osg::StateAttribute::OFF
 	);
-	
-	camera->setProjectionMatrix(osg::Matrix::ortho2D(0, width, 0, height));
+
+	camera->setProjectionMatrix(osg::Matrix::ortho2D(0.0, width, 0.0f, height));
 	camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 	camera->setViewMatrix(osg::Matrix::identity());
 	camera->setClearMask(GL_DEPTH_BUFFER_BIT);
 	camera->setRenderOrder(osg::Camera::POST_RENDER);
-	
+
+	return camera;
+}
+
+osg::Camera* createInvertedYOrthoCamera(float width, float height) {
+	osg::Camera* camera = createOrthoCamera(width, height);
+
+	camera->setProjectionMatrix(createInvertedYOrthoProjectionMatrix(width, height));
+
 	return camera;
 }
 
 int main(int argc, char** argv) {
-	osgPango::Font::init();
+	osgPango::Font::init(132);
 
-	const std::string font("Sans 28");
-
-	osgPango::Font::create(font, 512, 64);
-
+	const std::string font("monospace 40 outline=1.0");
+	
+	osgPango::Font::create(font, 512, 128);
+	
 	osgPango::Text* t = new osgPango::Text(font);
 
 	t->setText(LOREM_IPSUM);

@@ -7,6 +7,8 @@
 #include <osg/TexMat>
 #include <osgPango/Font>
 
+#define DEBUG_GLYPH_BOXES 0
+
 namespace osgPango {
 
 CachedGlyph::CachedGlyph(
@@ -28,12 +30,15 @@ ul     (_ul) {
 }
 
 GlyphCache::GlyphCache(unsigned int width, unsigned int height):
-_x         (1.0f),
-_y         (1.0f),
-_h         (1.0f),
-_img       (0),
-_imgWidth  (width ? width : DEFAULT_GCW),
-_imgHeight (height ? height : DEFAULT_GCH) {
+_gcm             (GCM_NORMAL),
+_x               (0.0f),
+_y               (0.0f),
+_h               (0.0f),
+_outlineSize     (0.0f),
+_img             (0),
+_imgWidth        (width ? width : DEFAULT_GCW),
+_imgHeight       (height ? height : DEFAULT_GCH),
+_shadowOffset    (0) {
 	_newImage();
 }
 
@@ -42,11 +47,6 @@ const CachedGlyph* GlyphCache::getCachedGlyph(unsigned int i) {
 
 	// If we already have cached data, return it.
 	if(g != _glyphs.end()) return &g->second;
-
-	// Otherwise, we need to start building the glyph cache.
-	// This will try to create a new SurfaceImage (which acts like a canvas for our
-	// glyph data) if the _img variable is larger than the actual size of our container.
-	if(_images.size() < _img) _newImage();
 
 	return 0;
 };
@@ -69,42 +69,47 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	cairo_scaled_font_t*    sf = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
 	osgCairo::SurfaceImage* si = _images[_img].get();
 
-	if(_y + h >= _imgHeight) {
-		// std::cout << "Need to jump image. " << gi->glyph << std::endl;
-
-		_x = 1.0f;
-		_y = 1.0f;
-		_h = 1.0f;
-
-		if(!_newImage()) return false;
-
-		_img++;
-
-		si = _images[_img].get();
-	}
-
 	cairo_set_scaled_font(si->getContext(), sf);
 
-	// If our remaining space isn't enough to accomodate another glyph, jump to
-	// another "row."
-	if(_x + w >= _imgWidth) {
+	// This condition is met after we create a new Image...
+	if(!_x && !_y && !_h) _calculateInitialOrigin();
+
+	// double add = round(_outlineSize) + _shadowOffset;
+
+	// If our remaining space isn't enough to accomodate another glyph, jump to another "row."
+	if(!_confirmHorizontalSpaceAvailable(w)) {
 		_x  = 1.0f;
 		_y += _h + 1.0f;
 
-		si->identityMatrix();
-		si->translate(_x, _y);
+		if(_confirmVerticalSpaceAvailable(h)) {
+			si = _images[_img].get();
+
+			cairo_set_scaled_font(si->getContext(), sf);
+		}
+
+		else {
+			si->identityMatrix();
+			si->translate(_x, _y);
+		}
 	}
 
 	if(h > _h) _h = h;
 
-	cairo_show_glyphs(si->getContext(), &g, 1);
+	#if DEBUG_GLYPH_BOXES
+		si->setSourceRGBA(1.0f, 1.0f, 1.0f, 0.1f);
+		si->rectangle(0.0f, 0.0f, w, h);
+		si->fill();
+		si->setSourceRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	#endif
 
-	/*
-	cairo_glyph_path(si->getContext(), &g, 1);
-	si->setSourceRGBA(0.0f, 0.0f, 0.0f, 0.2f);
-	si->setLineWidth(1.0f);
-	si->stroke();
-	*/
+	if(_outlineSize > 0.0f) {
+		cairo_glyph_path(si->getContext(), &g, 1);
+		
+		si->setLineWidth(_outlineSize);
+		si->stroke();
+	}
+
+	else cairo_show_glyphs(si->getContext(), &g, 1);
 
 	_glyphs[glyph] = CachedGlyph(
 		_img,
@@ -150,18 +155,55 @@ bool GlyphCache::_newImage() {
 
 	osgCairo::SurfaceImage* si = _images[_images.size() - 1].get();
 
+	if(_gcm == GCM_OUTLINE) {
+		_outlines.push_back(
+			new osgCairo::SurfaceImage(_imgWidth, _imgHeight, 0, CAIRO_FORMAT_A8)
+		);
+		
+		osgCairo::SurfaceImage* sio = _outlines[_outlines.size() - 1].get();
+
+		if(!sio || !sio->valid() || !sio->createContext()) return false;
+	}
+
 	if(!si || !si->valid() || !si->createContext()) return false;
 
-	/*
-	si->setSourceRGBA(1.0, 1.0, 1.0, 0.1f);
-	si->rectangle(0.0f, 0.0f, _imgWidth, _imgHeight);
-	si->fill();
-	si->setSourceRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	*/
+	return true;
+}
 
-	si->translate(1.0f, 1.0f);
+bool GlyphCache::_confirmHorizontalSpaceAvailable(unsigned int w) {
+	if(_x + w + round(_outlineSize) + _shadowOffset + 1 >= _imgWidth) return false;
 
 	return true;
+}
+
+bool GlyphCache::_confirmVerticalSpaceAvailable(unsigned int h) {
+	if(_y + h >= _imgHeight) {
+		if(!_newImage()) return false;
+
+		_x = 0.0f;
+		_y = 0.0f;
+		_h = 0.0f;
+
+		_img++;
+
+		_calculateInitialOrigin();
+
+		return true;
+	}
+
+	return false;
+}
+
+void GlyphCache::_calculateInitialOrigin() {
+	osgCairo::SurfaceImage* si = _images[_img].get();
+	
+	unsigned int v = round(_outlineSize) + _shadowOffset + 1.0f;
+
+	_x = v;
+	_y = v;
+
+	si->identityMatrix();
+	si->translate(_x, _y);
 }
 
 osgCairo::SurfaceImage* GlyphCache::_getImage(unsigned int index) const {

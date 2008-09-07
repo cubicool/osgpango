@@ -1,5 +1,6 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
+#include <iostream>
 #include <algorithm>
 #include <sstream>
 #include <osgPango/Font>
@@ -20,18 +21,50 @@ Font* Font::create(const std::string& descr, unsigned int w, unsigned int h) {
 	if(!s.size()) s = OSGPANGO_DEFAULT_FONT;
 
 	if(f != _fonts.end()) return f->second.get();
-	
-	Font* font = new Font(s, w, h);
 
-	if(!font) return 0;
+	// At this point, we need to create a new Font so be sure and check for our
+	// "Shadow" or "Outline" keywords.
+	Font* font = 0;
+
+	std::string::size_type pos1 = s.rfind(" ");
+
+	if(pos1 != std::string::npos) {
+		std::string last(s, pos1 + 1);
+	
+		std::string::size_type pos2 = last.rfind("=");
+
+		// 8 characters is the minimum amount to specify an additional option...
+		if(last.size() >= 8 && pos2 != std::string::npos) {
+			std::string arg(last, 0, pos2);
+			std::string val(last, pos2 + 1);
+
+			font = new Font(std::string(s, 0, pos1), w, h);
+
+			if(arg == "shadow") {
+				font->_cache->_gcm          = GlyphCache::GCM_SHADOW;
+				font->_cache->_shadowOffset = std::atoi(val.c_str());
+			}
+
+			else if(arg == "outline") {
+				font->_cache->_gcm         = GlyphCache::GCM_OUTLINE;
+				font->_cache->_outlineSize = std::atof(val.c_str());
+			}
+
+			else osg::notify(osg::WARN)
+				<< "Bad argument in font: " << arg
+				<< "." << std::endl
+			;
+		}
+	}
+
+	if(!font) font = new Font(s, w, h);
 
 	_fonts[s] = font;
 
 	return font;
 }
 
-Font::Font(const std::string& descr, unsigned int w, unsigned int h):
-_descr(0) {
+Font::Font(const std::string& descr, unsigned int w, unsigned int h) {
 	_descr = pango_font_description_from_string(descr.c_str());
 	_cache = new GlyphCache(w, h);
 }
