@@ -24,7 +24,7 @@ struct RendererClass {
 
 class Text: public osg::Geode {
 public:
-	Text(const std::string& = "");
+	Text(const std::string& = "", GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT);
 
 	~Text() {
 		g_object_unref(_layout);
@@ -65,6 +65,7 @@ private:
 	String             _text;
 	PangoLayout*       _layout;
 	GlyphPositionList  _pos;
+	GlyphEffectsMethod _gem;
 };
 
 }

@@ -36,10 +36,11 @@ void renderer_class_init(RendererClass* klass) {
 	renderer_class->draw_trapezoid = &Text::drawTrapezoid;
 }
 
-Text::Text(const std::string& font):
+Text::Text(const std::string& font, GlyphEffectsMethod gem):
 _font   (Font::create(font)),
 _text   ("", osgText::String::ENCODING_UTF8),
-_layout (pango_layout_new(Font::getPangoContext())) {
+_layout (pango_layout_new(Font::getPangoContext())),
+_gem    (gem) {
 	if(!_renderer) _renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
 
 	pango_layout_set_font_description(_layout, _font->getDescription());
@@ -55,8 +56,8 @@ void Text::setText(const std::string& str) {
 	_pos.clear();
 
 	pango_layout_set_text(_layout, utf8.c_str(), -1);
-	pango_layout_set_width(_layout, 1100 * PANGO_SCALE);
-	// pango_layout_set_justify(_layout, true);
+	pango_layout_set_width(_layout, 1000 * PANGO_SCALE);
+	//pango_layout_set_justify(_layout, true);
 	
 	_renderer->text  = const_cast<Text*>(this);
 	_renderer->count = 0;
@@ -65,18 +66,29 @@ void Text::setText(const std::string& str) {
 
 	GlyphGeometryVector ggv(_font->getGlyphCache()->getNumImages());
 
-	for(unsigned int i = 0; i < ggv.size(); i++) ggv[i] = new GlyphGeometry();
+	for(unsigned int i = 0; i < ggv.size(); i++) ggv[i] = new GlyphGeometry(
+		_font->getOutlineSize() > 0.0f
+	);
 
 	for(GlyphPositionList::iterator i = _pos.begin(); i != _pos.end(); i++) {
 		const CachedGlyph* cg = _font->getGlyphCache()->getCachedGlyph(i->first);
 
-		ggv[cg->img]->pushCachedGlyphAt(cg, i->second);
+		ggv[cg->img]->pushCachedGlyphAt(
+			cg,
+			i->second,
+			_font->getOutlineSize(),
+			_font->getShadowOffset(),
+			_gem
+		);
 	}
 
 	removeDrawables(0, getNumDrawables());
 
 	for(unsigned int i = 0; i < ggv.size(); i++) {
-		if(!ggv[i]->finalize(_font->getGlyphCache()->getImage(i))) continue;
+		if(!ggv[i]->finalize(
+			_font->getGlyphCache()->getImage(i),
+			_font->getGlyphCache()->getImage(i, true)
+		)) continue;
 
 		addDrawable(ggv[i]);
 	}
@@ -100,7 +112,7 @@ void Text::drawGlyphs(
 
 	osg::Vec2 layoutPos(x / PANGO_SCALE, -(y / PANGO_SCALE));
 	
-	// std::cout << "Text::drawGlyphs (initial pos): " << layoutPos << std::endl;
+	// double add = round(f->getOutlineSize()) * 1.0f;
 
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
@@ -119,16 +131,19 @@ void Text::drawGlyphs(
 
 		if(!cg) continue;
 
-		osg::Vec2 pos(
-			gi->geometry.x_offset / PANGO_SCALE,
-			gi->geometry.y_offset / PANGO_SCALE
-		);
-
-		// std::cout << "Text::drawGlyphs (mod pos " << gi->glyph << "): " << pos << std::endl;
+		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
+			osg::Vec2 pos(
+				gi->geometry.x_offset / PANGO_SCALE,
+				gi->geometry.y_offset / PANGO_SCALE
+			);
+	
+			_renderer->text->_pos.push_back(GlyphPositionPair(
+				gi->glyph,
+				pos + layoutPos
+			));
+		}
 		
-		_renderer->text->_pos.push_back(GlyphPositionPair(gi->glyph, pos + layoutPos));
-		
-		layoutPos += osg::Vec2(gi->geometry.width / PANGO_SCALE, 0.0f);
+		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE), 0.0f);
 	}
 }
 

@@ -83,9 +83,9 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init(132);
 
-	const std::string font("monospace 40 outline=1.0");
+	const std::string font("DejaVu Sans ExtraLight 24 outline=1.5");
 	
-	osgPango::Font::create(font, 512, 128);
+	osgPango::Font::create(font, 512, 512);
 	
 	osgPango::Text* t = new osgPango::Text(font);
 

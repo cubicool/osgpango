@@ -41,19 +41,14 @@ Font* Font::create(const std::string& descr, unsigned int w, unsigned int h) {
 			font = new Font(std::string(s, 0, pos1), w, h);
 
 			if(arg == "shadow") {
-				font->_cache->_gcm          = GlyphCache::GCM_SHADOW;
-				font->_cache->_shadowOffset = std::atoi(val.c_str());
+				font->_cache->_glyphEffects |= GlyphCache::GLYPH_EFFECT_SHADOW;
+				font->_cache->_shadowOffset  = std::atoi(val.c_str());
 			}
 
-			else if(arg == "outline") {
-				font->_cache->_gcm         = GlyphCache::GCM_OUTLINE;
-				font->_cache->_outlineSize = std::atof(val.c_str());
+			if(arg == "outline") {
+				font->_cache->_glyphEffects |= GlyphCache::GLYPH_EFFECT_OUTLINE;
+				font->_cache->_outlineSize   = std::atof(val.c_str());
 			}
-
-			else osg::notify(osg::WARN)
-				<< "Bad argument in font: " << arg
-				<< "." << std::endl
-			;
 		}
 	}
 
