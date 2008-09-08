@@ -37,16 +37,20 @@ struct CachedGlyph {
 typedef std::pair<unsigned int, osg::Vec2> GlyphPositionPair;
 typedef std::list<GlyphPositionPair>       GlyphPositionList;
 
+enum GlyphEffectsMethod {
+	GLYPH_EFFECTS_METHOD_DEFAULT,
+	GLYPH_EFFECTS_METHOD_GLSL
+};
+
 // There is one GlyphCache object PER FONT object.
 class GlyphCache: public osg::Referenced {
 public:
 	typedef std::map<unsigned int, CachedGlyph>                GlyphMap;
 	typedef std::vector<osg::ref_ptr<osgCairo::SurfaceImage> > ImageVector;
 
-	enum GlyphCacheMethod {
-		GCM_NORMAL,
-		GCM_OUTLINE,
-		GCM_SHADOW
+	enum GlyphEffects {
+		GLYPH_EFFECT_OUTLINE = 1,
+		GLYPH_EFFECT_SHADOW  = 2
 	};
 
 	GlyphCache(unsigned int = 0, unsigned int = 0);
@@ -54,12 +58,12 @@ public:
 	const CachedGlyph* getCachedGlyph    (unsigned int);
 	const CachedGlyph* createCachedGlyph (PangoFont*, PangoGlyphInfo*);
 
-	osgCairo::SurfaceImage* getImage(unsigned int index) {
-		return _getImage(index);
+	osgCairo::SurfaceImage* getImage(unsigned int index, bool outline = false) {
+		return _getImage(index, outline);
 	}
 
-	const osgCairo::SurfaceImage* getImage(unsigned int index) const {
-		return _getImage(index);
+	const osgCairo::SurfaceImage* getImage(unsigned int index, bool outline = false) const {
+		return _getImage(index, outline);
 	}
 
 	unsigned int getNumImages() const {
@@ -76,21 +80,22 @@ private:
 	bool _confirmVerticalSpaceAvailable   (unsigned int);
 	void _calculateInitialOrigin          ();
 
-	osgCairo::SurfaceImage* _getImage(unsigned int) const;
+	osgCairo::SurfaceImage* _getImage(unsigned int, bool) const;
 
 	// A container of texture image data where the glyphs are cached.
 	ImageVector _images;
 	ImageVector _outlines;
 
 	// A map of external Pango glyph indexes to their internally CachedGlyph data structures.
-	GlyphMap         _glyphs;
-	GlyphCacheMethod _gcm;
+	// We also have a flag of what effects to use, though their rendering method is passed
+	// on from the text object.
+	GlyphMap     _glyphs;
+	unsigned int _glyphEffects;
 
 	double       _x;
 	double       _y;
 	double       _h;
 	double       _outlineSize;
-	unsigned int _img;
 	unsigned int _imgWidth;
 	unsigned int _imgHeight;
 	unsigned int _shadowOffset;
@@ -98,10 +103,17 @@ private:
 
 class GlyphGeometry: public osg::Geometry {
 public:
-	GlyphGeometry();
+	GlyphGeometry(bool = false);
 
-	bool finalize          (osg::Image*);
-	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&);
+	bool finalize(osg::Image*, osg::Image* = 0);
+
+	bool pushCachedGlyphAt(
+		const CachedGlyph*,
+		const osg::Vec2&,
+		double,
+		unsigned int,
+		GlyphEffectsMethod
+	);
 
 private:
 	static osg::ref_ptr<osg::Vec3Array> _norms;
