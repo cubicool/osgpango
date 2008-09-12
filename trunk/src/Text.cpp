@@ -143,7 +143,7 @@ void Text::drawGlyphs(
 			));
 		}
 		
-		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE), 0.0f);
+		layoutPos += osg::Vec2(gi->geometry.width / PANGO_SCALE, 0.0f);
 	}
 }
 

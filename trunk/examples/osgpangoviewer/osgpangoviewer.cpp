@@ -81,15 +81,21 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 }
 
 int main(int argc, char** argv) {
-	osgPango::Font::init(132);
+	osgPango::Font::init(
+		72,
+		CAIRO_ANTIALIAS_SUBPIXEL,
+		CAIRO_HINT_STYLE_FULL,
+		CAIRO_SUBPIXEL_ORDER_RGB
+	);
 
-	const std::string font("DejaVu Sans ExtraLight 24 outline=1.5");
+	const std::string font("DejaVu Sans 100 outline=6.5");
 	
 	osgPango::Font::create(font, 512, 512);
 	
 	osgPango::Text* t = new osgPango::Text(font);
 
-	t->setText(LOREM_IPSUM);
+	//t->setText(LOREM_IPSUM);
+	t->setText("openscenegraph");
 	
 	osgPango::GlyphCache* gc = osgPango::Font::getFont(font)->getGlyphCache();
 	

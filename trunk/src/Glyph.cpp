@@ -5,7 +5,7 @@
 #include <osg/io_utils>
 #include <osg/Texture2D>
 #include <osg/TexMat>
-#include <osg/TexEnv>
+#include <osg/TexEnvCombine>
 #include <osgPango/Font>
 
 #define DEBUG_GLYPH_BOXES 0
@@ -77,13 +77,25 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	osgCairo::SurfaceImage* si  = _images.back().get();
 	osgCairo::SurfaceImage* sio = 0;
 	
+	cairo_set_scaled_font(si->getContext(), sf);
+
 	if(_glyphEffects & GLYPH_EFFECT_OUTLINE) {
 		sio = _outlines.back().get();
 
 		cairo_set_scaled_font(sio->getContext(), sf);
 	}
 
-	cairo_set_scaled_font(si->getContext(), sf);
+	/*
+	// TODO: -----------------
+	cairo_font_options_t* siFO  = 0;
+	cairo_font_options_t* sioFO = 0;
+
+	cairo_surface_get_font_options(si->getSurface(), siFO);
+	cairo_surface_get_font_options(sio->getSurface(), sioFO);
+
+	// std::cout << "Options: " <<wq
+	// TODO: -----------------
+	*/
 
 	// This condition is met after we create a new Image...
 	if(!_x && !_y && !_h) _calculateInitialOrigin();
@@ -93,7 +105,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	// If our remaining space isn't enough to accomodate another glyph, jump to another "row."
 	if(!_confirmHorizontalSpaceAvailable(w)) {
 		_x  = add + 1.0f;
-		_y += _h + add + 1.0f;
+		_y += _h + (add * 2.0f) + 1.0f;
 
 		if(_confirmVerticalSpaceAvailable(h)) {
 			si = _images.back().get();
@@ -123,10 +135,26 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	if(sio) {
 		cairo_glyph_path(sio->getContext(), &g, 1);
-		
-		sio->setLineWidth(_outlineSize);
-		sio->stroke();
+	
+		/*
+		osgCairo::RadialPattern rp(
+			w / 2.0f, h / 2.0f, 0.0f,
+			w / 2.0f, h / 2.0f, w - _outlineSize
+		);
 
+		rp.addColorStopRGBA(0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+		rp.addColorStopRGBA(1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+
+		sio->setSource(&rp);
+		*/
+
+		sio->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
+		sio->setLineWidth(_outlineSize);
+		sio->setSourceRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+		sio->strokePreserve();
+		sio->fill();
+		
+		/*
 		osgCairo::CairoOperator op = sio->getOperator();
 		
 		sio->setOperator(CAIRO_OPERATOR_CLEAR);
@@ -134,6 +162,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		cairo_show_glyphs(sio->getContext(), &g, 1);
 
 		sio->setOperator(op);
+		*/
 	}
 
 	// Show the "regular" font...
@@ -315,7 +344,7 @@ bool GlyphGeometry::finalize(osg::Image* image, osg::Image* outlineImage) {
 
 	// TODO: Put this somewhere else higher in the tree...
 	state->setTextureAttributeAndModes(
-		0,
+		outlineImage ? 1 : 0,
 		texture,
 		osg::StateAttribute::ON
 	);
@@ -324,39 +353,64 @@ bool GlyphGeometry::finalize(osg::Image* image, osg::Image* outlineImage) {
 	osg::Matrix t = osg::Matrix::translate(0.0f, -1.0, 0.0f);
 
 	state->setTextureAttributeAndModes(
-		0,
+		outlineImage ? 1 : 0,
 		new osg::TexMat(t * s),
 		osg::StateAttribute::ON
 	);
 
-	state->setMode(GL_BLEND, osg::StateAttribute::ON);
-	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-
 	if(outlineImage) {
-		osg::Texture2D* otexture = new osg::Texture2D();
-		osg::TexEnv*    texenv   = new osg::TexEnv();
+		osg::Texture2D*     otexture = new osg::Texture2D();
+		osg::TexEnvCombine* te0      = new osg::TexEnvCombine();
+		osg::TexEnvCombine* te1      = new osg::TexEnvCombine();
 
-		texenv->setMode(osg::TexEnv::BLEND);
-		texenv->setColor(osg::Vec4(1.0f, 1.0f, 0.0f, 0.5f));
+		otexture->setImage(outlineImage);
+		otexture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
+		otexture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
 
-		texture->setImage(outlineImage);
-		texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
-		texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+		te0->setCombine_RGB(osg::TexEnvCombine::MODULATE);
+		te0->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
+		te0->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
+		// This is the color of the border...
+		te0->setConstantColor(osg::Vec4(1.0f, 1.0f, 1.0f, 0.0f));
+		te0->setSource1_RGB(osg::TexEnvCombine::TEXTURE);
+		te0->setOperand1_RGB(osg::TexEnvCombine::SRC_ALPHA);
+		te0->setCombine_Alpha(osg::TexEnvCombine::REPLACE);
+		te0->setSource0_Alpha(osg::TexEnvCombine::TEXTURE0);
+		te0->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
+
+		te1->setCombine_RGB(osg::TexEnvCombine::INTERPOLATE);
+		te1->setSource1_RGB(osg::TexEnvCombine::PREVIOUS);
+		te1->setOperand1_RGB(osg::TexEnvCombine::SRC_COLOR);
+		te1->setSource2_RGB(osg::TexEnvCombine::TEXTURE1);
+		te1->setOperand2_RGB(osg::TexEnvCombine::SRC_ALPHA);
+		te1->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
+		te1->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
+		// This is the color of the text...
+		te1->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		te1->setCombine_Alpha(osg::TexEnvCombine::ADD);
+		te1->setSource0_Alpha(osg::TexEnvCombine::TEXTURE1);
+		te1->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
+		te1->setSource1_Alpha(osg::TexEnvCombine::PREVIOUS);
+		te1->setOperand1_Alpha(osg::TexEnvCombine::SRC_ALPHA);
 
 		state->setTextureAttributeAndModes(
-			1,
+			0,
 			otexture,
 			osg::StateAttribute::ON
 		);
 
 		state->setTextureAttributeAndModes(
-			1,
+			0,
 			new osg::TexMat(t * s),
 			osg::StateAttribute::ON
 		);
 
-		state->setTextureAttribute(1, texenv);
+		state->setTextureAttributeAndModes(0, te0, osg::StateAttribute::ON);
+		state->setTextureAttributeAndModes(1, te1, osg::StateAttribute::ON);
 	}
+
+	state->setMode(GL_BLEND, osg::StateAttribute::ON);
+	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
 	addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, _numQuads * 4));
 
