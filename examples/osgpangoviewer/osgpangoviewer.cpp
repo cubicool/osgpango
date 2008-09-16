@@ -1,11 +1,78 @@
 #include <osg/Texture2D>
 #include <osg/MatrixTransform>
 #include <osgGA/StateSetManipulator>
+#include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgPango/Text>
 
 const std::string LOREM_IPSUM(
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum. "
 	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
 	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
 	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
@@ -81,21 +148,15 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 }
 
 int main(int argc, char** argv) {
-	osgPango::Font::init(
-		72,
-		CAIRO_ANTIALIAS_SUBPIXEL,
-		CAIRO_HINT_STYLE_FULL,
-		CAIRO_SUBPIXEL_ORDER_RGB
-	);
+	osgPango::Font::init();
 
-	const std::string font("DejaVu Sans 100 outline=6.5");
+	const std::string font("Purisa 12"); //outline=0.5");
 	
-	osgPango::Font::create(font, 512, 512);
+	osgPango::Font::create(font, 512, 128);
 	
 	osgPango::Text* t = new osgPango::Text(font);
 
-	//t->setText(LOREM_IPSUM);
-	t->setText("openscenegraph");
+	t->setText(LOREM_IPSUM);
 	
 	osgPango::GlyphCache* gc = osgPango::Font::getFont(font)->getGlyphCache();
 	
@@ -103,11 +164,13 @@ int main(int argc, char** argv) {
 
 	osgViewer::Viewer viewer;
 
+	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(1280, 1024);
+	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
 	osg::Geode*  cairo  = new osg::Geode();
 	
 	osg::MatrixTransform* mt = new osg::MatrixTransform(
-		osg::Matrix::translate(10.0f, 800.0f, 0.0f)
+		osg::Matrix::translate(10.0f, 1000.0f, 0.0f)
 	);
 
 	cairo->addDrawable(createGeometry(gc->getImage(0)));
@@ -120,14 +183,15 @@ int main(int argc, char** argv) {
                 viewer.getCamera()->getOrCreateStateSet()
         ));
 
-	if(camera && cairo) {
-		camera->addChild(cairo);
-		camera->addChild(mt);
+	camera->addChild(cairo);
+	camera->addChild(mt);
 
-		viewer.setSceneData(camera);
+	group->addChild(node);
+	group->addChild(camera);
 
-		viewer.run();
-	}
+	viewer.setSceneData(group);
+
+	viewer.run();
 
 	osgPango::Font::cleanup();
 	osgPango::Text::cleanup();

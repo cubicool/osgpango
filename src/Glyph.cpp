@@ -85,18 +85,6 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		cairo_set_scaled_font(sio->getContext(), sf);
 	}
 
-	/*
-	// TODO: -----------------
-	cairo_font_options_t* siFO  = 0;
-	cairo_font_options_t* sioFO = 0;
-
-	cairo_surface_get_font_options(si->getSurface(), siFO);
-	cairo_surface_get_font_options(sio->getSurface(), sioFO);
-
-	// std::cout << "Options: " <<wq
-	// TODO: -----------------
-	*/
-
 	// This condition is met after we create a new Image...
 	if(!_x && !_y && !_h) _calculateInitialOrigin();
 
@@ -135,25 +123,25 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	if(sio) {
 		cairo_glyph_path(sio->getContext(), &g, 1);
-	
-		/*
-		osgCairo::RadialPattern rp(
-			w / 2.0f, h / 2.0f, 0.0f,
-			w / 2.0f, h / 2.0f, w - _outlineSize
-		);
-
-		rp.addColorStopRGBA(0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-		rp.addColorStopRGBA(1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-
-		sio->setSource(&rp);
-		*/
 
 		sio->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
 		sio->setLineWidth(_outlineSize);
 		sio->setSourceRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		sio->strokePreserve();
 		sio->fill();
+
+		/*
+		sio->setSourceRGBA(1.0f, 1.0f, 1.0f, 0.1f);
 		
+		for(unsigned int i = 0; i < add; i += 3) {
+			sio->setLineWidth(i + 0.5);
+			sio->strokePreserve();
+		}
+		
+		sio->setSourceRGBA(1.0f, 1.0f, 1.0f, 0.1f);
+		sio->fill();
+		*/
+	
 		/*
 		osgCairo::CairoOperator op = sio->getOperator();
 		
@@ -319,8 +307,8 @@ _numQuads(0) {
 		(*_cols)[0].set(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
-	setUseDisplayList(false);
-	setDataVariance(osg::Object::DYNAMIC);
+	setUseDisplayList(true);
+	setDataVariance(osg::Object::STATIC);
 	setVertexArray(new osg::Vec3Array());
 	setTexCoordArray(0, new osg::Vec2Array());
 	
@@ -367,30 +355,37 @@ bool GlyphGeometry::finalize(osg::Image* image, osg::Image* outlineImage) {
 		otexture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
 		otexture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
 
+		// This is the color of the border...
+		te0->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.5f));
+
+		// RGB setup for te0.
 		te0->setCombine_RGB(osg::TexEnvCombine::MODULATE);
 		te0->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
 		te0->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
-		// This is the color of the border...
-		te0->setConstantColor(osg::Vec4(1.0f, 1.0f, 1.0f, 0.0f));
-		te0->setSource1_RGB(osg::TexEnvCombine::TEXTURE);
 		te0->setOperand1_RGB(osg::TexEnvCombine::SRC_ALPHA);
+
+		// Alpha setup for te0.
 		te0->setCombine_Alpha(osg::TexEnvCombine::REPLACE);
 		te0->setSource0_Alpha(osg::TexEnvCombine::TEXTURE0);
 		te0->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
 
-		te1->setCombine_RGB(osg::TexEnvCombine::INTERPOLATE);
-		te1->setSource1_RGB(osg::TexEnvCombine::PREVIOUS);
-		te1->setOperand1_RGB(osg::TexEnvCombine::SRC_COLOR);
-		te1->setSource2_RGB(osg::TexEnvCombine::TEXTURE1);
-		te1->setOperand2_RGB(osg::TexEnvCombine::SRC_ALPHA);
-		te1->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
-		te1->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
 		// This is the color of the text...
-		te1->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		te1->setConstantColor(osg::Vec4(1.0f, 1.0f, 0.0f, 0.1f));
+
+		// RGB setup for te1.
+		te1->setCombine_RGB(osg::TexEnvCombine::INTERPOLATE);
+		te1->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
+		te1->setSource1_RGB(osg::TexEnvCombine::PREVIOUS);
+		te1->setSource2_RGB(osg::TexEnvCombine::TEXTURE1);
+		te1->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
+		te1->setOperand1_RGB(osg::TexEnvCombine::SRC_COLOR);
+		te1->setOperand2_RGB(osg::TexEnvCombine::SRC_ALPHA);
+
+		// Alpha setup for te1.
 		te1->setCombine_Alpha(osg::TexEnvCombine::ADD);
 		te1->setSource0_Alpha(osg::TexEnvCombine::TEXTURE1);
-		te1->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
 		te1->setSource1_Alpha(osg::TexEnvCombine::PREVIOUS);
+		te1->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
 		te1->setOperand1_Alpha(osg::TexEnvCombine::SRC_ALPHA);
 
 		state->setTextureAttributeAndModes(
@@ -408,6 +403,30 @@ bool GlyphGeometry::finalize(osg::Image* image, osg::Image* outlineImage) {
 		state->setTextureAttributeAndModes(0, te0, osg::StateAttribute::ON);
 		state->setTextureAttributeAndModes(1, te1, osg::StateAttribute::ON);
 	}
+
+	state->setTextureAttributeAndModes(
+		outlineImage ? 2 : 1,
+		texture,
+		osg::StateAttribute::ON
+	);
+
+	osg::TexEnvCombine* te2 = new osg::TexEnvCombine();
+	
+	te2->setCombine_RGB(osg::TexEnvCombine::REPLACE);
+	te2->setSource0_RGB(osg::TexEnvCombine::PREVIOUS);
+	te2->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
+	te2->setCombine_Alpha(osg::TexEnvCombine::MODULATE);
+	te2->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.5f));
+	te2->setSource0_Alpha(osg::TexEnvCombine::CONSTANT);
+	te2->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
+	te2->setSource1_Alpha(osg::TexEnvCombine::PREVIOUS);
+	te2->setOperand1_Alpha(osg::TexEnvCombine::SRC_ALPHA);
+
+	state->setTextureAttributeAndModes(
+		outlineImage ? 2 : 1,
+		te2,
+		osg::StateAttribute::ON
+	);
 
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);
 	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);

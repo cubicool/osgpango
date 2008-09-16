@@ -56,7 +56,7 @@ void Text::setText(const std::string& str) {
 	_pos.clear();
 
 	pango_layout_set_text(_layout, utf8.c_str(), -1);
-	pango_layout_set_width(_layout, 1000 * PANGO_SCALE);
+	pango_layout_set_width(_layout, 900 * PANGO_SCALE);
 	//pango_layout_set_justify(_layout, true);
 	
 	_renderer->text  = const_cast<Text*>(this);
@@ -112,7 +112,7 @@ void Text::drawGlyphs(
 
 	osg::Vec2 layoutPos(x / PANGO_SCALE, -(y / PANGO_SCALE));
 	
-	// double add = round(f->getOutlineSize()) * 1.0f;
+	double add = round(f->getOutlineSize());
 
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
@@ -133,8 +133,8 @@ void Text::drawGlyphs(
 
 		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
 			osg::Vec2 pos(
-				gi->geometry.x_offset / PANGO_SCALE,
-				gi->geometry.y_offset / PANGO_SCALE
+				(gi->geometry.x_offset / PANGO_SCALE) + add,
+				(gi->geometry.y_offset / PANGO_SCALE) + add
 			);
 	
 			_renderer->text->_pos.push_back(GlyphPositionPair(
@@ -143,7 +143,7 @@ void Text::drawGlyphs(
 			));
 		}
 		
-		layoutPos += osg::Vec2(gi->geometry.width / PANGO_SCALE, 0.0f);
+		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE) + add, 0.0f);
 	}
 }
 
