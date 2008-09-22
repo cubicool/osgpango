@@ -47,7 +47,7 @@ Font* Font::create(const std::string& descr, unsigned int w, unsigned int h) {
 
 			if(arg == "outline") {
 				font->_cache->_glyphEffects |= GlyphCache::GLYPH_EFFECT_OUTLINE;
-				font->_cache->_outlineSize   = std::atof(val.c_str());
+				font->_cache->_outlineSize   = std::atoi(val.c_str());
 			}
 		}
 	}
