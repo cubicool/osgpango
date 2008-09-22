@@ -30,7 +30,10 @@ public:
 		g_object_unref(_layout);
 	}
 
-	void setText(const std::string&);
+	void setText         (const std::string&);
+	void setColor        (const osg::Vec3&);
+	void setEffectsColor (const osg::Vec3&);
+	void setAlpha        (double);
 
 	Font* getFont() {
 		return _font.get();
@@ -38,6 +41,26 @@ public:
 
 	const Font* getFont() const {
 		return _font.get();
+	}
+
+	osg::Vec3 getColor() {
+		return _color;
+	}
+
+	const osg::Vec3& getColor() const {
+		return _color;
+	}
+
+	osg::Vec3 getEffectsColor() {
+		return _effectsColor;
+	}
+
+	const osg::Vec3& getEffectsColor() const {
+		return _effectsColor;
+	}
+
+	double getAlpha() const {
+		return _alpha;
 	}
 
 	static void drawGlyphs    (PangoRenderer*, PangoFont*, PangoGlyphString*, int, int);
@@ -66,6 +89,9 @@ private:
 	PangoLayout*       _layout;
 	GlyphPositionList  _pos;
 	GlyphEffectsMethod _gem;
+	osg::Vec3          _color;
+	osg::Vec3          _effectsColor;
+	double             _alpha;
 };
 
 }

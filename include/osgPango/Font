@@ -61,14 +61,6 @@ public:
 		return _cache.get();
 	}
 
-	unsigned int getShadowOffset() const {
-		return _cache->_shadowOffset;
-	}
-
-	double getOutlineSize() const {
-		return _cache->_outlineSize;
-	}
-
 private:
 	Font  (const std::string&, unsigned int = 0, unsigned int = 0);
 	~Font ();

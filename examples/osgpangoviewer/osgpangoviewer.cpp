@@ -13,6 +13,7 @@ const std::string LOREM_IPSUM(
 	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
 	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
 	"culpa qui officia deserunt mollit anim id est laborum. "
+	/*
 	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
 	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
 	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
@@ -79,6 +80,7 @@ const std::string LOREM_IPSUM(
 	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
 	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
 	"culpa qui officia deserunt mollit anim id est laborum."
+	*/
 );
 
 osg::Geometry* createGeometry(osg::Image* image) {
@@ -148,15 +150,19 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 }
 
 int main(int argc, char** argv) {
-	osgPango::Font::init();
+	osgPango::Font::init(132);
 
-	const std::string font("Purisa 12"); //outline=0.5");
+	const std::string font("DejaVu Sans ExtraLight 8");
 	
-	osgPango::Font::create(font, 512, 128);
+	osgPango::Font::create(font, 256, 256);
 	
 	osgPango::Text* t = new osgPango::Text(font);
 
-	t->setText(LOREM_IPSUM);
+	t->setColor(osg::Vec3(1.0f, 1.0f, 1.0f));
+	t->setEffectsColor(osg::Vec3(0.0f, 0.0f, 0.0f));
+	//t->setAlpha(0.25f);
+	//t->setText(LOREM_IPSUM);
+	t->setText("Jeremy Lee Moles");
 	
 	osgPango::GlyphCache* gc = osgPango::Font::getFont(font)->getGlyphCache();
 	
@@ -190,6 +196,7 @@ int main(int argc, char** argv) {
 	group->addChild(camera);
 
 	viewer.setSceneData(group);
+	viewer.getCamera()->setClearColor(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
 
 	viewer.run();
 

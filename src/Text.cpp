@@ -37,10 +37,13 @@ void renderer_class_init(RendererClass* klass) {
 }
 
 Text::Text(const std::string& font, GlyphEffectsMethod gem):
-_font   (Font::create(font)),
-_text   ("", osgText::String::ENCODING_UTF8),
-_layout (pango_layout_new(Font::getPangoContext())),
-_gem    (gem) {
+_font         (Font::create(font)),
+_text         ("", osgText::String::ENCODING_UTF8),
+_layout       (pango_layout_new(Font::getPangoContext())),
+_gem          (gem),
+_color        (1.0f, 1.0f, 1.0f),
+_effectsColor (0.0f, 0.0f, 0.0f),
+_alpha        (1.0f) {
 	if(!_renderer) _renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
 
 	pango_layout_set_font_description(_layout, _font->getDescription());
@@ -64,34 +67,43 @@ void Text::setText(const std::string& str) {
 
 	pango_renderer_draw_layout(PANGO_RENDERER(_renderer), _layout, 0, 0);
 
-	GlyphGeometryVector ggv(_font->getGlyphCache()->getNumImages());
+	GlyphCache* gc = _font->getGlyphCache();
 
-	for(unsigned int i = 0; i < ggv.size(); i++) ggv[i] = new GlyphGeometry(
-		_font->getOutlineSize() > 0.0f
-	);
+	GlyphGeometryVector ggv(gc->getNumImages());
+
+	for(unsigned int i = 0; i < ggv.size(); i++) ggv[i] = new GlyphGeometry(gc->hasEffects());
 
 	for(GlyphPositionList::iterator i = _pos.begin(); i != _pos.end(); i++) {
-		const CachedGlyph* cg = _font->getGlyphCache()->getCachedGlyph(i->first);
+		const CachedGlyph* cg = gc->getCachedGlyph(i->first);
 
-		ggv[cg->img]->pushCachedGlyphAt(
-			cg,
-			i->second,
-			_font->getOutlineSize(),
-			_font->getShadowOffset(),
-			_gem
-		);
+		ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);
 	}
 
 	removeDrawables(0, getNumDrawables());
 
 	for(unsigned int i = 0; i < ggv.size(); i++) {
 		if(!ggv[i]->finalize(
-			_font->getGlyphCache()->getImage(i),
-			_font->getGlyphCache()->getImage(i, true)
+			gc->getImage(i),
+			gc->getImage(i, true),
+			_color,
+			_effectsColor,
+			_alpha
 		)) continue;
 
 		addDrawable(ggv[i]);
 	}
+}
+
+void Text::setColor(const osg::Vec3& color) {
+	_color = color;
+}
+
+void Text::setEffectsColor(const osg::Vec3& color) {
+	_effectsColor = color;
+}
+
+void Text::setAlpha(double alpha) {
+	_alpha = alpha;
 }
 
 void Text::drawGlyphs(
@@ -112,7 +124,7 @@ void Text::drawGlyphs(
 
 	osg::Vec2 layoutPos(x / PANGO_SCALE, -(y / PANGO_SCALE));
 	
-	double add = round(f->getOutlineSize());
+	double add = 0.0f; //gc->getExtraEffectsSize();
 
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
