@@ -11,7 +11,7 @@ PangoFontMap* Font::_map     = 0;
 PangoContext* Font::_context = 0;
 Font::FontMap Font::_fonts;
 
-Font* Font::create(const std::string& descr, unsigned int w, unsigned int h) {
+Font* Font::create(const std::string& descr, GlyphCache* gc) {
 	std::string s = descr;
 
 	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
@@ -22,46 +22,19 @@ Font* Font::create(const std::string& descr, unsigned int w, unsigned int h) {
 
 	if(f != _fonts.end()) return f->second.get();
 
-	// At this point, we need to create a new Font so be sure and check for our
-	// "Shadow" or "Outline" keywords.
-	Font* font = 0;
-
-	std::string::size_type pos1 = s.rfind(" ");
-
-	if(pos1 != std::string::npos) {
-		std::string last(s, pos1 + 1);
-	
-		std::string::size_type pos2 = last.rfind("=");
-
-		// 8 characters is the minimum amount to specify an additional option...
-		if(last.size() >= 8 && pos2 != std::string::npos) {
-			std::string arg(last, 0, pos2);
-			std::string val(last, pos2 + 1);
-
-			font = new Font(std::string(s, 0, pos1), w, h);
-
-			if(arg == "shadow") {
-				font->_cache->_glyphEffects |= GlyphCache::GLYPH_EFFECT_SHADOW;
-				font->_cache->_shadowOffset  = std::atoi(val.c_str());
-			}
-
-			if(arg == "outline") {
-				font->_cache->_glyphEffects |= GlyphCache::GLYPH_EFFECT_OUTLINE;
-				font->_cache->_outlineSize   = std::atoi(val.c_str());
-			}
-		}
-	}
-
-	if(!font) font = new Font(s, w, h);
+	Font* font = new Font(s, gc);
 
 	_fonts[s] = font;
 
 	return font;
 }
 
-Font::Font(const std::string& descr, unsigned int w, unsigned int h) {
+Font::Font(const std::string& descr, GlyphCache* gc) {
 	_descr = pango_font_description_from_string(descr.c_str());
-	_cache = new GlyphCache(w, h);
+	
+	if(!gc) _cache = new GlyphCache(DEFAULT_GCW, DEFAULT_GCH);
+
+	else _cache = gc;
 }
 
 Font::~Font() {

@@ -48,50 +48,39 @@ public:
 	typedef std::map<unsigned int, CachedGlyph>                GlyphMap;
 	typedef std::vector<osg::ref_ptr<osgCairo::SurfaceImage> > ImageVector;
 
-	enum GlyphEffects {
-		GLYPH_EFFECT_OUTLINE = 1,
-		GLYPH_EFFECT_SHADOW  = 2
-	};
+	GlyphCache(unsigned int = 0, unsigned int = 0, bool = false);
 
-	GlyphCache(unsigned int = 0, unsigned int = 0);
+	const CachedGlyph* getCachedGlyph     (unsigned int);
+	const CachedGlyph* createCachedGlyph  (PangoFont*, PangoGlyphInfo*);
+	void               writeImagesAsFiles (const std::string&) const;
 
-	unsigned int       getExtraEffectsSize () const;
-	const CachedGlyph* getCachedGlyph      (unsigned int);
-	const CachedGlyph* createCachedGlyph   (PangoFont*, PangoGlyphInfo*);
+	// This method returns an osg::Vec4 object whose values correspond to the following:
+	// the x origin offset, y origin offset, extra width, and extra height respectively.
+	// It is used when custom "effects" implementations needs to inform the cache object
+	// that additional space should be required for proper positioning.
+	virtual osg::Vec4 getExtraGlyphExtents() const;
 
-	osgCairo::SurfaceImage* getImage(unsigned int index, bool outline = false) {
-		return _getImage(index, outline);
+	virtual bool renderGlyph        (osgCairo::SurfaceImage*, const osgCairo::Glyph&);
+	virtual bool renderGlyphEffects (osgCairo::SurfaceImage*, const osgCairo::Glyph&);
+
+	osgCairo::SurfaceImage* getImage(unsigned int index, bool effects = false) {
+		return _getImage(index, effects);
 	}
 
-	const osgCairo::SurfaceImage* getImage(unsigned int index, bool outline = false) const {
-		return _getImage(index, outline);
+	const osgCairo::SurfaceImage* getImage(unsigned int index, bool effects = false) const {
+		return _getImage(index, effects);
 	}
 
 	unsigned int getNumImages() const {
 		return _images.size();
 	}
 
-	unsigned int getOutlineSize() const {
-		return _outlineSize;
+	bool hasEffects() const {
+		return _hasEffects;
 	}
-
-	unsigned int getShadowOffset() const {
-		return _shadowOffset;
-	}
-
-	bool hasEffects         () const;
-	bool hasShadows         () const;
-	bool hasOutlines        () const;
-	void writeImagesAsFiles (const std::string&) const;
 
 private:
-	friend class Font;
-
-	bool   _newImage                        ();
-	bool   _confirmHorizontalSpaceAvailable (unsigned int);
-	bool   _confirmVerticalSpaceAvailable   (unsigned int);
-	void   _calculateInitialOrigin          ();
-	double _calculateLineWidth              () const;
+	bool _newImage(ImageVector&);
 
 	void _writeImageVectorFiles(
 		const std::string&,
@@ -108,16 +97,14 @@ private:
 	// A map of external Pango glyph indexes to their internally CachedGlyph data structures.
 	// We also have a flag of what effects to use, though their rendering method is passed
 	// on from the text object.
-	GlyphMap     _glyphs;
-	unsigned int _glyphEffects;
+	GlyphMap _glyphs;
 
 	double       _x;
 	double       _y;
 	double       _h;
 	unsigned int _imgWidth;
 	unsigned int _imgHeight;
-	unsigned int _outlineSize;
-	unsigned int _shadowOffset;
+	bool         _hasEffects;
 };
 
 class GlyphGeometry: public osg::Geometry {
@@ -136,6 +123,31 @@ private:
 };
 
 typedef std::vector<GlyphGeometry*> GlyphGeometryVector;
+
+class GlyphCacheOutlined: public GlyphCache {
+public:
+	GlyphCacheOutlined(unsigned int, unsigned int, unsigned int);
+
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+
+	virtual bool renderGlyph        (osgCairo::SurfaceImage*, const osgCairo::Glyph&);
+	virtual bool renderGlyphEffects (osgCairo::SurfaceImage*, const osgCairo::Glyph&);
+
+private:
+	unsigned int _outline;
+};
+
+class GlyphCacheShadowed: public GlyphCache {
+public:
+	GlyphCacheShadowed(unsigned int, unsigned int, unsigned int);
+
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+
+	virtual bool renderGlyphEffects(osgCairo::SurfaceImage*, const osgCairo::Glyph&);
+
+private:
+	unsigned int _shadow;
+};
 
 }
 

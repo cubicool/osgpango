@@ -1,14 +1,10 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
-#include <iostream>
 #include <sstream>
-#include <osg/io_utils>
 #include <osg/Texture2D>
 #include <osg/TexMat>
 #include <osg/TexEnvCombine>
 #include <osgPango/Font>
-
-#define DEBUG_GLYPH_BOXES 0
 
 namespace osgPango {
 
@@ -30,23 +26,13 @@ ur     (_ur),
 ul     (_ul) {
 }
 
-GlyphCache::GlyphCache(unsigned int width, unsigned int height):
-_glyphEffects (0),
-_x            (0.0f),
-_y            (0.0f),
-_h            (0.0f),
-_imgWidth     (width ? width : DEFAULT_GCW),
-_imgHeight    (height ? height : DEFAULT_GCH),
-_outlineSize  (0),
-_shadowOffset (0) {
-}
-
-unsigned int GlyphCache::getExtraEffectsSize() const {
-	if(hasOutlines()) return round(_calculateLineWidth());
-
-	else if(hasShadows()) return _shadowOffset;
-
-	else return 0;
+GlyphCache::GlyphCache(unsigned int width, unsigned int height, bool effects):
+_x          (0.0f),
+_y          (0.0f),
+_h          (0.0f),
+_imgWidth   (width ? width : DEFAULT_GCW),
+_imgHeight  (height ? height : DEFAULT_GCH),
+_hasEffects (effects) {
 }
 
 const CachedGlyph* GlyphCache::getCachedGlyph(unsigned int i) {
@@ -59,16 +45,13 @@ const CachedGlyph* GlyphCache::getCachedGlyph(unsigned int i) {
 };
 
 const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo* gi) {
-	unsigned int glyph = gi->glyph;
+	unsigned int   glyph = gi->glyph;
 	PangoRectangle r;
-	cairo_glyph_t  g;
 
 	pango_font_get_glyph_extents(font, glyph, &r, 0);
 	pango_extents_to_pixels(&r, 0);
 
-	g.x     = -r.x;
-	g.y     = -r.y;
-	g.index = glyph;
+	osgCairo::Glyph g(glyph, -r.x, -r.y);
 
 	double w = r.width;
 	double h = r.height;
@@ -79,136 +62,114 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		return const_cast<const CachedGlyph*>(&_glyphs[glyph]);
 	}
 
-	if(!_images.size()) _newImage();
+	// We can't do this in constructor because we need to give the object time
+	// to allow the user to set various caching options.
+	if(!_images.size()) _newImage(_images);
+	
+	if(_hasEffects && !_effects.size()) _newImage(_effects);
 
-	cairo_scaled_font_t*    sf  = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
+	osgCairo::ScaledFont sf(pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font)));
+
 	osgCairo::SurfaceImage* si  = _images.back().get();
 	osgCairo::SurfaceImage* sie = 0;
 	
-	cairo_set_scaled_font(si->getContext(), sf);
+	si->setScaledFont(&sf);
 
-	if(hasEffects()) {
+	if(_hasEffects) {
 		sie = _effects.back().get();
 
-		cairo_set_scaled_font(sie->getContext(), sf);
+		sie->setScaledFont(&sf);
 	}
 
-	// This condition is met after we create a new Image...
-	if(!_x && !_y && !_h) _calculateInitialOrigin();
+	osg::Vec4 extents = getExtraGlyphExtents();
 
-	double add = 0.0f;
-	
-	if(hasOutlines()) add = _outlineSize;
+	double addw = extents[2] + 1.0f;
+	double addh = extents[3] + 1.0f;
 
-	else if(hasShadows()) add = _shadowOffset;
+	if(w + addw >= _imgWidth || h + addh >= _imgHeight) {
+		osg::notify(osg::WARN)
+			<< "The single glyph " << glyph 
+			<< " cannot fit on the allocated texture size; this is likely a critical"
+			<< " bug. Please make sure you have a large enough texture to properly"
+			<< " cache the desired font." << std::endl
+		;
 
-	/*
+		return 0;
+	}
+
 	// If our remaining space isn't enough to accomodate another glyph, jump to another "row."
-	if(!_confirmHorizontalSpaceAvailable(w)) {
-		_x  = add + 1.0f;
-		_y += _h + (add * 2.0f) + 1.0f;
-
-		if(_confirmVerticalSpaceAvailable(h)) {
-			si = _images.back().get();
-
-			cairo_set_scaled_font(si->getContext(), sf);
-		}
-
-		else {
-			si->identityMatrix();
-			si->translate(_x, _y);
-
-			if(sie) {
-				sie->identityMatrix();
-				sie->translate(_x, _y);
-			}
-		}
+	if(_x + w + addw >= _imgWidth) {
+		_x  = 1.0f;
+		_y += _h + addh;
 	}
-	*/
+	
+	// Mkae sure we have enough vertical space, too.
+	if(_y + h + addh >= _imgHeight) {
+		_newImage(_images);
 
-	if(h > _h) _h = h;
+		si = _images.back().get();
 
-	#if DEBUG_GLYPH_BOXES
-		si->setSourceRGBA(1.0f, 1.0f, 1.0f, 0.1f);
-		si->rectangle(0.0f, 0.0f, w, h);
-		si->fill();
-		si->setSourceRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	#endif
+		si->setScaledFont(&sf);
 
-	if(sie) {
-		if(hasOutlines()) {
-			cairo_glyph_path(sie->getContext(), &g, 1);
+		if(_hasEffects) {
+			_newImage(_effects);
 
-			sie->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
-			sie->setLineWidth(_calculateLineWidth());
-			sie->setSourceRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-			sie->strokePreserve();
-			sie->fill();
+			sie = _effects.back().get();
+
+			sie->setScaledFont(&sf);
 		}
-
-		else if(hasShadows()) {
-			sie->save();
-			//sie->setSourceRGBA(1.0f, 1.0f, 1.0f);
-			//cairo_show_glyphs(sie->getContext(), &g, 1);
-			sie->translate(_shadowOffset, _shadowOffset);
-			cairo_show_glyphs(sie->getContext(), &g, 1);
-			sie->restore();
-		}
-	}
-
-	// Show the "regular" font...
-	cairo_show_glyphs(si->getContext(), &g, 1);
-
-	double tx = 0.0f; 
-	double ty = 0.0f;
-	double tw = 1.0f;
-	double th = 1.0f;
-
-	if(hasShadows()) {
-		tx = _x / _imgWidth;
-		ty = (_imgHeight - (h + add) - _y) / _imgHeight;
-		tw = (w + _x + add) / _imgWidth;
-		th = (_imgHeight - (_y - add)) / _imgHeight;
 	}
 
 	else {
-		tx = (_x - add) / _imgWidth;
-		ty = (_imgHeight - h - (_y + add)) / _imgHeight;
-		tw = (w + _x + add) / _imgWidth;
-		th = (_imgHeight - (_y - add)) / _imgHeight;
+		si->identityMatrix();
+		si->translate(_x, _y);
+
+		if(sie) {
+			sie->identityMatrix();
+			sie->translate(_x, _y);
+		}
 	}
+
+	if(h > _h) _h = h;
+
+	si->save();
+	
+	renderGlyph(si, g);
+
+	si->restore();
+	
+	if(sie) {
+		sie->save();
+
+		renderGlyphEffects(sie, g);
+
+		sie->restore();
+	}
+
+	double tx = _x / _imgWidth;
+	double ty = (_imgHeight - (h + extents[3]) - _y) / _imgHeight;
+	double tw = (_x + w + extents[2]) / _imgWidth;
+	double th = (_imgHeight - _y) / _imgHeight;
 
 	_glyphs[glyph] = CachedGlyph(
 		_images.size() - 1,
 		osg::Vec2(r.x, -(h + r.y)),
-		osg::Vec2(w + (add * 2.0f), h + (add * 2.0f)),
+		// We don't use addw/addh here because we don't want the extra 1.0f pixel,
+		// which is used during linear filtering.
+		osg::Vec2(w + extents[2], h + extents[3]),
 		osg::Vec2(tx, ty),
 		osg::Vec2(tw, ty),
 		osg::Vec2(tw, th),
 		osg::Vec2(tx, th)
 	);
 
-	double addw = w + (add * 2.0f) + 1.0f;
+	si->translate(w + addw, 0.0f);
 
-	si->translate(addw, 0.0f);
+	if(sie) sie->translate(w + addw, 0.0f);
 
-	if(sie) sie->translate(addw, 0.0f);
-
-	_x += addw;
+	_x += w + addw;
 
 	return const_cast<const CachedGlyph*>(&_glyphs[glyph]);
-}
-
-bool GlyphCache::hasEffects() const {
-	return hasShadows() || hasOutlines();
-}
-
-bool GlyphCache::hasShadows() const {
-	return (_glyphEffects & GLYPH_EFFECT_SHADOW) != 0;
-}
-
-bool GlyphCache::hasOutlines() const {
-	return (_glyphEffects & GLYPH_EFFECT_OUTLINE) != 0;
 }
 
 void GlyphCache::writeImagesAsFiles(const std::string& prefix) const {
@@ -216,75 +177,41 @@ void GlyphCache::writeImagesAsFiles(const std::string& prefix) const {
 	_writeImageVectorFiles(prefix, "_effects", _effects);
 }
 
-bool GlyphCache::_newImage() {
-	_images.push_back(new osgCairo::SurfaceImage(_imgWidth, _imgHeight, 0, CAIRO_FORMAT_A8));
+osg::Vec4 GlyphCache::getExtraGlyphExtents() const {
+	return osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
+}
 
-	osgCairo::SurfaceImage* si = _images[_images.size() - 1].get();
+bool GlyphCache::renderGlyph(osgCairo::SurfaceImage* si, const osgCairo::Glyph& g) {
+	if(!si) return false;
 
-	if(hasEffects()) {
-		_effects.push_back(
-			new osgCairo::SurfaceImage(_imgWidth, _imgHeight, 0, CAIRO_FORMAT_A8)
-		);
-		
-		osgCairo::SurfaceImage* sie = _effects[_effects.size() - 1].get();
-
-		if(!sie || !sie->valid() || !sie->createContext()) return false;
-	}
-
-	if(!si || !si->valid() || !si->createContext()) return false;
+	si->showGlyphs(g);
 
 	return true;
 }
 
-bool GlyphCache::_confirmHorizontalSpaceAvailable(unsigned int w) {
-	if(_x + w + getExtraEffectsSize() + 1 >= _imgWidth) return false;
-
-	return true;
-}
-
-bool GlyphCache::_confirmVerticalSpaceAvailable(unsigned int h) {
-	if(_y + h + getExtraEffectsSize() >= _imgHeight) {
-		if(!_newImage()) return false;
-
-		_x = 0.0f;
-		_y = 0.0f;
-		_h = 0.0f;
-
-		_calculateInitialOrigin();
-
-		return true;
-	}
-
+bool GlyphCache::renderGlyphEffects(osgCairo::SurfaceImage*, const osgCairo::Glyph&) {
 	return false;
 }
 
-void GlyphCache::_calculateInitialOrigin() {
-	osgCairo::SurfaceImage* si = _images.back().get();
+bool GlyphCache::_newImage(ImageVector& images) {
+	images.push_back(new osgCairo::SurfaceImage(_imgWidth, _imgHeight, 0, CAIRO_FORMAT_A8));
 
-	unsigned int v = 1.0f;
+	osgCairo::SurfaceImage* si = images[images.size() - 1].get();
 
-	if(hasOutlines()) v = round(_outlineSize) + 1.0f;
+	if(!si || !si->valid() || !si->createContext()) return false;
 
-	_x = v;
-	_y = v;
+	// Whenever a new image is created we reset our _x, _y, and _h values.
+	// It's important that you do not create a new image unless you understand that this
+	// will happen and how it will affect everything.
+	
+	_x = 1.0f;
+	_y = 1.0f;
+	_h = 0.0f;
 
 	si->identityMatrix();
 	si->translate(_x, _y);
 
-	if(hasEffects()) {
-		si = _effects.back().get();
-		
-		si->identityMatrix();
-		si->translate(_x, _y);
-	}
-}
-
-double GlyphCache::_calculateLineWidth() const {
-	if(!_outlineSize) return 0.0f;
-
-	else if(_outlineSize == 1) return 1.5f;
-
-	else return (_outlineSize * 2) - 0.5f;
+	return true;
 }
 
 void GlyphCache::_writeImageVectorFiles(
@@ -301,7 +228,7 @@ void GlyphCache::_writeImageVectorFiles(
 
 		i->get()->writeToPNG(ss.str().c_str());
 
-		std::cout 
+		osg::notify()
 			<< "Wrote " << ss.str()
 			<< "; " << i->get()->getImageSizeInBytes() / 1024.0f
 			<< " KB internally." << std::endl
@@ -506,8 +433,6 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	texs->push_back(cg->ur);
 	texs->push_back(cg->ul);
 
-	_numQuads++;
-
 	if(effects) {
 		osg::Vec2Array* otexs = dynamic_cast<osg::Vec2Array*>(getTexCoordArray(1));
 
@@ -518,6 +443,68 @@ bool GlyphGeometry::pushCachedGlyphAt(
 		otexs->push_back(cg->ur);
 		otexs->push_back(cg->ul);
 	}
+
+	_numQuads++;
+
+	return true;
+}
+
+GlyphCacheOutlined::GlyphCacheOutlined(unsigned int w, unsigned int h, unsigned int size):
+GlyphCache (w, h, true),
+_outline   (size) {
+}
+
+osg::Vec4 GlyphCacheOutlined::getExtraGlyphExtents() const {
+	return osg::Vec4(_outline, _outline, _outline * 2, _outline * 2);
+}
+
+bool GlyphCacheOutlined::renderGlyph(osgCairo::SurfaceImage* si, const osgCairo::Glyph& g) {
+	if(!si) return false;
+
+	si->translate(_outline, _outline);
+
+	GlyphCache::renderGlyph(si, g);
+
+	return true;
+}
+
+bool GlyphCacheOutlined::renderGlyphEffects(osgCairo::SurfaceImage* si, const osgCairo::Glyph& g) {
+	if(!si) return false;
+
+	si->setLineWidth((_outline * 2) - 0.5f);
+	si->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
+	si->translate(_outline, _outline);
+	si->glyphPath(g);
+	si->strokePreserve();
+	si->fill();
+	si->setOperator(CAIRO_OPERATOR_CLEAR);
+	
+	GlyphCache::renderGlyph(si, g);
+
+	return true;
+}
+
+GlyphCacheShadowed::GlyphCacheShadowed(unsigned int w, unsigned int h, unsigned int size):
+GlyphCache (w, h, true),
+_shadow    (size) {
+}
+
+osg::Vec4 GlyphCacheShadowed::getExtraGlyphExtents() const {
+	return osg::Vec4(0.0f, 0.0f, _shadow, _shadow);
+}
+
+bool GlyphCacheShadowed::renderGlyphEffects(osgCairo::SurfaceImage* si, const osgCairo::Glyph& g) {
+	if(!si) return false;
+
+	si->save();
+	si->translate(_shadow, _shadow);
+
+	GlyphCache::renderGlyph(si, g);
+
+	si->restore();
+	si->setOperator(CAIRO_OPERATOR_CLEAR);
+	
+	GlyphCache::renderGlyph(si, g);
 
 	return true;
 }
