@@ -124,7 +124,7 @@ void Text::drawGlyphs(
 
 	osg::Vec2 layoutPos(x / PANGO_SCALE, -(y / PANGO_SCALE));
 	
-	double add = 0.0f; //gc->getExtraEffectsSize();
+	osg::Vec4 extents = gc->getExtraGlyphExtents();
 
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
@@ -145,8 +145,8 @@ void Text::drawGlyphs(
 
 		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
 			osg::Vec2 pos(
-				(gi->geometry.x_offset / PANGO_SCALE) + add,
-				(gi->geometry.y_offset / PANGO_SCALE) + add
+				(gi->geometry.x_offset / PANGO_SCALE) + extents[0],
+				(gi->geometry.y_offset / PANGO_SCALE) + extents[1]
 			);
 	
 			_renderer->text->_pos.push_back(GlyphPositionPair(
@@ -155,7 +155,7 @@ void Text::drawGlyphs(
 			));
 		}
 		
-		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE) + add, 0.0f);
+		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE) + extents[0], 0.0f);
 	}
 }
 

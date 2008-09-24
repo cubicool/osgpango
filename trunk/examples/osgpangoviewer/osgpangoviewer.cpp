@@ -12,75 +12,7 @@ const std::string LOREM_IPSUM(
 	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
 	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
 	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	/*
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
 	"culpa qui officia deserunt mollit anim id est laborum."
-	*/
 );
 
 osg::Geometry* createGeometry(osg::Image* image) {
@@ -150,20 +82,23 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 }
 
 int main(int argc, char** argv) {
-	osgPango::Font::init(132);
+	osgPango::Font::init();
 
-	const std::string font("DejaVu Sans ExtraLight 8");
-	
-	osgPango::Font::create(font, 256, 256);
-	
+	const std::string font("Osaka-Sans Serif 40");
+
+	osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowed(512, 512, 2);
+
+	osgPango::Font::create(font, cache);
+
 	osgPango::Text* t = new osgPango::Text(font);
 
 	t->setColor(osg::Vec3(1.0f, 1.0f, 1.0f));
 	t->setEffectsColor(osg::Vec3(0.0f, 0.0f, 0.0f));
-	//t->setAlpha(0.25f);
-	//t->setText(LOREM_IPSUM);
-	t->setText("Jeremy Lee Moles");
-	
+	t->setAlpha(0.75f);
+	//t->setText("Jeremy");
+	t->setText(LOREM_IPSUM);
+
+	// An alternative way of getting our GlyphCacheOutlined created above.
 	osgPango::GlyphCache* gc = osgPango::Font::getFont(font)->getGlyphCache();
 	
 	gc->writeImagesAsFiles("foo_");
@@ -176,7 +111,7 @@ int main(int argc, char** argv) {
 	osg::Geode*  cairo  = new osg::Geode();
 	
 	osg::MatrixTransform* mt = new osg::MatrixTransform(
-		osg::Matrix::translate(10.0f, 1000.0f, 0.0f)
+		osg::Matrix::translate(100.0f, 1000.0f, 0.0f)
 	);
 
 	cairo->addDrawable(createGeometry(gc->getImage(0)));
