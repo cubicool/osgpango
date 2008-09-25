@@ -134,14 +134,14 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	si->save();
 	
-	renderGlyph(si, g);
+	renderGlyph(si, g, w, h);
 
 	si->restore();
 	
 	if(sie) {
 		sie->save();
 
-		renderGlyphEffects(sie, g);
+		renderGlyphEffects(sie, g, w, h);
 
 		sie->restore();
 	}
@@ -181,7 +181,12 @@ osg::Vec4 GlyphCache::getExtraGlyphExtents() const {
 	return osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
-bool GlyphCache::renderGlyph(osgCairo::SurfaceImage* si, const osgCairo::Glyph& g) {
+bool GlyphCache::renderGlyph(
+	osgCairo::SurfaceImage* si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
 	if(!si) return false;
 
 	si->showGlyphs(g);
@@ -189,7 +194,12 @@ bool GlyphCache::renderGlyph(osgCairo::SurfaceImage* si, const osgCairo::Glyph& 
 	return true;
 }
 
-bool GlyphCache::renderGlyphEffects(osgCairo::SurfaceImage*, const osgCairo::Glyph&) {
+bool GlyphCache::renderGlyphEffects(
+	osgCairo::SurfaceImage* si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
 	return false;
 }
 
@@ -270,9 +280,9 @@ _numQuads(0) {
 		(*_cols)[0].set(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
-	//setUseDisplayList(true);
-	setUseVertexBufferObjects(true);
-	setDataVariance(osg::Object::STATIC);
+	setUseDisplayList(false);
+	setUseVertexBufferObjects(false);
+	setDataVariance(osg::Object::DYNAMIC);
 	setVertexArray(new osg::Vec3Array());
 	setTexCoordArray(0, new osg::Vec2Array());
 	
@@ -458,17 +468,29 @@ osg::Vec4 GlyphCacheOutlined::getExtraGlyphExtents() const {
 	return osg::Vec4(_outline, _outline, _outline * 2, _outline * 2);
 }
 
-bool GlyphCacheOutlined::renderGlyph(osgCairo::SurfaceImage* si, const osgCairo::Glyph& g) {
+bool GlyphCacheOutlined::renderGlyph(
+	osgCairo::SurfaceImage* si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
+
 	if(!si) return false;
 
 	si->translate(_outline, _outline);
 
-	GlyphCache::renderGlyph(si, g);
+	GlyphCache::renderGlyph(si, g, w, h);
 
 	return true;
 }
 
-bool GlyphCacheOutlined::renderGlyphEffects(osgCairo::SurfaceImage* si, const osgCairo::Glyph& g) {
+bool GlyphCacheOutlined::renderGlyphEffects(
+	osgCairo::SurfaceImage* si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
+
 	if(!si) return false;
 
 	si->setLineWidth((_outline * 2) - 0.5f);
@@ -479,7 +501,7 @@ bool GlyphCacheOutlined::renderGlyphEffects(osgCairo::SurfaceImage* si, const os
 	si->fill();
 	si->setOperator(CAIRO_OPERATOR_CLEAR);
 	
-	GlyphCache::renderGlyph(si, g);
+	GlyphCache::renderGlyph(si, g, w, h);
 
 	return true;
 }
@@ -493,18 +515,24 @@ osg::Vec4 GlyphCacheShadowed::getExtraGlyphExtents() const {
 	return osg::Vec4(0.0f, 0.0f, _shadow, _shadow);
 }
 
-bool GlyphCacheShadowed::renderGlyphEffects(osgCairo::SurfaceImage* si, const osgCairo::Glyph& g) {
+bool GlyphCacheShadowed::renderGlyphEffects(
+	osgCairo::SurfaceImage* si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
+
 	if(!si) return false;
 
 	si->save();
 	si->translate(_shadow, _shadow);
 
-	GlyphCache::renderGlyph(si, g);
+	GlyphCache::renderGlyph(si, g, w, h);
 
 	si->restore();
 	si->setOperator(CAIRO_OPERATOR_CLEAR);
 	
-	GlyphCache::renderGlyph(si, g);
+	GlyphCache::renderGlyph(si, g, w, h);
 
 	return true;
 }

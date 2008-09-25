@@ -60,8 +60,19 @@ public:
 	// that additional space should be required for proper positioning.
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
-	virtual bool renderGlyph        (osgCairo::SurfaceImage*, const osgCairo::Glyph&);
-	virtual bool renderGlyphEffects (osgCairo::SurfaceImage*, const osgCairo::Glyph&);
+	virtual bool renderGlyph(
+		osgCairo::SurfaceImage*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
+	
+	virtual bool renderGlyphEffects(
+		osgCairo::SurfaceImage*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
 
 	osgCairo::SurfaceImage* getImage(unsigned int index, bool effects = false) {
 		return _getImage(index, effects);
@@ -130,8 +141,19 @@ public:
 
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
-	virtual bool renderGlyph        (osgCairo::SurfaceImage*, const osgCairo::Glyph&);
-	virtual bool renderGlyphEffects (osgCairo::SurfaceImage*, const osgCairo::Glyph&);
+	virtual bool renderGlyph(
+		osgCairo::SurfaceImage*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
+
+	virtual bool renderGlyphEffects(
+		osgCairo::SurfaceImage*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
 
 private:
 	unsigned int _outline;
@@ -143,7 +165,12 @@ public:
 
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
-	virtual bool renderGlyphEffects(osgCairo::SurfaceImage*, const osgCairo::Glyph&);
+	virtual bool renderGlyphEffects(
+		osgCairo::SurfaceImage*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
 
 private:
 	unsigned int _shadow;
