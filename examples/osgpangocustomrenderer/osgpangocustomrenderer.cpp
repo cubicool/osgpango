@@ -15,6 +15,28 @@ const std::string LOREM_IPSUM(
 	"culpa qui officia deserunt mollit anim id est laborum."
 );
 
+class GlyphCacheGradient: public osgPango::GlyphCache {
+	virtual bool renderGlyph(
+		osgCairo::SurfaceImage* si,
+		const osgCairo::Glyph&  g,
+		unsigned int            w,
+		unsigned int            h
+	) {
+		si->setLineWidth(1.5f);
+		si->glyphPath(g);
+		
+		osgCairo::LinearPattern lp(w / 2.0f, 0.0f, w / 2.0f, h);
+
+		lp.addColorStopRGBA(0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+		lp.addColorStopRGBA(0.8f, 0.0f, 0.0f, 0.0f, 0.0f);
+
+		si->setSource(&lp);
+		si->fill();
+
+		return true;
+	}
+};
+
 osg::Geometry* createGeometry(osg::Image* image) {
 	static osg::Vec3 pos(50.0f, 50.0f, -0.8f);
 
@@ -84,19 +106,16 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	const std::string font("Osaka-Sans Serif 40");
+	const std::string font("iNked God 45");
 
-	osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowed(512, 512, 2);
+	osgPango::GlyphCache* cache = new GlyphCacheGradient();
 
 	osgPango::Font::create(font, cache);
 
 	osgPango::Text* t = new osgPango::Text(font);
 
-	t->setColor(osg::Vec3(1.0f, 1.0f, 1.0f));
-	t->setEffectsColor(osg::Vec3(0.0f, 0.0f, 0.0f));
-	t->setAlpha(0.75f);
-	t->setText("osgPango + AnimTK");
-	//t->setText(LOREM_IPSUM);
+	t->setColor(osg::Vec3(1.0f, 0.8f, 0.2f));
+	t->setText(LOREM_IPSUM);
 
 	// An alternative way of getting our GlyphCacheOutlined created above.
 	osgPango::GlyphCache* gc = osgPango::Font::getFont(font)->getGlyphCache();
