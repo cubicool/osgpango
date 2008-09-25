@@ -30,7 +30,6 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 
 		if(!geom) return;
 	
-		// 2 seconds to update...
 		_motion.update(dt * _direction * 4.0f);
 		
 		float val = _motion.getValue();
@@ -43,6 +42,8 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 
 		if(!verts) return;
 
+		// We don't have any value to interpolate too, so we just use some function
+		// of the framerate. :) ACK!!!
 		float mod = val * _direction;
 
 		for(unsigned int g = 0; g < verts->size(); g += 4) {
