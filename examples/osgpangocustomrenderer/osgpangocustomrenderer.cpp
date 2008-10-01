@@ -110,15 +110,13 @@ int main(int argc, char** argv) {
 
 	osgPango::GlyphCache* cache = new GlyphCacheGradient();
 
-	osgPango::Font::create(font, cache);
+	osgPango::Font* f = new osgPango::Font(font, cache);
+	osgPango::Text* t = new osgPango::Text(f);
 
-	osgPango::Text* t = new osgPango::Text(font);
-
-	t->setColor(osg::Vec3(1.0f, 0.8f, 0.2f));
+	t->setColor(osg::Vec3(0.0f, 0.0f, 0.2f));
 	t->setText(LOREM_IPSUM);
 
-	// An alternative way of getting our GlyphCacheOutlined created above.
-	osgPango::GlyphCache* gc = osgPango::Font::getFont(font)->getGlyphCache();
+	osgPango::GlyphCache* gc = f->getGlyphCache();
 	
 	gc->writeImagesAsFiles("foo_");
 

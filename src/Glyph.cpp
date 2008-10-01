@@ -459,16 +459,16 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	return true;
 }
 
-GlyphCacheOutlined::GlyphCacheOutlined(unsigned int w, unsigned int h, unsigned int size):
+GlyphCacheOutline::GlyphCacheOutline(unsigned int w, unsigned int h, unsigned int size):
 GlyphCache (w, h, true),
 _outline   (size) {
 }
 
-osg::Vec4 GlyphCacheOutlined::getExtraGlyphExtents() const {
+osg::Vec4 GlyphCacheOutline::getExtraGlyphExtents() const {
 	return osg::Vec4(_outline, _outline, _outline * 2, _outline * 2);
 }
 
-bool GlyphCacheOutlined::renderGlyph(
+bool GlyphCacheOutline::renderGlyph(
 	osgCairo::SurfaceImage* si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
@@ -484,7 +484,7 @@ bool GlyphCacheOutlined::renderGlyph(
 	return true;
 }
 
-bool GlyphCacheOutlined::renderGlyphEffects(
+bool GlyphCacheOutline::renderGlyphEffects(
 	osgCairo::SurfaceImage* si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
@@ -506,16 +506,16 @@ bool GlyphCacheOutlined::renderGlyphEffects(
 	return true;
 }
 
-GlyphCacheShadowed::GlyphCacheShadowed(unsigned int w, unsigned int h, unsigned int size):
+GlyphCacheShadowOffset::GlyphCacheShadowOffset(unsigned int w, unsigned int h, unsigned int size):
 GlyphCache (w, h, true),
-_shadow    (size) {
+_offset    (size) {
 }
 
-osg::Vec4 GlyphCacheShadowed::getExtraGlyphExtents() const {
-	return osg::Vec4(0.0f, 0.0f, _shadow, _shadow);
+osg::Vec4 GlyphCacheShadowOffset::getExtraGlyphExtents() const {
+	return osg::Vec4(0.0f, 0.0f, _offset, _offset);
 }
 
-bool GlyphCacheShadowed::renderGlyphEffects(
+bool GlyphCacheShadowOffset::renderGlyphEffects(
 	osgCairo::SurfaceImage* si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
@@ -525,7 +525,7 @@ bool GlyphCacheShadowed::renderGlyphEffects(
 	if(!si) return false;
 
 	si->save();
-	si->translate(_shadow, _shadow);
+	si->translate(_offset, _offset);
 
 	GlyphCache::renderGlyph(si, g, w, h);
 

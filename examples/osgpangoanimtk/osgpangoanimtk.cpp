@@ -44,7 +44,7 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 
 		// We don't have any value to interpolate too, so we just use some function
 		// of the framerate. :) ACK!!!
-		float mod = val * _direction;
+		float mod = (val * _direction) * 0.9f;
 
 		for(unsigned int g = 0; g < verts->size(); g += 4) {
 			(*verts)[g    ].x() += mod;
@@ -91,17 +91,16 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	const std::string font("Osaka-Sans Serif 80");
+	const std::string font("Jellyka Castle's Queen 100");
 
-	osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowed(512, 512, 2);
+	osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowOffset(512, 512, 2);
 
-	osgPango::Font::create(font, cache);
-
-	osgPango::Text* t = new osgPango::Text(font);
+	osgPango::Font* f = new osgPango::Font(font, cache);
+	osgPango::Text* t = new osgPango::Text(f);
 
 	t->setColor(osg::Vec3(0.9f, 0.1f, 0.1f));
 	t->setEffectsColor(osg::Vec3(1.0f, 1.0f, 1.0f));
-	t->setText("osgPango\nand\nAnimTK");
+	t->setText("ripley");
 	t->getDrawable(0)->setUpdateCallback(new GlyphSampler());
 
 	osgViewer::Viewer viewer;

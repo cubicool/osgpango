@@ -1,5 +1,12 @@
 PROJECT(osgPango)
 
+SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/etc/")
+
+# On GCC, we need to set these compiler flags.
+IF(NOT WIN32)
+	SET(CMAKE_CXX_FLAGS "-W -Wall -Wno-unused")
+ENDIF(NOT WIN32)
+
 INCLUDE(FindPkgConfig)
 
 PKG_CHECK_MODULES(CAIRO REQUIRED cairo)
@@ -20,24 +27,23 @@ SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/Util
 )
 
-SET(CMAKE_INCLUDE_PATH /usr/local/include CACHE STRING "Put your OSG include dir here...")
-SET(CMAKE_LIBRARY_PATH /usr/local/lib CACHE STRING "Put your OSG lib dir here...")
+FIND_PACKAGE(OpenSceneGraph)
 
 INCLUDE_DIRECTORIES(include
-	${CMAKE_INCLUDE_PATH}
+	${OPENSCENEGRAPH_INCLUDE_DIR}
 	${CAIRO_INCLUDE_DIRS}
 	${PANGO_INCLUDE_DIRS}
 	${PANGOCAIRO_INCLUDE_DIRS}
 )
 
 LINK_DIRECTORIES(
-	${CMAKE_LIBRARY_PATH}
+	${OPENSCENEGRAPH_LIB_DIR}
 	${CAIRO_LIBRARY_DIRS}
 	${PANGO_LIBRARY_DIRS}
 	${PANGOCAIRO_LIBRARY_DIRS}
 )
 
-LINK_LIBRARIES(osg osgUtil osgViewer osgCairo pango-1.0 pangocairo-1.0)
+LINK_LIBRARIES(osg osgUtil osgViewer osgCairo osgWidget pango-1.0 pangocairo-1.0)
 
 ADD_LIBRARY(osgPango SHARED ${SRC_FILES} ${HEADER_FILES})
 
@@ -66,3 +72,19 @@ CONFIGURE_FILE(
 ADD_CUSTOM_TARGET(uninstall
 	"${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake"
 )
+
+# Packaging information.
+SET(CPACK_GENERATOR TGZ)
+SET(CPACK_SOURCE_GENERATOR TGZ)
+SET(CPACK_SOURCE_IGNORE_FILES
+	"~$"
+	".*.svn"
+	".*build/"
+	".*debug/"
+	".*release/"
+)
+
+SET(OSGPANGO_VERSION "0.0.1")
+SET(CPACK_SOURCE_PACKAGE_FILE_NAME "osgPango-${OSGPANGO_VERSION}")
+
+INCLUDE(CPack)

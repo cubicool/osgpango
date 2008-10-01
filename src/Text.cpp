@@ -1,5 +1,7 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
+#include <iostream>
+#include <cmath>
 #include <osg/io_utils>
 #include <osgPango/Text>
 
@@ -36,39 +38,56 @@ void renderer_class_init(RendererClass* klass) {
 	renderer_class->draw_trapezoid = &Text::drawTrapezoid;
 }
 
-Text::Text(const std::string& font, GlyphEffectsMethod gem):
-_font         (Font::create(font)),
+Text::Text(Font* font, GlyphEffectsMethod gem):
+_font         (font ? font : new Font()),
 _text         ("", osgText::String::ENCODING_UTF8),
 _layout       (pango_layout_new(Font::getPangoContext())),
 _gem          (gem),
 _color        (1.0f, 1.0f, 1.0f),
 _effectsColor (0.0f, 0.0f, 0.0f),
-_alpha        (1.0f) {
+_alpha        (1.0f),
+_baseline     (0) {
 	if(!_renderer) _renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
 
 	pango_layout_set_font_description(_layout, _font->getDescription());
 }
 
 void Text::setText(const std::string& str) {
-	if(!str.size()) return;
+	if(str.size()) {
+		_text.set(str, osgText::String::ENCODING_UTF8);
 
-	_text.set(str, osgText::String::ENCODING_UTF8);
+		std::string utf8 = _text.createUTF8EncodedString();
 
-	std::string utf8 = _text.createUTF8EncodedString();
+		_pos.clear();
 
-	_pos.clear();
+		pango_layout_set_text(_layout, utf8.c_str(), -1);
+	}
 
-	pango_layout_set_text(_layout, utf8.c_str(), -1);
-	pango_layout_set_width(_layout, 900 * PANGO_SCALE);
-	//pango_layout_set_justify(_layout, true);
-	
 	_renderer->text  = const_cast<Text*>(this);
 	_renderer->count = 0;
 
 	pango_renderer_draw_layout(PANGO_RENDERER(_renderer), _layout, 0, 0);
 
+	// Here we calculate the size of the text we just rendered. This may be possible to do
+	// WHILE we render it in drawGlyphs later, but for the time being it's simply too
+	// difficult.
+	PangoRectangle rect;
+
+	pango_layout_get_pixel_extents(_layout, &rect, 0);
+
 	GlyphCache* gc = _font->getGlyphCache();
 
+	const osg::Vec4& extents = gc->getExtraGlyphExtents();
+
+	_origin.set(rect.x + extents[0], rect.y - extents[1] - extents[3]);
+
+	_effectsSize.y() = extents[3];
+
+	_size.set(rect.width, rect.height);
+
+	_size += _effectsSize;
+
+	// Now we set the texture values, etc...
 	GlyphGeometryVector ggv(gc->getNumImages());
 
 	for(unsigned int i = 0; i < ggv.size(); i++) ggv[i] = new GlyphGeometry(gc->hasEffects());
@@ -94,6 +113,24 @@ void Text::setText(const std::string& str) {
 	}
 }
 
+void Text::setAlignment(Text::Alignment align) {
+	if(align != ALIGN_JUSTIFY) {
+		PangoAlignment pa = PANGO_ALIGN_LEFT;
+
+		if(align == ALIGN_CENTER) pa = PANGO_ALIGN_CENTER;
+
+		else if(align == ALIGN_RIGHT) pa = PANGO_ALIGN_RIGHT;
+	
+		pango_layout_set_alignment(_layout, pa);
+	}
+
+	else pango_layout_set_justify(_layout, true);
+}
+
+void Text::setWidth(unsigned int width) {
+	pango_layout_set_width(_layout, width * PANGO_SCALE);
+}
+
 void Text::setColor(const osg::Vec3& color) {
 	_color = color;
 }
@@ -104,6 +141,14 @@ void Text::setEffectsColor(const osg::Vec3& color) {
 
 void Text::setAlpha(double alpha) {
 	_alpha = alpha;
+}
+
+osg::Vec2 Text::getOriginBaseline() const {
+	return osg::Vec2(-_origin.x(), _baseline);
+}
+
+osg::Vec2 Text::getOriginTranslated() const {
+	return osg::Vec2(-_origin.x(), _size.y() + _origin.y());
 }
 
 void Text::drawGlyphs(
@@ -117,14 +162,16 @@ void Text::drawGlyphs(
 
 	if(!r || !r->text) return;
 
-	Font*       f  = r->text->getFont();
-	GlyphCache* gc = f->getGlyphCache();
+	Text*       t  = r->text;
+	GlyphCache* gc = t->getFont()->getGlyphCache();
 
 	if(!gc) return;
 
 	osg::Vec2 layoutPos(x / PANGO_SCALE, -(y / PANGO_SCALE));
-	
+
 	osg::Vec4 extents = gc->getExtraGlyphExtents();
+
+	unsigned int effectsWidth = 0;
 
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
@@ -149,14 +196,20 @@ void Text::drawGlyphs(
 				(gi->geometry.y_offset / PANGO_SCALE) + extents[1]
 			);
 	
-			_renderer->text->_pos.push_back(GlyphPositionPair(
+			t->_pos.push_back(GlyphPositionPair(
 				gi->glyph,
 				pos + layoutPos
 			));
 		}
 		
 		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE) + extents[0], 0.0f);
+
+		effectsWidth += extents[0];
 	}
+
+	t->_baseline = y / PANGO_SCALE;
+
+	if(t->_effectsSize.x() < effectsWidth) t->_effectsSize.x() = effectsWidth;
 }
 
 void Text::drawRectangle(PangoRenderer*, PangoRenderPart, int, int, int, int) {
