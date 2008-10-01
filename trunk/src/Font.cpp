@@ -9,25 +9,6 @@ namespace osgPango {
 
 PangoFontMap* Font::_map     = 0;
 PangoContext* Font::_context = 0;
-Font::FontMap Font::_fonts;
-
-Font* Font::create(const std::string& descr, GlyphCache* gc) {
-	std::string s = descr;
-
-	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-	
-	FontMap::iterator f = _fonts.find(s);
-
-	if(!s.size()) s = OSGPANGO_DEFAULT_FONT;
-
-	if(f != _fonts.end()) return f->second.get();
-
-	Font* font = new Font(s, gc);
-
-	_fonts[s] = font;
-
-	return font;
-}
 
 Font::Font(const std::string& descr, GlyphCache* gc) {
 	_descr = pango_font_description_from_string(descr.c_str());
@@ -39,14 +20,6 @@ Font::Font(const std::string& descr, GlyphCache* gc) {
 
 Font::~Font() {
 	pango_font_description_free(_descr);
-}
-
-Font* Font::getFont(const std::string& descr) {
-	std::string s = descr;
-
-	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-
-	return _fonts[s].get();
 }
 
 unsigned int Font::getFontList(FontList& fl) {

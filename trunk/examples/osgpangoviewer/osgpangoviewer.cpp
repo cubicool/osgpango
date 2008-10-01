@@ -1,9 +1,12 @@
+#include <iostream>
+#include <osg/io_utils>
 #include <osg/Texture2D>
 #include <osg/MatrixTransform>
 #include <osgGA/StateSetManipulator>
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
+#include <osgWidget/Widget>
 #include <osgPango/Text>
 
 const std::string LOREM_IPSUM(
@@ -14,39 +17,6 @@ const std::string LOREM_IPSUM(
 	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
 	"culpa qui officia deserunt mollit anim id est laborum."
 );
-
-osg::Geometry* createGeometry(osg::Image* image) {
-	static osg::Vec3 pos(50.0f, 50.0f, -0.8f);
-
-	osg::Texture2D* texture = new osg::Texture2D();
-	osg::Geometry*  geom    = osg::createTexturedQuadGeometry(
-		pos,
-		osg::Vec3(image->s(), 0.0f, 0.0f),
-		osg::Vec3(0.0f, image->t(), 0.0f),
-		0.0f,
-		0.0f, 
-		1.0f,
-		1.0f
-	);
-
-	texture->setImage(image);
-	texture->setDataVariance(osg::Object::DYNAMIC);
-
-	osg::StateSet* state = geom->getOrCreateStateSet();
-
-	state->setTextureAttributeAndModes(
-		0,
-		texture,
-		osg::StateAttribute::ON
-	);
-
-	state->setMode(GL_BLEND, osg::StateAttribute::ON);
-	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-
-	pos += osg::Vec3(image->s() + 50.0f, 0.0f, 0.1f);
-
-	return geom;
-}
 
 osg::Matrix createInvertedYOrthoProjectionMatrix(float width, float height) {
 	osg::Matrix m = osg::Matrix::ortho2D(0.0f, width, 0.0f, height);
@@ -84,37 +54,64 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	const std::string font("Osaka-Sans Serif 40");
+	const std::string font("Aurulent Sans Mono 50");
+	// const std::string font("English 30");
+	// const std::string font("Sans 30");
 
-	osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowed(512, 512, 2);
+	osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowOffset(1024, 128, 2);
+	// osgPango::GlyphCache* cache = new osgPango::GlyphCacheOutline(1024, 128, 1);
+	// osgPango::GlyphCache* cache = 0;
 
-	osgPango::Font::create(font, cache);
+	osgPango::Font* f = new osgPango::Font(font, cache);
+	osgPango::Text* t = new osgPango::Text(f);
 
-	osgPango::Text* t = new osgPango::Text(font);
-
-	t->setColor(osg::Vec3(1.0f, 1.0f, 1.0f));
+	t->setColor(osg::Vec3(1.0f, 0.8f, 0.0f));
 	t->setEffectsColor(osg::Vec3(0.0f, 0.0f, 0.0f));
 	t->setAlpha(0.75f);
-	t->setText("osgPango + AnimTK");
-	//t->setText(LOREM_IPSUM);
+	t->setAlignment(osgPango::Text::ALIGN_LEFT);
+	t->setWidth(1100);
+	t->setText(LOREM_IPSUM);
 
-	// An alternative way of getting our GlyphCacheOutlined created above.
-	osgPango::GlyphCache* gc = osgPango::Font::getFont(font)->getGlyphCache();
+	// ----------------------------------------------------------------------------------------
+	const osg::Vec2& size   = t->getSize();
+	const osg::Vec2& origin = t->getOrigin();
+
+	std::cout << "size: "   << size << std::endl;
+	std::cout << "origin: " << origin << std::endl;
+
+	/*
+	osgWidget::Widget* wi = new osgWidget::Widget("", size.x(), size.y());
 	
-	gc->writeImagesAsFiles("foo_");
+	wi->setColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	float x = origin.x();
+	float y = -(size.y() + origin.y());
+	float w = size.x();
+	float h = size.y();
+	float z = -1.0f;
+
+	osg::Vec3Array* v = dynamic_cast<osg::Vec3Array*>(wi->getVertexArray());
+
+	(*v)[0].set(x,     y,     z);
+	(*v)[1].set(x + w, y,     z);
+	(*v)[2].set(x + w, y + h, z);
+	(*v)[3].set(x,     y + h, z);
+
+	t->addDrawable(wi);
+	// ----------------------------------------------------------------------------------------
+	*/
+
+	f->getGlyphCache()->writeImagesAsFiles("foo_");
 
 	osgViewer::Viewer viewer;
 
 	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(1280, 1024);
 	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
-	osg::Geode*  cairo  = new osg::Geode();
 	
 	osg::MatrixTransform* mt = new osg::MatrixTransform(
-		osg::Matrix::translate(100.0f, 1000.0f, 0.0f)
+		osg::Matrix::translate(osg::Vec3(t->getOriginTranslated(), 0.0f))
 	);
-
-	cairo->addDrawable(createGeometry(gc->getImage(0)));
 
 	mt->addChild(t);
 
@@ -124,7 +121,6 @@ int main(int argc, char** argv) {
                 viewer.getCamera()->getOrCreateStateSet()
         ));
 
-	camera->addChild(cairo);
 	camera->addChild(mt);
 
 	group->addChild(node);

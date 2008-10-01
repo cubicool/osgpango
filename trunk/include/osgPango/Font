@@ -13,10 +13,10 @@ const std::string OSGPANGO_DEFAULT_FONT = "Sans 6";
 
 class Font: public osg::Referenced {
 public:
-	typedef std::map<const std::string, osg::ref_ptr<Font> > FontMap;
-	typedef std::list<std::string>                           FontList;
+	typedef std::list<std::string> FontList;
 
-	static Font* create(const std::string& = "", GlyphCache* = 0);
+	Font  (const std::string& = OSGPANGO_DEFAULT_FONT, GlyphCache* = 0);
+	~Font ();
 
 	static bool init(
 		unsigned int                 = 72,
@@ -25,16 +25,11 @@ public:
 		osgCairo::CairoSubpixelOrder = CAIRO_SUBPIXEL_ORDER_RGB
 	);
 
-	static Font*        getFont     (const std::string&);
-	static unsigned int getFontList (FontList&);
+	static unsigned int getFontList(FontList&);
 
 	static void cleanup() {
 		g_object_unref(_map);
 		g_object_unref(_context);
-	}
-
-	static FontMap& getFontMap() {
-		return _fonts;
 	}
 
 	static PangoFontMap* getPangoFontMap() {
@@ -62,10 +57,6 @@ public:
 	}
 
 private:
-	Font  (const std::string&, GlyphCache* = 0);
-	~Font ();
-
-	static FontMap       _fonts;
 	static PangoFontMap* _map;
 	static PangoContext* _context;
 
