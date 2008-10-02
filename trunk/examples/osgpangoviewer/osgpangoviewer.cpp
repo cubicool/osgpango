@@ -54,23 +54,27 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	const std::string font("Aurulent Sans Mono 50");
-	// const std::string font("English 30");
-	// const std::string font("Sans 30");
+	// const std::string font("Aurulent Sans Mono Bold 50");
+	// const std::string font("Osaka-Sans Serif Bold 120");
+	const std::string font("Sans Bold 120");
 
-	osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowOffset(1024, 128, 2);
-	// osgPango::GlyphCache* cache = new osgPango::GlyphCacheOutline(1024, 128, 1);
+	// osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowOffset(1024, 128, 2);
+	// osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowGaussian(1024, 128, 10);
+	osgPango::GlyphCache* cache = new osgPango::GlyphCacheOutline(1024, 128, 10);
 	// osgPango::GlyphCache* cache = 0;
 
 	osgPango::Font* f = new osgPango::Font(font, cache);
 	osgPango::Text* t = new osgPango::Text(f);
 
-	t->setColor(osg::Vec3(1.0f, 0.8f, 0.0f));
+	t->setColor(osg::Vec3(1.0f, 1.0f, 1.0f));
 	t->setEffectsColor(osg::Vec3(0.0f, 0.0f, 0.0f));
-	t->setAlpha(0.75f);
+	t->setAlpha(0.5f);
 	t->setAlignment(osgPango::Text::ALIGN_LEFT);
 	t->setWidth(1100);
-	t->setText(LOREM_IPSUM);
+	//t->setText(LOREM_IPSUM);
+	t->setText("this is a TEST");
+
+	// cache->getImage(0, true)->gaussianBlur(10);
 
 	// ----------------------------------------------------------------------------------------
 	const osg::Vec2& size   = t->getSize();

@@ -114,6 +114,7 @@ int main(int argc, char** argv) {
 	osgPango::Text* t = new osgPango::Text(f);
 
 	t->setColor(osg::Vec3(0.0f, 0.0f, 0.2f));
+	t->setWidth(900);
 	t->setText(LOREM_IPSUM);
 
 	osgPango::GlyphCache* gc = f->getGlyphCache();
