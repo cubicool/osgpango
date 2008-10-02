@@ -176,6 +176,30 @@ private:
 	unsigned int _offset;
 };
 
+class GlyphCacheShadowGaussian: public GlyphCache {
+public:
+	GlyphCacheShadowGaussian(unsigned int, unsigned int, unsigned int);
+
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+
+	virtual bool renderGlyph(
+		osgCairo::SurfaceImage*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
+
+	virtual bool renderGlyphEffects(
+		osgCairo::SurfaceImage*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
+
+private:
+	unsigned int _radius;
+};
+
 }
 
 #endif

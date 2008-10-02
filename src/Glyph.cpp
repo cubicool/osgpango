@@ -281,7 +281,7 @@ _numQuads(0) {
 	}
 
 	setUseDisplayList(false);
-	setUseVertexBufferObjects(false);
+	setUseVertexBufferObjects(true);
 	setDataVariance(osg::Object::DYNAMIC);
 	setVertexArray(new osg::Vec3Array());
 	setTexCoordArray(0, new osg::Vec2Array());
@@ -506,9 +506,13 @@ bool GlyphCacheOutline::renderGlyphEffects(
 	return true;
 }
 
-GlyphCacheShadowOffset::GlyphCacheShadowOffset(unsigned int w, unsigned int h, unsigned int size):
+GlyphCacheShadowOffset::GlyphCacheShadowOffset(
+	unsigned int w,
+	unsigned int h,
+	unsigned int offset
+):
 GlyphCache (w, h, true),
-_offset    (size) {
+_offset    (offset) {
 }
 
 osg::Vec4 GlyphCacheShadowOffset::getExtraGlyphExtents() const {
@@ -521,7 +525,6 @@ bool GlyphCacheShadowOffset::renderGlyphEffects(
 	unsigned int            w,
 	unsigned int            h
 ) {
-
 	if(!si) return false;
 
 	si->save();
@@ -530,6 +533,56 @@ bool GlyphCacheShadowOffset::renderGlyphEffects(
 	GlyphCache::renderGlyph(si, g, w, h);
 
 	si->restore();
+	si->setOperator(CAIRO_OPERATOR_CLEAR);
+	
+	GlyphCache::renderGlyph(si, g, w, h);
+
+	return true;
+}
+
+GlyphCacheShadowGaussian::GlyphCacheShadowGaussian(
+	unsigned int w,
+	unsigned int h,
+	unsigned int radius
+):
+GlyphCache (w, h, true),
+_radius    (radius) {
+}
+
+osg::Vec4 GlyphCacheShadowGaussian::getExtraGlyphExtents() const {
+	return osg::Vec4(_radius, _radius, _radius * 2, _radius * 2);
+}
+
+bool GlyphCacheShadowGaussian::renderGlyph(
+	osgCairo::SurfaceImage* si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
+	if(!si) return false;
+
+	si->translate(_radius, _radius);
+
+	GlyphCache::renderGlyph(si, g, w, h);
+
+	return true;
+}
+
+bool GlyphCacheShadowGaussian::renderGlyphEffects(
+	osgCairo::SurfaceImage* si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
+	if(!si) return false;
+
+	si->setLineWidth(_radius - 0.5f);
+	si->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
+	si->translate(_radius, _radius);
+	si->glyphPath(g);
+	si->strokePreserve();
+	si->fill();
+	//si->gaussianBlur(10);
 	si->setOperator(CAIRO_OPERATOR_CLEAR);
 	
 	GlyphCache::renderGlyph(si, g, w, h);
