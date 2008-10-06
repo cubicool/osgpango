@@ -54,9 +54,9 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	// osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowOffset(1024, 128, 2);
 	osgPango::GlyphCache* cache1 = new osgPango::GlyphCacheShadowGaussian(1024, 128, 10);
-	osgPango::GlyphCache* cache2 = new osgPango::GlyphCacheOutline(1024, 128, 4);
+	//osgPango::GlyphCache* cache2 = new osgPango::GlyphCacheOutline(1024, 128, 5);
+	osgPango::GlyphCache* cache2 = new osgPango::GlyphCacheShadowOffset(1024, 128, 2, 2);
 
 	osgPango::Font* f1 = new osgPango::Font("Sans Bold 102", cache1);
 	osgPango::Font* f2 = new osgPango::Font("Osaka-Sans Serif 62", cache2);
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 	// ----------------------------------------------------------------------------------------
 	*/
 
-	// f1->getGlyphCache()->writeImagesAsFiles("foo_");
+	f2->getGlyphCache()->writeImagesAsFiles("osgpangoviewer");
 
 	osgViewer::Viewer viewer;
 
