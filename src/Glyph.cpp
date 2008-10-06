@@ -1,5 +1,7 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
+#include <cstdlib>
+#include <iostream>
 #include <sstream>
 #include <osg/Texture2D>
 #include <osg/TexMat>
@@ -416,6 +418,8 @@ bool GlyphGeometry::finalize(
 	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
 	addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, _numQuads * 4));
+	
+	// for(int i = _numQuads * 4; i != 0; i -= 4) addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, i - 4, 4));
 
 	return true;
 }
@@ -426,7 +430,7 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	bool               effects,
 	GlyphEffectsMethod gem
 ) {
-	static float z = 0.0f;
+	static float z = -1.0f;
 
 	osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(getVertexArray());
 	osg::Vec2Array* texs  = dynamic_cast<osg::Vec2Array*>(getTexCoordArray(0));
@@ -440,7 +444,7 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	verts->push_back(osg::Vec3(origin + cg->size, z));
 	verts->push_back(osg::Vec3(origin + osg::Vec2(0.0f, cg->size.y()), z));
 
-	z -= 1.0f;
+	z += 0.001f;
 
 	texs->push_back(cg->bl);
 	texs->push_back(cg->br);
@@ -513,14 +517,33 @@ bool GlyphCacheOutline::renderGlyphEffects(
 GlyphCacheShadowOffset::GlyphCacheShadowOffset(
 	unsigned int w,
 	unsigned int h,
-	unsigned int offset
+	int          xo,
+	int          yo
 ):
 GlyphCache (w, h, true),
-_offset    (offset) {
+_xOffset   (xo),
+_yOffset   (yo) {
 }
 
 osg::Vec4 GlyphCacheShadowOffset::getExtraGlyphExtents() const {
-	return osg::Vec4(0.0f, 0.0f, _offset, _offset);
+	return osg::Vec4(0.0f, 0.0f, std::abs(_xOffset), std::abs(_yOffset));
+}
+
+bool GlyphCacheShadowOffset::renderGlyph(
+	osgCairo::SurfaceImage* si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
+	if(!si) return false;
+
+	if(_xOffset < 0) si->translate(std::abs(_xOffset), 0.0f);
+
+	if(_yOffset < 0) si->translate(0.0f, std::abs(_yOffset));
+
+	GlyphCache::renderGlyph(si, g, w, h);
+
+	return true;
 }
 
 bool GlyphCacheShadowOffset::renderGlyphEffects(
@@ -532,13 +555,20 @@ bool GlyphCacheShadowOffset::renderGlyphEffects(
 	if(!si) return false;
 
 	si->save();
-	si->translate(_offset, _offset);
+
+	if(_xOffset > 0) si->translate(_xOffset, 0.0f);
+
+	if(_yOffset > 0) si->translate(0.0f, _yOffset);
 
 	GlyphCache::renderGlyph(si, g, w, h);
 
 	si->restore();
 	si->setOperator(CAIRO_OPERATOR_CLEAR);
-	
+
+	if(_xOffset < 0) si->translate(std::abs(_xOffset), 0.0f);
+
+	if(_yOffset < 0) si->translate(0.0f, std::abs(_yOffset));
+
 	GlyphCache::renderGlyph(si, g, w, h);
 
 	return true;

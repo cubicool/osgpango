@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
 
 	osgPango::GlyphCache* gc = f->getGlyphCache();
 	
-	gc->writeImagesAsFiles("foo_");
+	gc->writeImagesAsFiles("osgpangocustomrenderer");
 
 	osgViewer::Viewer viewer;
 

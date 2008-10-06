@@ -137,7 +137,7 @@ typedef std::vector<GlyphGeometry*> GlyphGeometryVector;
 
 class GlyphCacheOutline: public GlyphCache {
 public:
-	GlyphCacheOutline(unsigned int, unsigned int, unsigned int);
+	GlyphCacheOutline(unsigned int, unsigned int, unsigned int = 2);
 
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
@@ -161,9 +161,16 @@ private:
 
 class GlyphCacheShadowOffset: public GlyphCache {
 public:
-	GlyphCacheShadowOffset(unsigned int, unsigned int, unsigned int);
+	GlyphCacheShadowOffset(unsigned int, unsigned int, int = 1, int = 1);
 
 	virtual osg::Vec4 getExtraGlyphExtents() const;
+
+	virtual bool renderGlyph(
+		osgCairo::SurfaceImage*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
 
 	virtual bool renderGlyphEffects(
 		osgCairo::SurfaceImage*,
@@ -173,7 +180,8 @@ public:
 	);
 
 private:
-	unsigned int _offset;
+	int _xOffset;
+	int _yOffset;
 };
 
 class GlyphCacheShadowGaussian: public GlyphCache {

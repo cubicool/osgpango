@@ -12,6 +12,11 @@
 const unsigned int WINDOW_WIDTH  = 720;
 const unsigned int WINDOW_HEIGHT = 480;
 
+// A lot of this code is by:
+// 
+// 	Cedric Pinson <mornifle@plopbyte.net>
+//
+// ...who is also the author of AnimTK. Many thanks, Ced. :)
 struct GlyphSampler: public osg::Drawable::UpdateCallback {
 	typedef osgATK::OutCubicMotion MyMotion;
 
@@ -25,7 +30,7 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 	}
 
 	void update(osg::NodeVisitor* nv , osg::Drawable* drawable) {
-		static float mod = 10.0f;
+		static float mod = 20.0f;
 
 		if(nv->getVisitorType() != osg::NodeVisitor::UPDATE_VISITOR) return;
 
@@ -74,8 +79,6 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 			(*verts)[g + 1].x() = (*_originals)[g + 1].x() + mod * sin(val);
 			(*verts)[g + 2].x() = (*_originals)[g + 2].x() + mod * sin(val);
 			(*verts)[g + 3].x() = (*_originals)[g + 3].x() - mod * sin(val);
-
-			// std::cout << (*verts)[g] << std::endl;
 		}
 	}
 };
@@ -116,21 +119,19 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	const std::string font("Osaka-Sans Serif 80");
+	osgPango::GlyphCache* cache = new osgPango::GlyphCacheOutline(512, 512, 4);
 
-	osgPango::GlyphCache* cache = 0; //new osgPango::GlyphCacheOutline(512, 512, 0);
-
-	osgPango::Font* f = new osgPango::Font(font, cache);
+	osgPango::Font* f = new osgPango::Font("Sans Bold 100", cache);
 	osgPango::Text* t = new osgPango::Text(f);
 
-	t->setColor(osg::Vec3(0.7f, 0.8f, 1.0f));
+	t->setColor(osg::Vec3(0.5f, 0.7f, 0.8f));
 	t->setEffectsColor(osg::Vec3(1.0f, 1.0f, 1.0f));
 	t->setText("osgPango\nand\nAnimTK");
 	t->getDrawable(0)->setUpdateCallback(new GlyphSampler());
 
 	osgViewer::Viewer viewer;
 
-	// osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
+	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 	
 	const osg::Vec2& size = t->getSize();
 
@@ -148,11 +149,10 @@ int main(int argc, char** argv) {
                 viewer.getCamera()->getOrCreateStateSet()
         ));
 
-	// camera->addChild(mt);
+	camera->addChild(mt);
 
 	viewer.setUpViewInWindow(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-	// viewer.setSceneData(camera);
-	viewer.setSceneData(mt);
+	viewer.setSceneData(camera);
 	viewer.getCamera()->setClearColor(osg::Vec4(0.2f, 0.2f, 0.2f, 1.0f));
 
 	viewer.run();
