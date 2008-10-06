@@ -281,7 +281,7 @@ _numQuads(0) {
 	}
 
 	setUseDisplayList(false);
-	setUseVertexBufferObjects(true);
+	setUseVertexBufferObjects(false);
 	setDataVariance(osg::Object::DYNAMIC);
 	setVertexArray(new osg::Vec3Array());
 	setTexCoordArray(0, new osg::Vec2Array());
@@ -426,6 +426,8 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	bool               effects,
 	GlyphEffectsMethod gem
 ) {
+	static float z = 0.0f;
+
 	osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(getVertexArray());
 	osg::Vec2Array* texs  = dynamic_cast<osg::Vec2Array*>(getTexCoordArray(0));
 
@@ -433,10 +435,12 @@ bool GlyphGeometry::pushCachedGlyphAt(
 
 	osg::Vec2 origin = pos + cg->origin;
 
-	verts->push_back(osg::Vec3(origin, 0.0f));
-	verts->push_back(osg::Vec3(origin + osg::Vec2(cg->size.x(), 0.0f), 0.0f));
-	verts->push_back(osg::Vec3(origin + cg->size, 0.0f));
-	verts->push_back(osg::Vec3(origin + osg::Vec2(0.0f, cg->size.y()), 0.0f));
+	verts->push_back(osg::Vec3(origin, z));
+	verts->push_back(osg::Vec3(origin + osg::Vec2(cg->size.x(), 0.0f), z));
+	verts->push_back(osg::Vec3(origin + cg->size, z));
+	verts->push_back(osg::Vec3(origin + osg::Vec2(0.0f, cg->size.y()), z));
+
+	z -= 1.0f;
 
 	texs->push_back(cg->bl);
 	texs->push_back(cg->br);

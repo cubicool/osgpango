@@ -54,36 +54,36 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	// const std::string font("Aurulent Sans Mono Bold 50");
-	// const std::string font("Osaka-Sans Serif Bold 120");
-	const std::string font("Sans Bold 120");
-
 	// osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowOffset(1024, 128, 2);
-	// osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowGaussian(1024, 128, 10);
-	osgPango::GlyphCache* cache = new osgPango::GlyphCacheOutline(1024, 128, 10);
-	// osgPango::GlyphCache* cache = 0;
+	osgPango::GlyphCache* cache1 = new osgPango::GlyphCacheShadowGaussian(1024, 128, 10);
+	osgPango::GlyphCache* cache2 = new osgPango::GlyphCacheOutline(1024, 128, 4);
 
-	osgPango::Font* f = new osgPango::Font(font, cache);
-	osgPango::Text* t = new osgPango::Text(f);
+	osgPango::Font* f1 = new osgPango::Font("Sans Bold 102", cache1);
+	osgPango::Font* f2 = new osgPango::Font("Osaka-Sans Serif 62", cache2);
+	osgPango::Text* t1 = new osgPango::Text(f1);
+	osgPango::Text* t2 = new osgPango::Text(f2);
 
-	t->setColor(osg::Vec3(1.0f, 1.0f, 1.0f));
-	t->setEffectsColor(osg::Vec3(0.0f, 0.0f, 0.0f));
-	t->setAlpha(0.5f);
-	t->setAlignment(osgPango::Text::ALIGN_LEFT);
-	t->setWidth(1100);
-	//t->setText(LOREM_IPSUM);
-	t->setText("this is a TEST");
+	t1->setColor(osg::Vec3(1.0f, 1.0f, 1.0f));
+	t1->setEffectsColor(osg::Vec3(0.0f, 0.0f, 0.0f));
+	t1->setAlpha(0.7f);
+	t1->setAlignment(osgPango::Text::ALIGN_LEFT);
+	t1->setWidth(1100);
+	t1->setText("this is a TEST");
 
-	// cache->getImage(0, true)->gaussianBlur(10);
+	t2->setColor(osg::Vec3(0.7f, 0.8f, 1.0f));
+	t2->setEffectsColor(osg::Vec3(0.0f, 0.0f, 0.0f));
+	t2->setAlpha(0.7f);
+	t2->setAlignment(osgPango::Text::ALIGN_RIGHT);
+	t2->setWidth(800);
+	t2->setText("this is a TEST, please do not adjust your dial.");
 
-	// ----------------------------------------------------------------------------------------
-	const osg::Vec2& size   = t->getSize();
-	const osg::Vec2& origin = t->getOrigin();
-
-	std::cout << "size: "   << size << std::endl;
-	std::cout << "origin: " << origin << std::endl;
+	cache1->getImage(0, true)->gaussianBlur(10);
 
 	/*
+	// ----------------------------------------------------------------------------------------
+	const osg::Vec2& size   = t1->getSize();
+	const osg::Vec2& origin = t1->getOrigin();
+
 	osgWidget::Widget* wi = new osgWidget::Widget("", size.x(), size.y());
 	
 	wi->setColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -105,19 +105,24 @@ int main(int argc, char** argv) {
 	// ----------------------------------------------------------------------------------------
 	*/
 
-	f->getGlyphCache()->writeImagesAsFiles("foo_");
+	// f1->getGlyphCache()->writeImagesAsFiles("foo_");
 
 	osgViewer::Viewer viewer;
 
 	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(1280, 1024);
-	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
+	osg::Node*   node   = osgDB::readNodeFile("dumptruck.osg");
 	
-	osg::MatrixTransform* mt = new osg::MatrixTransform(
-		osg::Matrix::translate(osg::Vec3(t->getOriginTranslated(), 0.0f))
+	osg::MatrixTransform* mt1 = new osg::MatrixTransform(
+		osg::Matrix::translate(osg::Vec3(t1->getOriginTranslated(), 0.0f))
 	);
 
-	mt->addChild(t);
+	osg::MatrixTransform* mt2 = new osg::MatrixTransform(
+		osg::Matrix::translate(osg::Vec3(t2->getOriginTranslated(), -0.1f))
+	);
+
+	mt1->addChild(t1);
+	mt2->addChild(t2);
 
         viewer.addEventHandler(new osgViewer::StatsHandler());
         viewer.addEventHandler(new osgViewer::WindowSizeHandler());
@@ -125,7 +130,8 @@ int main(int argc, char** argv) {
                 viewer.getCamera()->getOrCreateStateSet()
         ));
 
-	camera->addChild(mt);
+	camera->addChild(mt1);
+	camera->addChild(mt2);
 
 	group->addChild(node);
 	group->addChild(camera);

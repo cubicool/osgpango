@@ -1,4 +1,5 @@
 #include <iostream>
+#include <osg/io_utils>
 #include <osg/Texture2D>
 #include <osg/MatrixTransform>
 #include <osgGA/StateSetManipulator>
@@ -8,49 +9,73 @@
 #include <osgATK/EaseMotion>
 #include <osgPango/Text>
 
-struct GlyphSampler: public osg::Drawable::UpdateCallback {
-	osgATK::LinearMotion _motion;
+const unsigned int WINDOW_WIDTH  = 720;
+const unsigned int WINDOW_HEIGHT = 480;
 
-	float _direction;
+struct GlyphSampler: public osg::Drawable::UpdateCallback {
+	typedef osgATK::OutCubicMotion MyMotion;
+
 	float _previous;
-	
+
+	osg::ref_ptr<osg::Vec3Array> _originals;
+	std::vector<MyMotion>        _motions;
+
 	GlyphSampler():
-	_direction (1.0f),
-	_previous  (0) {
+	_previous(0) {
 	}
 
 	void update(osg::NodeVisitor* nv , osg::Drawable* drawable) {
-		const osg::FrameStamp* f = nv->getFrameStamp();
+		static float mod = 10.0f;
 
-		float dt = f->getSimulationTime() - _previous;
+		if(nv->getVisitorType() != osg::NodeVisitor::UPDATE_VISITOR) return;
 
-		_previous = f->getSimulationTime();
-		
 		osg::Geometry* geom = dynamic_cast<osg::Geometry*>(drawable);
-
-		if(!geom) return;
-	
-		_motion.update(dt * _direction * 4.0f);
 		
-		float val = _motion.getValue();
-
-		if(val == 1.0f) _direction = -1.0f;
-
-		if(val == 0.0f) _direction = 1.0f;
-
+		if(!geom) return;
+		
 		osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(geom->getVertexArray());
-
+		
 		if(!verts) return;
 
-		// We don't have any value to interpolate too, so we just use some function
-		// of the framerate. :) ACK!!!
-		float mod = (val * _direction) * 0.9f;
+		if(!_originals.valid()) {
+			_originals = new osg::Vec3Array(*verts);
+
+			_motions.resize(_originals->size()/4);
+			
+			for (unsigned int i = 0; i < _motions.size(); i++) {
+				float duration = 1;
+				
+				_motions[i] = MyMotion(0, duration, 3.14, osgATK::Motion::LOOP);
+				
+				float offset = (random() * 1.0 / (1.0 * RAND_MAX)) * duration;
+				
+				_motions[i].setTime(offset);
+			}
+		}
+
+		const osg::FrameStamp* f = nv->getFrameStamp();
+
+		double t  = f->getSimulationTime();
+		float  dt = t - _previous;
+
+		_previous = t;
 
 		for(unsigned int g = 0; g < verts->size(); g += 4) {
-			(*verts)[g    ].x() += mod;
-			(*verts)[g + 1].y() += mod;
-			(*verts)[g + 2].x() += mod;
-			(*verts)[g + 3].y() += mod;
+			_motions[g / 4].update(dt);
+
+			float val = _motions[g/4].getValue();
+			
+			(*verts)[g    ].y() = (*_originals)[g + 0].y() - mod * sin(val);
+			(*verts)[g + 1].y() = (*_originals)[g + 1].y() - mod * sin(val);
+			(*verts)[g + 2].y() = (*_originals)[g + 2].y() + mod * sin(val);
+			(*verts)[g + 3].y() = (*_originals)[g + 3].y() + mod * sin(val);
+
+			(*verts)[g    ].x() = (*_originals)[g + 0].x() - mod * sin(val);
+			(*verts)[g + 1].x() = (*_originals)[g + 1].x() + mod * sin(val);
+			(*verts)[g + 2].x() = (*_originals)[g + 2].x() + mod * sin(val);
+			(*verts)[g + 3].x() = (*_originals)[g + 3].x() - mod * sin(val);
+
+			// std::cout << (*verts)[g] << std::endl;
 		}
 	}
 };
@@ -91,25 +116,29 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	const std::string font("Jellyka Castle's Queen 100");
+	const std::string font("Osaka-Sans Serif 80");
 
-	osgPango::GlyphCache* cache = new osgPango::GlyphCacheShadowOffset(512, 512, 2);
+	osgPango::GlyphCache* cache = 0; //new osgPango::GlyphCacheOutline(512, 512, 0);
 
 	osgPango::Font* f = new osgPango::Font(font, cache);
 	osgPango::Text* t = new osgPango::Text(f);
 
-	t->setColor(osg::Vec3(0.9f, 0.1f, 0.1f));
+	t->setColor(osg::Vec3(0.7f, 0.8f, 1.0f));
 	t->setEffectsColor(osg::Vec3(1.0f, 1.0f, 1.0f));
-	t->setText("ripley");
+	t->setText("osgPango\nand\nAnimTK");
 	t->getDrawable(0)->setUpdateCallback(new GlyphSampler());
 
 	osgViewer::Viewer viewer;
 
-	osg::Camera* camera = createOrthoCamera(720, 480);
+	// osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 	
-	osg::MatrixTransform* mt = new osg::MatrixTransform(
-		osg::Matrix::translate(200.0f, 300.0f, 0.0f)
-	);
+	const osg::Vec2& size = t->getSize();
+
+	osg::MatrixTransform* mt = new osg::MatrixTransform(osg::Matrix::translate(
+		round((WINDOW_WIDTH - size.x()) / 2.0f),
+		size.y() + round((WINDOW_HEIGHT - size.y()) / 2.0f),
+		0.0f
+	));
 
 	mt->addChild(t);
 
@@ -119,11 +148,12 @@ int main(int argc, char** argv) {
                 viewer.getCamera()->getOrCreateStateSet()
         ));
 
-	camera->addChild(mt);
+	// camera->addChild(mt);
 
-	viewer.setUpViewInWindow(0, 0, 720, 480);
-	viewer.setSceneData(camera);
-	viewer.getCamera()->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	viewer.setUpViewInWindow(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	// viewer.setSceneData(camera);
+	viewer.setSceneData(mt);
+	viewer.getCamera()->setClearColor(osg::Vec4(0.2f, 0.2f, 0.2f, 1.0f));
 
 	viewer.run();
 
