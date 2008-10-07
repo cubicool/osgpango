@@ -18,7 +18,8 @@ const unsigned int WINDOW_HEIGHT = 480;
 //
 // ...who is also the author of AnimTK. Many thanks, Ced. :)
 struct GlyphSampler: public osg::Drawable::UpdateCallback {
-	typedef osgATK::OutCubicMotion MyMotion;
+	// typedef osgATK::OutCubicMotion MyMotion;
+	typedef osgATK::OutBounceMotion MyMotion;
 
 	float _previous;
 
@@ -119,7 +120,7 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	osgPango::GlyphCache* cache = new osgPango::GlyphCacheOutline(512, 512, 4);
+	osgPango::GlyphCache* cache = new osgPango::GlyphCacheOutline(512, 512, 5);
 
 	osgPango::Font* f = new osgPango::Font("Sans Bold 100", cache);
 	osgPango::Text* t = new osgPango::Text(f);

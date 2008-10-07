@@ -92,19 +92,15 @@ void Text::setText(const std::string& str) {
 
 	for(unsigned int i = 0; i < ggv.size(); i++) ggv[i] = new GlyphGeometry(gc->hasEffects());
 
-	// Now, this sucks, but we need to add our geometry BACKWARDS.
-	// TODO: Explain WHY in more detail.
+	/*
 	typedef std::pair<const CachedGlyph*, const osg::Vec2&> ReversedListItem;
 	typedef std::list<ReversedListItem>                     ReversedList;
 
 	ReversedList rlist;
 
-	for(GlyphPositionList::iterator i = _pos.begin(); i != _pos.end(); i++) {
-		//const CachedGlyph* cg = gc->getCachedGlyph(i->first);
-		//ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);
-		
-		rlist.push_front(ReversedListItem(gc->getCachedGlyph(i->first), i->second));
-	}
+	for(GlyphPositionList::iterator i = _pos.begin(); i != _pos.end(); i++) rlist.push_front(
+		ReversedListItem(gc->getCachedGlyph(i->first), i->second)
+	);
 
 	for(ReversedList::const_iterator i = rlist.begin(); i != rlist.end(); i++) {
 		const CachedGlyph* cg = i->first;
@@ -112,6 +108,13 @@ void Text::setText(const std::string& str) {
 		std::cout << i->second << std::endl;
 
 		ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);	
+	}
+	*/
+
+	for(GlyphPositionList::iterator i = _pos.begin(); i != _pos.end(); i++) {
+		const CachedGlyph* cg = gc->getCachedGlyph(i->first);
+
+		ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);
 	}
 
 	removeDrawables(0, getNumDrawables());
