@@ -1,5 +1,7 @@
 PROJECT(osgPango)
 
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
 SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/etc/")
 
 # On GCC, we need to set these compiler flags.

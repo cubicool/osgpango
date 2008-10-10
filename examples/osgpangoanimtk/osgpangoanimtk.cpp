@@ -9,8 +9,11 @@
 #include <osgATK/EaseMotion>
 #include <osgPango/Text>
 
-const unsigned int WINDOW_WIDTH  = 720;
-const unsigned int WINDOW_HEIGHT = 480;
+// const unsigned int WINDOW_WIDTH  = 720;
+// const unsigned int WINDOW_HEIGHT = 480;
+
+const unsigned int WINDOW_WIDTH  = 1920;
+const unsigned int WINDOW_HEIGHT = 1200;
 
 // A lot of this code is by:
 // 
@@ -18,8 +21,8 @@ const unsigned int WINDOW_HEIGHT = 480;
 //
 // ...who is also the author of AnimTK. Many thanks, Ced. :)
 struct GlyphSampler: public osg::Drawable::UpdateCallback {
-	// typedef osgATK::OutCubicMotion MyMotion;
-	typedef osgATK::OutBounceMotion MyMotion;
+	typedef osgATK::OutCubicMotion MyMotion;
+	// typedef osgATK::OutBounceMotion MyMotion;
 
 	float _previous;
 
@@ -122,11 +125,12 @@ int main(int argc, char** argv) {
 
 	osgPango::GlyphCache* cache = new osgPango::GlyphCacheOutline(512, 512, 5);
 
-	osgPango::Font* f = new osgPango::Font("Sans Bold 100", cache);
+	osgPango::Font* f = new osgPango::Font("CuprumFFU 100", cache);
 	osgPango::Text* t = new osgPango::Text(f);
 
 	t->setColor(osg::Vec3(0.5f, 0.7f, 0.8f));
 	t->setEffectsColor(osg::Vec3(1.0f, 1.0f, 1.0f));
+	t->setAlignment(osgPango::Text::ALIGN_CENTER);
 	t->setText("osgPango\nand\nAnimTK");
 	t->getDrawable(0)->setUpdateCallback(new GlyphSampler());
 
