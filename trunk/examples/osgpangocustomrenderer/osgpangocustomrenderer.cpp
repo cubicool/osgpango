@@ -17,7 +17,7 @@ const std::string LOREM_IPSUM(
 
 class GlyphCacheGradient: public osgPango::GlyphCache {
 	virtual bool renderGlyph(
-		osgCairo::SurfaceImage* si,
+		osgCairo::Image*        si,
 		const osgCairo::Glyph&  g,
 		unsigned int            w,
 		unsigned int            h

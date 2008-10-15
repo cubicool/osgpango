@@ -7,7 +7,6 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgWidget/Widget>
 #include <osgPango/Text>
 
 const std::string LOREM_IPSUM(
@@ -102,6 +101,8 @@ int main(int argc, char** argv) {
 
 	setupArguments(args);
 
+	osgViewer::Viewer viewer(args);
+
 	while(args.read("--help")) {
 		args.getApplicationUsage()->write(
 			std::cout,
@@ -121,7 +122,7 @@ int main(int argc, char** argv) {
 
 	osgPango::GlyphCache* c = 0;
 
-	while(args.read("--font", font)) std::cout << "Using font: " << font << std::endl;
+	while(args.read("--font", font));
 
 	while(args.read("--cache", cache, cacheSize)) {
 		int s = std::atoi(cacheSize.c_str());
@@ -183,41 +184,11 @@ int main(int argc, char** argv) {
 
 	t->setText(text);
 
-	// cache1->getImage(0, true)->gaussianBlur(4);
-
-	/*
-	// ----------------------------------------------------------------------------------------
-	const osg::Vec2& size   = t1->getSize();
-	const osg::Vec2& origin = t1->getOrigin();
-
-	osgWidget::Widget* wi = new osgWidget::Widget("", size.x(), size.y());
-	
-	wi->setColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-	float x = origin.x();
-	float y = -(size.y() + origin.y());
-	float w = size.x();
-	float h = size.y();
-	float z = -1.0f;
-
-	osg::Vec3Array* v = dynamic_cast<osg::Vec3Array*>(wi->getVertexArray());
-
-	(*v)[0].set(x,     y,     z);
-	(*v)[1].set(x + w, y,     z);
-	(*v)[2].set(x + w, y + h, z);
-	(*v)[3].set(x,     y + h, z);
-
-	t->addDrawable(wi);
-	// ----------------------------------------------------------------------------------------
-	*/
-
 	f->getGlyphCache()->writeImagesAsFiles("osgpangoviewer");
-
-	osgViewer::Viewer viewer(args);
 
 	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(1280, 1024);
-	osg::Node*   node   = osgDB::readNodeFile("dumptruck.osg");
+	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
 	
 	osg::MatrixTransform* mt = new osg::MatrixTransform(
 		osg::Matrix::translate(osg::Vec3(t->getOriginTranslated(), 0.0f))
@@ -237,7 +208,6 @@ int main(int argc, char** argv) {
 	group->addChild(camera);
 
 	viewer.setSceneData(group);
-	viewer.getCamera()->setClearColor(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
 
 	viewer.run();
 
