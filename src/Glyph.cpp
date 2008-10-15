@@ -72,8 +72,8 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	osgCairo::ScaledFont sf(pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font)));
 
-	osgCairo::SurfaceImage* si  = _images.back().get();
-	osgCairo::SurfaceImage* sie = 0;
+	osgCairo::Image* si  = _images.back().get();
+	osgCairo::Image* sie = 0;
 	
 	si->setScaledFont(&sf);
 
@@ -184,7 +184,7 @@ osg::Vec4 GlyphCache::getExtraGlyphExtents() const {
 }
 
 bool GlyphCache::renderGlyph(
-	osgCairo::SurfaceImage* si,
+	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
@@ -197,7 +197,7 @@ bool GlyphCache::renderGlyph(
 }
 
 bool GlyphCache::renderGlyphEffects(
-	osgCairo::SurfaceImage* si,
+	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
@@ -206,9 +206,9 @@ bool GlyphCache::renderGlyphEffects(
 }
 
 bool GlyphCache::_newImage(ImageVector& images) {
-	images.push_back(new osgCairo::SurfaceImage(_imgWidth, _imgHeight, 0, CAIRO_FORMAT_A8));
+	images.push_back(new osgCairo::Image(_imgWidth, _imgHeight, CAIRO_FORMAT_A8));
 
-	osgCairo::SurfaceImage* si = images[images.size() - 1].get();
+	osgCairo::Image* si = images[images.size() - 1].get();
 
 	if(!si || !si->valid() || !si->createContext()) return false;
 
@@ -250,7 +250,7 @@ void GlyphCache::_writeImageVectorFiles(
 	}
 }
 
-osgCairo::SurfaceImage* GlyphCache::_getImage(unsigned int index, bool effects) const {
+osgCairo::Image* GlyphCache::_getImage(unsigned int index, bool effects) const {
 	if(!effects) {
 		if(index < _images.size()) return _images[index].get();
 
@@ -477,7 +477,7 @@ osg::Vec4 GlyphCacheOutline::getExtraGlyphExtents() const {
 }
 
 bool GlyphCacheOutline::renderGlyph(
-	osgCairo::SurfaceImage* si,
+	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
@@ -493,7 +493,7 @@ bool GlyphCacheOutline::renderGlyph(
 }
 
 bool GlyphCacheOutline::renderGlyphEffects(
-	osgCairo::SurfaceImage* si,
+	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
@@ -530,7 +530,7 @@ osg::Vec4 GlyphCacheShadowOffset::getExtraGlyphExtents() const {
 }
 
 bool GlyphCacheShadowOffset::renderGlyph(
-	osgCairo::SurfaceImage* si,
+	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
@@ -547,7 +547,7 @@ bool GlyphCacheShadowOffset::renderGlyph(
 }
 
 bool GlyphCacheShadowOffset::renderGlyphEffects(
-	osgCairo::SurfaceImage* si,
+	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
@@ -588,7 +588,7 @@ osg::Vec4 GlyphCacheShadowGaussian::getExtraGlyphExtents() const {
 }
 
 bool GlyphCacheShadowGaussian::renderGlyph(
-	osgCairo::SurfaceImage* si,
+	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
@@ -603,7 +603,7 @@ bool GlyphCacheShadowGaussian::renderGlyph(
 }
 
 bool GlyphCacheShadowGaussian::renderGlyphEffects(
-	osgCairo::SurfaceImage* si,
+	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h

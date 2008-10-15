@@ -5,7 +5,7 @@
 
 #include <map>
 #include <osg/Geometry>
-#include <osgCairo/SurfaceImage>
+#include <osgCairo/Image>
 
 namespace osgPango {
 
@@ -46,7 +46,7 @@ enum GlyphEffectsMethod {
 class GlyphCache: public osg::Referenced {
 public:
 	typedef std::map<unsigned int, CachedGlyph>                GlyphMap;
-	typedef std::vector<osg::ref_ptr<osgCairo::SurfaceImage> > ImageVector;
+	typedef std::vector<osg::ref_ptr<osgCairo::Image> > ImageVector;
 
 	GlyphCache(unsigned int = 0, unsigned int = 0, bool = false);
 
@@ -61,24 +61,24 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(
-		osgCairo::SurfaceImage*,
+		osgCairo::Image*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
 	);
 	
 	virtual bool renderGlyphEffects(
-		osgCairo::SurfaceImage*,
+		osgCairo::Image*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
 	);
 
-	osgCairo::SurfaceImage* getImage(unsigned int index, bool effects = false) {
+	osgCairo::Image* getImage(unsigned int index, bool effects = false) {
 		return _getImage(index, effects);
 	}
 
-	const osgCairo::SurfaceImage* getImage(unsigned int index, bool effects = false) const {
+	const osgCairo::Image* getImage(unsigned int index, bool effects = false) const {
 		return _getImage(index, effects);
 	}
 
@@ -99,7 +99,7 @@ private:
 		const ImageVector&
 	) const;
 
-	osgCairo::SurfaceImage* _getImage(unsigned int, bool) const;
+	osgCairo::Image* _getImage(unsigned int, bool) const;
 
 	// A container of texture image data where the glyphs are cached.
 	ImageVector _images;
@@ -142,14 +142,14 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(
-		osgCairo::SurfaceImage*,
+		osgCairo::Image*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
 	);
 
 	virtual bool renderGlyphEffects(
-		osgCairo::SurfaceImage*,
+		osgCairo::Image*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
@@ -166,14 +166,14 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(
-		osgCairo::SurfaceImage*,
+		osgCairo::Image*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
 	);
 
 	virtual bool renderGlyphEffects(
-		osgCairo::SurfaceImage*,
+		osgCairo::Image*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
@@ -191,14 +191,14 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(
-		osgCairo::SurfaceImage*,
+		osgCairo::Image*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
 	);
 
 	virtual bool renderGlyphEffects(
-		osgCairo::SurfaceImage*,
+		osgCairo::Image*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int

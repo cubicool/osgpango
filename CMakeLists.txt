@@ -45,9 +45,9 @@ LINK_DIRECTORIES(
 	${PANGOCAIRO_LIBRARY_DIRS}
 )
 
-LINK_LIBRARIES(osg osgUtil osgViewer osgCairo osgWidget pango-1.0 pangocairo-1.0)
-
 ADD_LIBRARY(osgPango SHARED ${SRC_FILES} ${HEADER_FILES})
+
+TARGET_LINK_LIBRARIES(osgPango osg osgUtil osgViewer osgCairo osgWidget pango-1.0 pangocairo-1.0)
 
 INSTALL(TARGETS osgPango DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
@@ -63,6 +63,7 @@ ENDFOREACH(INCLUDEFILE)
 ADD_SUBDIRECTORY(examples/osgpangoanimtk)
 ADD_SUBDIRECTORY(examples/osgpangocustomrenderer)
 ADD_SUBDIRECTORY(examples/osgpangofonts)
+ADD_SUBDIRECTORY(examples/osgpangoguiviewer)
 ADD_SUBDIRECTORY(examples/osgpangoviewer)
 
 CONFIGURE_FILE(
