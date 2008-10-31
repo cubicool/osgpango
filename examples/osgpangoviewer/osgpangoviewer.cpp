@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
 
 	osgPango::GlyphCache* c = 0;
 
-	while(args.read("--font", font));
+	while(args.read("--font", font)) {};
 
 	while(args.read("--cache", cache, cacheSize)) {
 		int s = std::atoi(cacheSize.c_str());
