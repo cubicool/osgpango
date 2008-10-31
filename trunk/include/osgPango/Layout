@@ -10,11 +10,11 @@
 
 namespace osgPango {
 
-class Text;
+class Layout;
 
 struct Renderer {
 	PangoRenderer parent_instance;
-	Text*         text;
+	Layout*         text;
 	unsigned int  count;
 };
 
@@ -22,7 +22,7 @@ struct RendererClass {
 	PangoRendererClass class_instance;
 };
 
-class Text: public osg::Geode {
+class Layout {
 public:
 	enum Alignment {
 		ALIGN_LEFT,
@@ -31,13 +31,16 @@ public:
 		ALIGN_JUSTIFY
 	};
 
-	Text(Font* = 0, GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT);
+	Layout(Font* = 0, GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT);
 
-	~Text() {
+	~Layout() {
 		g_object_unref(_layout);
 	}
+	
+	// Our virtual method all implementations must override.
+	virtual bool textUpdated(GlyphGeometryVector*) = 0;
 
-	void setText         (const std::string&);
+	void setLayout       (const std::string&);
 	void setAlignment    (Alignment);
 	void setWidth        (unsigned int);
 	void setColor        (const osg::Vec3&);
@@ -124,18 +127,19 @@ public:
 private:
 	static Renderer* _renderer;
 
-	osg::ref_ptr<Font> _font;
-	String             _text;
-	PangoLayout*       _layout;
-	GlyphPositionList  _pos;
-	GlyphEffectsMethod _gem;
-	osg::Vec3          _color;
-	osg::Vec3          _effectsColor;
-	double             _alpha;
-	osg::Vec2          _size;
-	osg::Vec2          _effectsSize;
-	osg::Vec2          _origin;
-	unsigned int       _baseline;
+	osg::ref_ptr<Font>  _font;
+	String              _text;
+	PangoLayout*        _layout;
+	GlyphPositionList   _pos;
+	GlyphEffectsMethod  _gem;
+	GlyphGeometryVector _ggv;
+	osg::Vec3           _color;
+	osg::Vec3           _effectsColor;
+	double              _alpha;
+	osg::Vec2           _size;
+	osg::Vec2           _effectsSize;
+	osg::Vec2           _origin;
+	unsigned int        _baseline;
 };
 
 }
