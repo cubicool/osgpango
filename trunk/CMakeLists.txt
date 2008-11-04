@@ -18,12 +18,14 @@ PKG_CHECK_MODULES(PANGOCAIRO REQUIRED pangocairo)
 SET(SRC_FILES
 	src/Glyph.cpp
 	src/Font.cpp
+	src/Layout.cpp
 	src/Text.cpp
 )
 
 SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/Glyph
 	${osgPango_SOURCE_DIR}/include/osgPango/Font
+	${osgPango_SOURCE_DIR}/include/osgPango/Layout
 	${osgPango_SOURCE_DIR}/include/osgPango/Text
 	${osgPango_SOURCE_DIR}/include/osgPango/String
 	${osgPango_SOURCE_DIR}/include/osgPango/Util

@@ -1,9 +1,8 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
-#ifndef OSGPANGO_TEXT
-#define OSGPANGO_TEXT
+#ifndef OSGPANGO_LAYOUT
+#define OSGPANGO_LAYOUT
 
-#include <iostream>
 #include <osg/Geode>
 #include <osgPango/String>
 #include <osgPango/Font>
@@ -14,15 +13,17 @@ class Layout;
 
 struct Renderer {
 	PangoRenderer parent_instance;
-	Layout*         text;
-	unsigned int  count;
+	Layout*       text;
 };
 
 struct RendererClass {
 	PangoRendererClass class_instance;
 };
 
-class Layout {
+// We only inherit from Referenced here for convenience, it's not necessary. 
+// In fact, there may be some complications with multiple inheritance and objects
+// inheriting from the same base.
+class Layout: public osg::Referenced {
 public:
 	enum Alignment {
 		ALIGN_LEFT,
@@ -33,14 +34,14 @@ public:
 
 	Layout(Font* = 0, GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT);
 
-	~Layout() {
+	virtual ~Layout() {
 		g_object_unref(_layout);
 	}
 	
 	// Our virtual method all implementations must override.
-	virtual bool textUpdated(GlyphGeometryVector*) = 0;
+	virtual bool textUpdated(GlyphGeometryVector&) = 0;
 
-	void setLayout       (const std::string&);
+	void setText         (const std::string&);
 	void setAlignment    (Alignment);
 	void setWidth        (unsigned int);
 	void setColor        (const osg::Vec3&);

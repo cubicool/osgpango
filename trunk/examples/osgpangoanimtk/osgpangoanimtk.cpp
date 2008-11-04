@@ -6,7 +6,7 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgATK/EaseMotion>
+#include <osgAnimation/EaseMotion>
 #include <osgPango/Text>
 
 // const unsigned int WINDOW_WIDTH  = 720;
@@ -21,8 +21,8 @@ const unsigned int WINDOW_HEIGHT = 1200;
 //
 // ...who is also the author of AnimTK. Many thanks, Ced. :)
 struct GlyphSampler: public osg::Drawable::UpdateCallback {
-	typedef osgATK::OutCubicMotion MyMotion;
-	// typedef osgATK::OutBounceMotion MyMotion;
+	typedef osgAnimation::OutCubicMotion MyMotion;
+	// typedef osgAnimation::OutBounceMotion MyMotion;
 
 	float _previous;
 
@@ -54,7 +54,7 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 			for (unsigned int i = 0; i < _motions.size(); i++) {
 				float duration = 1;
 				
-				_motions[i] = MyMotion(0, duration, 3.14, osgATK::Motion::LOOP);
+				_motions[i] = MyMotion(0, duration, 3.14, osgAnimation::Motion::LOOP);
 				
 				float offset = (random() * 1.0 / (1.0 * RAND_MAX)) * duration;
 				

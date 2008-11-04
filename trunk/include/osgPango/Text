@@ -1,0 +1,25 @@
+// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+
+#ifndef OSGPANGO_TEXT
+#define OSGPANGO_TEXT
+
+#include <osg/Geode>
+#include <osgPango/Layout>
+
+namespace osgPango {
+
+class Text: public Layout, public osg::Geode {
+public:
+	Text(Font* font = 0, GlyphEffectsMethod gem = GLYPH_EFFECTS_METHOD_DEFAULT):
+	Layout(font, gem) {
+	}
+
+	virtual ~Text() {
+	}
+
+	virtual bool textUpdated(GlyphGeometryVector&);
+};
+
+}
+
+#endif
