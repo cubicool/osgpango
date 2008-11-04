@@ -26,34 +26,32 @@ public:
 
 	virtual bool textUpdated(GlyphGeometryVector&);
 
-/*
-virtual void parented   (Window*);
-virtual void unparented (Window*);
-virtual void positioned ();
-
-void update       ();
-void setLabel     (const std::string&);
-void setFont      (const std::string&);
-void setFontSize  (unsigned int);
-void setFontColor (const Color&);
-void setShadow    (point_type);
-
-XYCoord getTextSize() const;
-
-std::string getLabel() const { return _text->getText().createUTF8EncodedString(); }
-
-void setFontColor(point_type r, point_type g, point_type b, point_type a) { setFontColor(Color(r, g, b, a)); }
-
-// For now you only get a const pointer, because we have a highly specific
-// interface with the osgText library.
-const osgText::Text* getText() const { return _text.get(); }
+	virtual void parented   (Window*);
+	virtual void unparented (Window*);
+	virtual void positioned ();
 
 protected:
+	void _setDrawables     ();
+	void _removesDrawables ();
 
-unsigned int _index;
+	bool _textUpdated;
+	
+	std::list<unsigned int> _indexes;
 
-virtual void _calculateSize(const XYCoord&);
-*/
+	/*
+	XYCoord getTextSize() const;
+
+	std::string getLabel() const { return _text->getText().createUTF8EncodedString(); }
+
+	void setFontColor(point_type r, point_type g, point_type b, point_type a) { setFontColor(Color(r, g, b, a)); }
+
+	// For now you only get a const pointer, because we have a highly specific
+	// interface with the osgText library.
+	const osgText::Text* getText() const { return _text.get(); }
+
+	protected:
+	virtual void _calculateSize(const XYCoord&);
+	*/
 
 };
 
