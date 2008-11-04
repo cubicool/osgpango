@@ -45,6 +45,7 @@ _layout       (pango_layout_new(Font::getPangoContext())),
 _gem          (gem),
 _color        (1.0f, 1.0f, 1.0f),
 _effectsColor (0.0f, 0.0f, 0.0f),
+_originOffset (0.0f, 0.0f, 0.0f),
 _alpha        (1.0f),
 _baseline     (0) {
 	if(!_renderer) _renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
