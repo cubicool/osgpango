@@ -1,0 +1,62 @@
+// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+
+#ifndef OSGPANGO_LABEL
+#define OSGPANGO_LABEL
+
+#include <osgWidget/Widget>
+#include <osgPango/Layout>
+
+namespace osgPango {
+
+class Label: public Layout, public osgWidget::Widget {
+public:
+	META_Object(osgPango, Label);
+
+	Label(
+		const std::string&,
+		const std::string&,
+		Font*              = 0,
+		GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT
+	);
+
+	Label(const Label&, const osg::CopyOp&);
+
+	virtual ~Label() {
+	}
+
+	virtual bool textUpdated(GlyphGeometryVector&);
+
+/*
+virtual void parented   (Window*);
+virtual void unparented (Window*);
+virtual void positioned ();
+
+void update       ();
+void setLabel     (const std::string&);
+void setFont      (const std::string&);
+void setFontSize  (unsigned int);
+void setFontColor (const Color&);
+void setShadow    (point_type);
+
+XYCoord getTextSize() const;
+
+std::string getLabel() const { return _text->getText().createUTF8EncodedString(); }
+
+void setFontColor(point_type r, point_type g, point_type b, point_type a) { setFontColor(Color(r, g, b, a)); }
+
+// For now you only get a const pointer, because we have a highly specific
+// interface with the osgText library.
+const osgText::Text* getText() const { return _text.get(); }
+
+protected:
+
+unsigned int _index;
+
+virtual void _calculateSize(const XYCoord&);
+*/
+
+};
+
+}
+
+#endif

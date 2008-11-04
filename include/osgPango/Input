@@ -1,0 +1,48 @@
+// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+
+#ifndef OSGPANGO_INPUT
+#define OSGPANGO_INPUT
+
+#include <iostream>
+#include <osgPango/Layout>
+
+namespace osgPango {
+
+// 1. An Input has a Cursor
+// 2. An Input isn't static.
+// 3. If a character is inserted over another character (or deleted), all subsequent
+//    characters are reset.
+// 4. An Input can alternatively have a fixed size.
+
+class Input: public Layout {
+public:
+	class CursorGeometry: public osg::Geometry {
+	};
+
+	Input(unsigned int);
+
+	unsigned int addCharacter       (String::value_type);
+	unsigned int deleteCharacter    ();
+	unsigned int backspaceCharacter ();
+	unsigned int cursorForward      ();
+	unsigned int cursorBackward     ();
+
+	CursorGeometry* getCursor() {
+		return _getCursor();
+	}
+
+	const CursorGeometry* getCursor() const {
+		return _getCursor();
+	}
+
+public:
+	CursorGeometry* _getCursor() const {
+		return 0;
+	}
+
+	unsigned int _cursorPos;
+};
+
+}
+
+#endif

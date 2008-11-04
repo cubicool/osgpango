@@ -40,7 +40,7 @@ void renderer_class_init(RendererClass* klass) {
 
 Layout::Layout(Font* font, GlyphEffectsMethod gem):
 _font         (font ? font : new Font()),
-_text         ("", osgLayout::String::ENCODING_UTF8),
+_text         ("", osgText::String::ENCODING_UTF8),
 _layout       (pango_layout_new(Font::getPangoContext())),
 _gem          (gem),
 _color        (1.0f, 1.0f, 1.0f),
@@ -52,9 +52,9 @@ _baseline     (0) {
 	pango_layout_set_font_description(_layout, _font->getDescription());
 }
 
-void Layout::setLayout(const std::string& str) {
+void Layout::setText(const std::string& str) {
 	if(str.size()) {
-		_text.set(str, osgLayout::String::ENCODING_UTF8);
+		_text.set(str, osgText::String::ENCODING_UTF8);
 
 		std::string utf8 = _text.createUTF8EncodedString();
 
@@ -63,8 +63,7 @@ void Layout::setLayout(const std::string& str) {
 		pango_layout_set_text(_layout, utf8.c_str(), -1);
 	}
 
-	_renderer->text  = const_cast<Layout*>(this);
-	_renderer->count = 0;
+	_renderer->text = const_cast<Layout*>(this);
 
 	pango_renderer_draw_layout(PANGO_RENDERER(_renderer), _layout, 0, 0);
 
@@ -90,7 +89,7 @@ void Layout::setLayout(const std::string& str) {
 	// Now we set the texture values, etc...
 	_ggv.resize(gc->getNumImages(), 0);
 
-	for(unsigned int i = 0; i < ggv.size(); i++) ggv[i] = new GlyphGeometry(gc->hasEffects());
+	for(unsigned int i = 0; i < _ggv.size(); i++) _ggv[i] = new GlyphGeometry(gc->hasEffects());
 
 	/*
 	typedef std::pair<const CachedGlyph*, const osg::Vec2&> ReversedListItem;
@@ -114,21 +113,17 @@ void Layout::setLayout(const std::string& str) {
 	for(GlyphPositionList::iterator i = _pos.begin(); i != _pos.end(); i++) {
 		const CachedGlyph* cg = gc->getCachedGlyph(i->first);
 
-		ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);
+		_ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);
 	}
 
-	// removeDrawables(0, getNumDrawables());
-
-	for(unsigned int i = 0; i < ggv.size(); i++) {
-		if(!ggv[i]->finalize(
+	for(unsigned int i = 0; i < _ggv.size(); i++) {
+		if(!_ggv[i]->finalize(
 			gc->getImage(i),
 			gc->getImage(i, true),
 			_color,
 			_effectsColor,
 			_alpha
 		)) continue;
-
-		// addDrawable(ggv[i]);
 	}
 
 	textUpdated(_ggv);
