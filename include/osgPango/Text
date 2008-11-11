@@ -10,18 +10,18 @@
 
 namespace osgPango {
 
-class Layout;
+class Text;
 
 struct OSGPANGO_EXPORT Renderer {
 	PangoRenderer parent_instance;
-	Layout*       text;
+	Text*       text;
 };
 
 struct OSGPANGO_EXPORT RendererClass {
 	PangoRendererClass class_instance;
 };
 
-class OSGPANGO_EXPORT Layout: public osg::MatrixTransform {
+class OSGPANGO_EXPORT Text: public osg::MatrixTransform {
 public:
 	enum Alignment {
 		ALIGN_LEFT,
@@ -30,9 +30,9 @@ public:
 		ALIGN_JUSTIFY
 	};
 
-	Layout(Font* = 0, GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT);
+	Text(Font* = 0, GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT);
 
-	virtual ~Layout() {
+	virtual ~Text() {
 		g_object_unref(_layout);
 	}
 	
@@ -99,6 +99,14 @@ public:
 		return _baseline;
 	}
 
+	osg::Geode* getGeode() {
+		return dynamic_cast<osg::Geode*>(getChild(0));
+	}
+
+	const osg::Geode* getGeode() const {
+		return dynamic_cast<const osg::Geode*>(getChild(0));
+	}
+
 	osg::Vec2 getOriginBaseline   () const;
 	osg::Vec2 getOriginTranslated () const;
 
@@ -122,8 +130,6 @@ public:
 
 private:
 	static Renderer* _renderer;
-
-	osg::Geode* _getGeode();
 
 	osg::ref_ptr<Font>  _font;
 	String              _text;
