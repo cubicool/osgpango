@@ -11,7 +11,7 @@ namespace osgPango {
 
 const std::string OSGPANGO_DEFAULT_FONT = "Sans 6";
 
-class Font: public osg::Referenced {
+class OSGPANGO_EXPORT Font: public osg::Referenced {
 public:
 	typedef std::list<std::string> FontList;
 

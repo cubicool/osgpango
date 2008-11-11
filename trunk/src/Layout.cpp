@@ -45,7 +45,6 @@ _layout       (pango_layout_new(Font::getPangoContext())),
 _gem          (gem),
 _color        (1.0f, 1.0f, 1.0f),
 _effectsColor (0.0f, 0.0f, 0.0f),
-_originOffset (0.0f, 0.0f, 0.0f),
 _alpha        (1.0f),
 _baseline     (0) {
 	if(!_renderer) _renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
@@ -88,9 +87,9 @@ void Layout::setText(const std::string& str) {
 	_size += _effectsSize;
 
 	// Now we set the texture values, etc...
-	_ggv.resize(gc->getNumImages(), 0);
+	GlyphGeometryVector ggv(gc->getNumImages(), 0);
 
-	for(unsigned int i = 0; i < _ggv.size(); i++) _ggv[i] = new GlyphGeometry(gc->hasEffects());
+	for(unsigned int i = 0; i < ggv.size(); i++) ggv[i] = new GlyphGeometry(gc->hasEffects());
 
 	/*
 	typedef std::pair<const CachedGlyph*, const osg::Vec2&> ReversedListItem;
@@ -114,20 +113,22 @@ void Layout::setText(const std::string& str) {
 	for(GlyphPositionList::iterator i = _pos.begin(); i != _pos.end(); i++) {
 		const CachedGlyph* cg = gc->getCachedGlyph(i->first);
 
-		_ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);
+		ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);
 	}
 
-	for(unsigned int i = 0; i < _ggv.size(); i++) {
-		if(!_ggv[i]->finalize(
+	removeDrawables(0, getNumDrawables());
+
+	for(unsigned int i = 0; i < ggv.size(); i++) {
+		if(!ggv[i]->finalize(
 			gc->getImage(i),
 			gc->getImage(i, true),
 			_color,
 			_effectsColor,
 			_alpha
 		)) continue;
-	}
 
-	textUpdated(_ggv);
+		addDrawable(ggv[i]);
+	}
 }
 
 void Layout::setAlignment(Layout::Alignment align) {

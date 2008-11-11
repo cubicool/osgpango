@@ -6,6 +6,7 @@
 #include <map>
 #include <osg/Geometry>
 #include <osgCairo/Image>
+#include <osgPango/Export>
 
 namespace osgPango {
 
@@ -14,7 +15,7 @@ class Font;
 const unsigned int DEFAULT_GCW = 512;
 const unsigned int DEFAULT_GCH = 512;
 
-struct CachedGlyph {
+struct OSGPANGO_EXPORT CachedGlyph {
 	CachedGlyph(
 		unsigned int     = 0,
 		const osg::Vec2& = osg::Vec2(),
@@ -43,7 +44,7 @@ enum GlyphEffectsMethod {
 };
 
 // There is one GlyphCache object PER FONT object.
-class GlyphCache: public osg::Referenced {
+class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {
 public:
 	typedef std::map<unsigned int, CachedGlyph>                GlyphMap;
 	typedef std::vector<osg::ref_ptr<osgCairo::Image> > ImageVector;
@@ -118,7 +119,7 @@ private:
 	bool         _hasEffects;
 };
 
-class GlyphGeometry: public osg::Geometry {
+class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
 public:
 	GlyphGeometry(bool = false);
 
@@ -135,7 +136,7 @@ private:
 
 typedef std::vector<GlyphGeometry*> GlyphGeometryVector;
 
-class GlyphCacheOutline: public GlyphCache {
+class OSGPANGO_EXPORT GlyphCacheOutline: public GlyphCache {
 public:
 	GlyphCacheOutline(unsigned int, unsigned int, unsigned int = 2);
 
@@ -159,7 +160,7 @@ private:
 	unsigned int _outline;
 };
 
-class GlyphCacheShadowOffset: public GlyphCache {
+class OSGPANGO_EXPORT GlyphCacheShadowOffset: public GlyphCache {
 public:
 	GlyphCacheShadowOffset(unsigned int, unsigned int, int = 1, int = 1);
 
@@ -184,7 +185,7 @@ private:
 	int _yOffset;
 };
 
-class GlyphCacheShadowGaussian: public GlyphCache {
+class OSGPANGO_EXPORT GlyphCacheShadowGaussian: public GlyphCache {
 public:
 	GlyphCacheShadowGaussian(unsigned int, unsigned int, unsigned int);
 
