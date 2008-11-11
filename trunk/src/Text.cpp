@@ -1,13 +1,10 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
-#include <iostream>
-#include <cmath>
-#include <osg/io_utils>
-#include <osgPango/Layout>
+#include <osgPango/Text>
 
 namespace osgPango {
 
-Renderer* Layout::_renderer = 0;
+Renderer* Text::_renderer = 0;
 
 G_DEFINE_TYPE(Renderer, renderer, PANGO_TYPE_RENDERER);
 
@@ -33,12 +30,12 @@ void renderer_class_init(RendererClass* klass) {
 
 	object_class->finalize = renderer_finalize;
 
-	renderer_class->draw_glyphs    = &Layout::drawGlyphs;
-	renderer_class->draw_rectangle = &Layout::drawRectangle;
-	renderer_class->draw_trapezoid = &Layout::drawTrapezoid;
+	renderer_class->draw_glyphs    = &Text::drawGlyphs;
+	renderer_class->draw_rectangle = &Text::drawRectangle;
+	renderer_class->draw_trapezoid = &Text::drawTrapezoid;
 }
 
-Layout::Layout(Font* font, GlyphEffectsMethod gem):
+Text::Text(Font* font, GlyphEffectsMethod gem):
 _font         (font ? font : new Font()),
 _text         ("", osgText::String::ENCODING_UTF8),
 _layout       (pango_layout_new(Font::getPangoContext())),
@@ -50,9 +47,12 @@ _baseline     (0) {
 	if(!_renderer) _renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
 
 	pango_layout_set_font_description(_layout, _font->getDescription());
+
+	// Add the child Geode that we use throughout the API.
+	addChild(new osg::Geode());
 }
 
-void Layout::setText(const std::string& str) {
+void Text::setText(const std::string& str) {
 	if(str.size()) {
 		_text.set(str, osgText::String::ENCODING_UTF8);
 
@@ -63,7 +63,7 @@ void Layout::setText(const std::string& str) {
 		pango_layout_set_text(_layout, utf8.c_str(), -1);
 	}
 
-	_renderer->text = const_cast<Layout*>(this);
+	_renderer->text = const_cast<Text*>(this);
 
 	pango_renderer_draw_layout(PANGO_RENDERER(_renderer), _layout, 0, 0);
 
@@ -116,7 +116,11 @@ void Layout::setText(const std::string& str) {
 		ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);
 	}
 
-	removeDrawables(0, getNumDrawables());
+	osg::Geode* geode = getGeode();
+
+	if(!geode) return;
+
+	geode->removeDrawables(0, geode->getNumDrawables());
 
 	for(unsigned int i = 0; i < ggv.size(); i++) {
 		if(!ggv[i]->finalize(
@@ -127,11 +131,11 @@ void Layout::setText(const std::string& str) {
 			_alpha
 		)) continue;
 
-		addDrawable(ggv[i]);
+		geode->addDrawable(ggv[i]);
 	}
 }
 
-void Layout::setAlignment(Layout::Alignment align) {
+void Text::setAlignment(Text::Alignment align) {
 	if(align != ALIGN_JUSTIFY) {
 		PangoAlignment pa = PANGO_ALIGN_LEFT;
 
@@ -145,31 +149,31 @@ void Layout::setAlignment(Layout::Alignment align) {
 	else pango_layout_set_justify(_layout, true);
 }
 
-void Layout::setWidth(unsigned int width) {
+void Text::setWidth(unsigned int width) {
 	pango_layout_set_width(_layout, width * PANGO_SCALE);
 }
 
-void Layout::setColor(const osg::Vec3& color) {
+void Text::setColor(const osg::Vec3& color) {
 	_color = color;
 }
 
-void Layout::setEffectsColor(const osg::Vec3& color) {
+void Text::setEffectsColor(const osg::Vec3& color) {
 	_effectsColor = color;
 }
 
-void Layout::setAlpha(double alpha) {
+void Text::setAlpha(double alpha) {
 	_alpha = alpha;
 }
 
-osg::Vec2 Layout::getOriginBaseline() const {
+osg::Vec2 Text::getOriginBaseline() const {
 	return osg::Vec2(-_origin.x(), _baseline);
 }
 
-osg::Vec2 Layout::getOriginTranslated() const {
+osg::Vec2 Text::getOriginTranslated() const {
 	return osg::Vec2(-_origin.x(), _size.y() + _origin.y());
 }
 
-void Layout::drawGlyphs(
+void Text::drawGlyphs(
 	PangoRenderer*    renderer,
 	PangoFont*        font,
 	PangoGlyphString* glyphs,
@@ -180,7 +184,7 @@ void Layout::drawGlyphs(
 
 	if(!r || !r->text) return;
 
-	Layout*       t  = r->text;
+	Text*       t  = r->text;
 	GlyphCache* gc = t->getFont()->getGlyphCache();
 
 	if(!gc) return;
@@ -230,11 +234,10 @@ void Layout::drawGlyphs(
 	if(t->_effectsSize.x() < effectsWidth) t->_effectsSize.x() = effectsWidth;
 }
 
-void Layout::drawRectangle(PangoRenderer*, PangoRenderPart, int, int, int, int) {
-	std::cout << "Layout::drawRectangle" << std::endl;
+void Text::drawRectangle(PangoRenderer*, PangoRenderPart, int, int, int, int) {
 }
 
-void Layout::drawTrapezoid(
+void Text::drawTrapezoid(
 	PangoRenderer*,
 	PangoRenderPart,
 	double,
@@ -244,7 +247,6 @@ void Layout::drawTrapezoid(
 	double,
 	double
 ) {
-	std::cout << "Layout::drawTrapezoid" << std::endl;
 }
 
 }

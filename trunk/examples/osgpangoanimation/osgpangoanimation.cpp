@@ -128,17 +128,17 @@ int main(int argc, char** argv) {
 	osgPango::Font* f = new osgPango::Font("CuprumFFU 100", cache);
 	osgPango::Text* t = new osgPango::Text(f);
 
-	t->getLayout()->setColor(osg::Vec3(0.5f, 0.7f, 0.8f));
-	t->getLayout()->setEffectsColor(osg::Vec3(1.0f, 1.0f, 1.0f));
-	t->getLayout()->setAlignment(osgPango::Layout::ALIGN_CENTER);
-	t->getLayout()->setText("osgPango\nand\nAnimTK");
-	t->getLayout()->getDrawable(0)->setUpdateCallback(new GlyphSampler());
+	t->setColor(osg::Vec3(0.5f, 0.7f, 0.8f));
+	t->setEffectsColor(osg::Vec3(1.0f, 1.0f, 1.0f));
+	t->setAlignment(osgPango::Text::ALIGN_CENTER);
+	t->setText("osgPango\nand\nAnimTK");
+	t->getGeode()->getDrawable(0)->setUpdateCallback(new GlyphSampler());
 
 	osgViewer::Viewer viewer;
 
 	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 	
-	const osg::Vec2& size = t->getLayout()->getSize();
+	const osg::Vec2& size = t->getSize();
 
 	t->setMatrix(osg::Matrix::translate(
 		round((WINDOW_WIDTH - size.x()) / 2.0f),
@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
 	viewer.run();
 
 	osgPango::Font::cleanup();
-	osgPango::Layout::cleanup();
+	osgPango::Text::cleanup();
 
 	return 0;
 }
