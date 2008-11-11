@@ -3,18 +3,18 @@
 #ifndef OSGPANGO_LABEL
 #define OSGPANGO_LABEL
 
-#include <osgWidget/Widget>
-#include <osgPango/Layout>
+#include <osgWidget/Window>
+#include <osgPango/Text>
 
 namespace osgPango {
 
-class Label: public Layout, public osgWidget::Widget {
+class OSGPANGO_EXPORT Label: public osgWidget::Widget {
 public:
 	META_Object(osgPango, Label);
 
 	Label(
-		const std::string&,
-		const std::string&,
+		const std::string& = "",
+		const std::string& = "",
 		Font*              = 0,
 		GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT
 	);
@@ -24,19 +24,14 @@ public:
 	virtual ~Label() {
 	}
 
-	virtual bool textUpdated(GlyphGeometryVector&);
-
-	virtual void parented   (Window*);
-	virtual void unparented (Window*);
+	virtual void parented   (osgWidget::Window*);
+	virtual void unparented (osgWidget::Window*);
 	virtual void positioned ();
 
 protected:
-	void _setDrawables     ();
-	void _removesDrawables ();
+	osg::ref_ptr<Text> _text;
 
-	bool _textUpdated;
-	
-	std::list<unsigned int> _indexes;
+	unsigned int _textIndex;
 
 	/*
 	XYCoord getTextSize() const;

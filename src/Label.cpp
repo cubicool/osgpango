@@ -4,45 +4,57 @@
 
 namespace osgPango {
 
-Label(
+Label::Label(
 	const std::string& name,
 	const std::string& label,
 	Font*              font,
 	GlyphEffectsMethod gem
 ):
-Layout            (font, gem),
 osgWidget::Widget (name, 0, 0),
-_textUpdated      (false) {
+_textIndex        (0) {
+	_text = new Text(font, gem);
 }
 
 Label::Label(const Label& label, const osg::CopyOp& co) {
 }
 
-virtual bool Label::textUpdated(GlyphGeometryVector& ggv) {
-	// TODO: Get our parent and call allDrawable(), just like text. Get
-	// the index for future use.
-	if(!_parent) {
-		_textUpdated = true;
+void Label::parented(osgWidget::Window* parent) {
+	/*
+	osg::Geode* geode = parent->getGeode();
 
-		return false;
-	}
+	Text* text = dynamic_cast<Text*>(geode->getDrawable(_textIndex));
 
-	else _setDrawables();
+	if(text) parent->getGeode()->setDrawable(_textIndex, _text.get());
 
-	return true;
+	else _textIndex = parent->addDrawableAndGetIndex(_text.get());
+	*/
 }
 
-void Label::parented(Window* parent) {
-	if(_textUpdated) {
-		_textUpdated = false;
+void Label::unparented(osgWidget::Window* parent) {
+	// _removeDrawables();
+}
 
-		_setDrawables(getGlyphGeometryVector());
-	}
+/*
+    osg::Geode* geode = parent->getGeode();
+
+    // If we've been cloned, use the index of the old text Drawable if it's already there.
+    // However, we have a problem here: imagine a Label gets cloned AFTER being added to
+    // a Window; it'll have a _textIndex, but that _textIndex won't apply to the
+    // currently cloned object. In this case, we'll need to check to be SURE.
+    osgText::Text* text = dynamic_cast<osgText::Text*>(geode->getDrawable(_textIndex));
+    
+    if(text) parent->getGeode()->setDrawable(_textIndex, _text.get());
+
+    // Otherwise, add it as new.
+    else _textIndex = parent->addDrawableAndGetIndex(_text.get());
 }
 
 void Label::unparented(Window* parent) {
-	_removeDrawables();
+    if(_textIndex) parent->getGeode()->removeDrawable(_text.get());
+
+    _textIndex = 0;
 }
+*/
 
 void Label::positioned() {
 	/*
@@ -66,13 +78,14 @@ void Label::positioned() {
 	*/
 }
 
+/*
 void Label::_removeDrawables() {
 	if(_indexes.size()) {
 		for(
 			std::list<unsigned int>::iterator i = _indexes.begin();
 			i != _indexes.end();
 			i++
-		) _parent->removeDrawable(*i);
+		) _parent->getGeode()->removeDrawables(*i);
 	}
 }
 
@@ -85,5 +98,6 @@ void Label::_setDrawables() {
 		_indexes.push_back(_parent->addDrawableAndGetIndex(*i));
 	;
 }
+*/
 
 }

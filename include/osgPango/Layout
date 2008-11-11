@@ -4,6 +4,7 @@
 #define OSGPANGO_LAYOUT
 
 #include <osg/Geode>
+#include <osg/MatrixTransform>
 #include <osgPango/String>
 #include <osgPango/Font>
 
@@ -11,19 +12,16 @@ namespace osgPango {
 
 class Layout;
 
-struct Renderer {
+struct OSGPANGO_EXPORT Renderer {
 	PangoRenderer parent_instance;
 	Layout*       text;
 };
 
-struct RendererClass {
+struct OSGPANGO_EXPORT RendererClass {
 	PangoRendererClass class_instance;
 };
 
-// We only inherit from Referenced here for convenience, it's not necessary. 
-// In fact, there may be some complications with multiple inheritance and objects
-// inheriting from the same base.
-class Layout: public osg::Referenced {
+class OSGPANGO_EXPORT Layout: public osg::MatrixTransform {
 public:
 	enum Alignment {
 		ALIGN_LEFT,
@@ -38,16 +36,12 @@ public:
 		g_object_unref(_layout);
 	}
 	
-	// Our virtual method all implementations must override.
-	virtual bool textUpdated(GlyphGeometryVector&) = 0;
-
 	void setText         (const std::string&);
 	void setAlignment    (Alignment);
 	void setWidth        (unsigned int);
 	void setColor        (const osg::Vec3&);
 	void setEffectsColor (const osg::Vec3&);
 	void setAlpha        (double);
-	void setOriginOffset (const osg::Vec3&);
 
 	Font* getFont() {
 		return _font.get();
@@ -105,14 +99,6 @@ public:
 		return _baseline;
 	}
 
-	GlyphGeometryVector* getGlyphGeometryVector() {
-		return &_ggv;
-	}
-
-	const GlyphGeometryVector* getGlyphGeometryVector() const {
-		return &_ggv;
-	}
-
 	osg::Vec2 getOriginBaseline   () const;
 	osg::Vec2 getOriginTranslated () const;
 
@@ -134,11 +120,10 @@ public:
 		g_object_unref(_renderer);
 	}
 
-protected:
-	GlyphGeometryVector _ggv;
-
 private:
 	static Renderer* _renderer;
+
+	osg::Geode* _getGeode();
 
 	osg::ref_ptr<Font>  _font;
 	String              _text;
@@ -147,7 +132,6 @@ private:
 	GlyphEffectsMethod  _gem;
 	osg::Vec3           _color;
 	osg::Vec3           _effectsColor;
-	osg::Vec3           _originOffset;
 	double              _alpha;
 	osg::Vec2           _size;
 	osg::Vec2           _effectsSize;
