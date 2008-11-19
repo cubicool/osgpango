@@ -282,9 +282,6 @@ _numQuads(0) {
 		(*_cols)[0].set(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
-	setUseDisplayList(false);
-	setUseVertexBufferObjects(false);
-	setDataVariance(osg::Object::DYNAMIC);
 	setVertexArray(new osg::Vec3Array());
 	setTexCoordArray(0, new osg::Vec2Array());
 	
@@ -421,6 +418,10 @@ bool GlyphGeometry::finalize(
 	
 	// for(int i = _numQuads * 4; i != 0; i -= 4) addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, i - 4, 4));
 
+	// setUseDisplayList(true);
+	setUseVertexBufferObjects(true);
+	setDataVariance(osg::Object::STATIC);
+
 	return true;
 }
 
@@ -430,7 +431,7 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	bool               effects,
 	GlyphEffectsMethod gem
 ) {
-	static float z = -1.0f;
+	static float z = 0.0f;
 
 	osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(getVertexArray());
 	osg::Vec2Array* texs  = dynamic_cast<osg::Vec2Array*>(getTexCoordArray(0));
@@ -444,7 +445,7 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	verts->push_back(osg::Vec3(origin + cg->size, z));
 	verts->push_back(osg::Vec3(origin + osg::Vec2(0.0f, cg->size.y()), z));
 
-	z += 0.001f;
+	// z += 0.001f;
 
 	texs->push_back(cg->bl);
 	texs->push_back(cg->br);
