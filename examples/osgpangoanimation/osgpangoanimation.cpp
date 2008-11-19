@@ -9,6 +9,8 @@
 #include <osgAnimation/EaseMotion>
 #include <osgPango/Text>
 
+#include <stdlib.h>
+
 // const unsigned int WINDOW_WIDTH  = 720;
 // const unsigned int WINDOW_HEIGHT = 480;
 
@@ -56,7 +58,7 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 				
 				_motions[i] = MyMotion(0, duration, 3.14, osgAnimation::Motion::LOOP);
 				
-				float offset = (random() * 1.0 / (1.0 * RAND_MAX)) * duration;
+				float offset = (rand() * 1.0 / (1.0 * RAND_MAX)) * duration;
 				
 				_motions[i].setTime(offset);
 			}
@@ -141,8 +143,8 @@ int main(int argc, char** argv) {
 	const osg::Vec2& size = t->getSize();
 
 	t->setMatrix(osg::Matrix::translate(
-		round((WINDOW_WIDTH - size.x()) / 2.0f),
-		size.y() + round((WINDOW_HEIGHT - size.y()) / 2.0f),
+        osg::round((WINDOW_WIDTH - size.x()) / 2.0f),
+        size.y() + osg::round((WINDOW_HEIGHT - size.y()) / 2.0f),
 		0.0f
 	));
 
@@ -154,7 +156,7 @@ int main(int argc, char** argv) {
 
 	camera->addChild(t);
 
-	viewer.setUpViewInWindow(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 	viewer.setSceneData(camera);
 	viewer.getCamera()->setClearColor(osg::Vec4(0.2f, 0.2f, 0.2f, 1.0f));
 

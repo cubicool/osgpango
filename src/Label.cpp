@@ -1,12 +1,12 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
+#include <osg/io_utils>
 #include <osgPango/Label>
 
 namespace osgPango {
 
 Label::Label(
 	const std::string& name,
-	const std::string& label,
 	Font*              font,
 	GlyphEffectsMethod gem
 ):
@@ -19,6 +19,8 @@ Label::Label(const Label& label, const osg::CopyOp& co) {
 }
 
 void Label::parented(osgWidget::Window* parent) {
+	_textIndex = parent->addChildAndGetIndex(_text.get());
+
 	/*
 	osg::Geode* geode = parent->getGeode();
 
@@ -57,12 +59,13 @@ void Label::unparented(Window* parent) {
 */
 
 void Label::positioned() {
-	/*
-	XYCoord    size = getTextSize();
-	point_type x    = osg::round(((getWidth() - size.x()) / 2.0f) + getX());
-	point_type y    = osg::round(((getHeight() - size.y()) / 2.0f) + getY());
-	point_type z    = _calculateZ(getLayer() + 1);
+	osgWidget::XYCoord    size   = _text->getSize();
+	osgWidget::XYCoord    origin = _text->getOriginTranslated();
+	osgWidget::point_type x      = osg::round(((getWidth() - size.x()) / 2.0f) + getX());
+	osgWidget::point_type y      = osg::round(((getHeight() - size.y()) / 2.0f) + getY());
+	osgWidget::point_type z      = _calculateZ(getLayer() + 1);
 
+	/*
 	const WindowManager* wm = _getWindowManager();
 
 	if(wm && wm->isUsingRenderBins()) {
@@ -73,31 +76,21 @@ void Label::positioned() {
 
 		z = 0.0f;
 	}
-
-	_text->setPosition(osg::Vec3(x, y, z));
 	*/
+
+	_text->setPosition(osg::Vec3(osgWidget::XYCoord(x, y) + origin, z));
 }
 
-/*
-void Label::_removeDrawables() {
-	if(_indexes.size()) {
-		for(
-			std::list<unsigned int>::iterator i = _indexes.begin();
-			i != _indexes.end();
-			i++
-		) _parent->getGeode()->removeDrawables(*i);
-	}
+void Label::textUpdated() {
+	osgWidget::XYCoord size = _text->getSize();
+	
+	osgWidget::warn() << "size: " << size << std::endl;
+
+	if(size.x() > getWidth()) setWidth(size.x());
+	
+	if(size.y() > getHeight()) setHeight(size.y());
+
+	positioned();
 }
-
-void Label::_setDrawables() {
-	_removeDrawables();
-
-	_indexes.clear();
-
-	for(GlyphGeometryVector::iterator i = _ggv.begin(); i != _ggv.end(); i++)
-		_indexes.push_back(_parent->addDrawableAndGetIndex(*i));
-	;
-}
-*/
 
 }

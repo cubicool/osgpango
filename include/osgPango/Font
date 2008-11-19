@@ -25,7 +25,7 @@ public:
 		osgCairo::CairoSubpixelOrder = CAIRO_SUBPIXEL_ORDER_RGB
 	);
 
-	static unsigned int getFontList(FontList&);
+	static unsigned int getFontList(FontList&, bool = true);
 
 	static void cleanup() {
 		g_object_unref(_map);

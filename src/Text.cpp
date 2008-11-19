@@ -165,6 +165,14 @@ void Text::setAlpha(double alpha) {
 	_alpha = alpha;
 }
 
+void Text::setPosition(const osg::Vec3& pos) {
+	setMatrix(osg::Matrix::translate(pos));
+}
+
+osg::Vec3 Text::getPosition() const {
+	return getMatrix().getTrans();
+}
+
 osg::Vec2 Text::getOriginBaseline() const {
 	return osg::Vec2(-_origin.x(), _baseline);
 }

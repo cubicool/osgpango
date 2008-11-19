@@ -22,7 +22,7 @@ Font::~Font() {
 	pango_font_description_free(_descr);
 }
 
-unsigned int Font::getFontList(FontList& fl) {
+unsigned int Font::getFontList(FontList& fl, bool faces) {
 	PangoFontFamily** pff = 0;
 	int               num = 0;
 
@@ -33,22 +33,26 @@ unsigned int Font::getFontList(FontList& fl) {
 	for(int i = 0; i < num; i++) {
 		std::ostringstream ss;
 
-		ss << pango_font_family_get_name(pff[i]) << " (";
+		ss << pango_font_family_get_name(pff[i]);
 		
-		PangoFontFace** faces    = 0;
-		int             numFaces = 0;
+		if(faces) {
+			ss << " (";
+		
+			PangoFontFace** faces    = 0;
+			int             numFaces = 0;
 
-		pango_font_family_list_faces(pff[i], &faces, &numFaces);
+			pango_font_family_list_faces(pff[i], &faces, &numFaces);
 
-		for(int j = 0; j < numFaces; j++) {
-			ss << pango_font_face_get_face_name(faces[j]);
+			for(int j = 0; j < numFaces; j++) {
+				ss << pango_font_face_get_face_name(faces[j]);
 
-			if(j + 1 != numFaces) ss << ", ";
+				if(j + 1 != numFaces) ss << ", ";
+			}
+
+			g_free(faces);
+
+			ss << ")";
 		}
-
-		g_free(faces);
-
-		ss << ")";
 
 		fl.push_back(ss.str());
 	}

@@ -4,7 +4,10 @@ PROJECT(osgpangoanimation)
 # current project, but we need to add the postfix for the other libs.
 LINK_LIBRARIES(osgPango
                debug     OpenThreads${CMAKE_DEBUG_POSTFIX}
-               optimized OpenThreads)
+               optimized OpenThreads
+               debug     osgGA${CMAKE_DEBUG_POSTFIX}
+               optimized osgGA
+)
 
 ADD_EXECUTABLE(osgpangoanimation osgpangoanimation.cpp)
 

@@ -4,7 +4,10 @@ PROJECT(osgpangoguiviewer)
 # current project, but we need to add the postfix for the other libs.
 LINK_LIBRARIES(osgPango
                debug     OpenThreads${CMAKE_DEBUG_POSTFIX}
-               optimized OpenThreads)
+               optimized OpenThreads
+               debug     osgDB${CMAKE_DEBUG_POSTFIX}
+               optimized osgDB
+)
 
 ADD_EXECUTABLE(osgpangoguiviewer osgpangoguiviewer.cpp)
 
