@@ -418,8 +418,8 @@ bool GlyphGeometry::finalize(
 	
 	// for(int i = _numQuads * 4; i != 0; i -= 4) addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, i - 4, 4));
 
-	// setUseDisplayList(true);
-	setUseVertexBufferObjects(true);
+	setUseDisplayList(true);
+	// setUseVertexBufferObjects(true);
 	setDataVariance(osg::Object::STATIC);
 
 	return true;
