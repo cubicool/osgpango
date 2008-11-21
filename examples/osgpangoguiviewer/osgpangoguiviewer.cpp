@@ -1,3 +1,4 @@
+#include <osg/BlendFunc>
 #include <osgDB/ReadFile>
 #include <osgWidget/WindowManager>
 #include <osgWidget/Util>
@@ -147,8 +148,6 @@ public:
 		lineTo(s, 0.0f);
 		fill();
 
-		writeToPNG("arrow.png");
-
 		return true;
 	}
 };
@@ -166,13 +165,13 @@ protected:
 public:
 	ListBoxBase(const std::string& name):
 	osgWidget::Frame(name),
-	_lineColor (0.3f, 0.2f, 0.3f),
-	_fillColor (0.8f, 0.9f, 0.8f),
-	_lineWidth (2.0f),
-	_fontSize  (12) {
+	_lineColor (0.0f, 0.0f, 0.1f),
+	_fillColor (0.7f, 0.8f, 0.8f),
+	_lineWidth (1.0f),
+	_fontSize  (10) {
 		std::ostringstream font;
 		
-		font << "Sans Bold " << _fontSize;
+		font << "Bitstream Vera Sans " << _fontSize;
 
 		_font = new osgPango::Font(font.str().c_str());
 
@@ -188,12 +187,16 @@ public:
 		createSimpleFrameWithSingleTexture(bt, 200.0f, 15.0f);
 		setFlags(osgWidget::Frame::FRAME_TEXTURE);
 		getBackground()->setColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+		getGeode()->getOrCreateStateSet()->setAttributeAndModes(
+			new osg::BlendFunc(osg::BlendFunc::ONE, osg::BlendFunc::ONE_MINUS_SRC_ALPHA)
+		);
 	}
 };
 
 class ListBoxPopup: public ListBoxBase {
 public:
-	ListBoxPopup():
+	ListBoxPopup(bool useOsgText = false):
 	ListBoxBase("listboxPopup") {
 		osgPango::Font::FontList fl;
 
@@ -202,18 +205,37 @@ public:
 		osgWidget::Box* fonts = new osgWidget::Box("fonts", osgWidget::Box::VERTICAL);
 
 		for(osgPango::Font::FontList::iterator i = fl.begin(); i != fl.end(); i++) {
-			osgPango::Label* label = new osgPango::Label(*i + "label", _font.get());
-			
-			label->getText()->setColor(_lineColor);
-			label->getText()->setText(*i);
+			osgWidget::Widget* label = 0;
+
+			if(useOsgText) {
+		 		osgWidget::Label* l = new osgWidget::Label(*i + "label");
+
+				l->setFont("fonts/Vera.ttf");
+				l->setFontSize(_fontSize);
+				l->setFontColor(osg::Vec4(_lineColor, 1.0f));
+				l->setLabel(*i);
+
+				label = l;
+			}
+
+			else {
+				osgPango::Label* l = new osgPango::Label(*i + "label", _font.get());
+
+				l->getText()->setColor(_lineColor);
+				l->getText()->setText(*i);
+				l->textUpdated();
+
+				label = l;
+			}
+
+			label->setAlignHorizontal(osgWidget::Widget::HA_LEFT);
 			label->setColor(osg::Vec4(_fillColor, 1.0f));
 			label->setPadding(3.0f);
-			label->textUpdated();
-
+			
 			fonts->addWidget(label);
 		}
 
-		fonts->getBackground()->setColor(0.8f, 0.9f, 0.8f, 1.0f);
+		fonts->getBackground()->setColor(osgWidget::Color(_fillColor, 1.0f));
 
 		setWindow(fonts);
 		resizeFrame(fonts->getWidth(), fonts->getHeight());
@@ -224,9 +246,9 @@ class ListBox: public ListBoxBase {
 	osg::observer_ptr<ListBoxPopup> _lbp;
 	
 public:
-	ListBox():
+	ListBox(bool useOsgText = false):
 	ListBoxBase("listbox"),
-	_lbp(new ListBoxPopup()) {
+	_lbp(new ListBoxPopup(useOsgText)) {
 		ButtonArrow* ba = new ButtonArrow();
 
 		ba->renderArrow(
@@ -237,13 +259,30 @@ public:
 		);
 
 		osgWidget::Box*    drop  = new osgWidget::Box("drop", osgWidget::Box::HORIZONTAL);
-		osgWidget::Widget* arrow = new osgWidget::Widget("arror", _fontSize * 2.0f, _fontSize);
-		osgPango::Label*   label = new osgPango::Label("testing", _font.get());
+		osgWidget::Widget* arrow = new osgWidget::Widget("arrow", _fontSize * 2.0f, _fontSize);
+		osgWidget::Widget* label = 0;
 
-		label->getText()->setColor(_lineColor);
-		label->getText()->setText("Choose a font...");
-		label->setColor(osgWidget::Color(_fillColor, 1.0f));
-		label->textUpdated();
+		if(useOsgText) {
+			osgWidget::Label* l = new osgWidget::Label("testing");
+
+			l->setFont("fonts/Vera.ttf");
+			l->setFontSize(_fontSize);
+			l->setFontColor(osg::Vec4(_lineColor, 1.0f));
+			l->setLabel("Choose a font...");
+
+			label = l;
+		}
+
+		else {
+			osgPango::Label* l = new osgPango::Label("testing", _font.get());
+
+			l->getText()->setColor(_lineColor);
+			l->getText()->setText("Choose a font...");
+			l->setColor(osgWidget::Color(_fillColor, 1.0f));
+			l->textUpdated();
+
+			label = l;
+		}
 
 		arrow->setImage(ba, true, true);
 		arrow->setPadLeft(30.0f);
@@ -251,6 +290,7 @@ public:
 		drop->getBackground()->setColor(osgWidget::Color(_fillColor, 1.0f));
 		drop->addWidget(label);
 		drop->addWidget(arrow);
+		drop->setEventMask(0x0);
 		drop->resize();
 
 		setWindow(drop);
@@ -262,15 +302,17 @@ public:
 
 		wm->addChild(_lbp.get());
 
-		_lbp->setOrigin(getOrigin());
+		_lbp->setOrigin(getX(), getY()); // + getHeight());
 		_lbp->hide();
 	}
 
-	virtual bool mousePush(double, double, osgWidget::WindowManager*) {
-		osgWidget::warn() << "Here..." << std::endl;
+	virtual bool mouseRelease(double, double, osgWidget::WindowManager*) {
+		if(_lbp->isVisible()) _lbp->hide();
 
-		_lbp->show();
-		_lbp->grabFocus();
+		else {
+			_lbp->show();
+			_lbp->grabFocus();
+		}
 
 		return true;
 	}
@@ -297,10 +339,10 @@ int main(int argc, char** argv) {
 		&viewer,
 		SCREEN_WIDTH,
 		SCREEN_HEIGHT,
-		0x01234,
-		osgWidget::WindowManager::WM_PICK_DEBUG
+		0x01234
 	);
 
+	/*
 	float x = 10.0f;
 	float y = 10.0f;
 
@@ -313,6 +355,16 @@ int main(int argc, char** argv) {
 
 		x += 210.0f;
 	}
+	*/
+
+	ListBox* lb1 = new ListBox();
+	ListBox* lb2 = new ListBox(true);
+
+	lb1->setOrigin(10.0f, 10.0f);
+	lb2->setOrigin(180.0f, 10.0f);
+
+	wm->addChild(lb1);
+	wm->addChild(lb2);
 
 	/*
 	// ----------------------------------------------------------------------------------------
