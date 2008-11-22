@@ -80,11 +80,16 @@ TARGET_LINK_LIBRARIES(osgPango
 	optimized osgWidget
 	debug     osgCairo${CMAKE_DEBUG_POSTFIX}
 	optimized osgCairo
-	general   cairo
-	general   pango-1.0
-	general   pangocairo-1.0
-	general   gobject-2.0
-	general   glib-2.0
+        debug     cairo
+        optimized cairo
+	debug     pango-1.0
+	optimized pango-1.0
+	debug     pangocairo-1.0
+	optimized pangocairo-1.0
+	debug     gobject-2.0
+	optimized gobject-2.0
+	debug     glib-2.0
+	optimized glib-2.0
 )
 
 # The archive/runtime part is so that the lib/dll pair goes into lib and bin
