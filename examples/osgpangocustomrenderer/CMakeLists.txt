@@ -12,5 +12,5 @@ LINK_LIBRARIES(osgPango
 
 ADD_EXECUTABLE(osgpangocustomrenderer osgpangocustomrenderer.cpp)
 
-INSTALL(TARGETS osgpangocustomrenderer DESTINATION ${CMAKE_INSTALL_PREFIX}/share/openscenegraph/bin)
+INSTALL(TARGETS osgpangocustomrenderer DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenSceneGraph/bin)
 SET_TARGET_PROPERTIES(osgpangocustomrenderer PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})

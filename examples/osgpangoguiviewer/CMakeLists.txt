@@ -11,5 +11,5 @@ LINK_LIBRARIES(osgPango
 
 ADD_EXECUTABLE(osgpangoguiviewer osgpangoguiviewer.cpp)
 
-INSTALL(TARGETS osgpangoguiviewer DESTINATION ${CMAKE_INSTALL_PREFIX}/share/openscenegraph/bin)
+INSTALL(TARGETS osgpangoguiviewer DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenSceneGraph/bin)
 SET_TARGET_PROPERTIES(osgpangoguiviewer PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
