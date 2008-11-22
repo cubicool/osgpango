@@ -8,5 +8,5 @@ LINK_LIBRARIES(osgPango
 
 ADD_EXECUTABLE(osgpangofonts osgpangofonts.cpp)
 
-INSTALL(TARGETS osgpangofonts DESTINATION ${CMAKE_INSTALL_PREFIX}/share/openscenegraph/bin)
+INSTALL(TARGETS osgpangofonts DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenSceneGraph/bin)
 SET_TARGET_PROPERTIES(osgpangofonts PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
