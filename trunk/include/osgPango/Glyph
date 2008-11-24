@@ -119,6 +119,9 @@ private:
 	bool         _hasEffects;
 };
 
+void setGlyphTexEnvCombineState(osg::Drawable*);
+void setGlyphTexEnvCombineState(osg::Node*);
+
 class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
 public:
 	GlyphGeometry(bool = false);

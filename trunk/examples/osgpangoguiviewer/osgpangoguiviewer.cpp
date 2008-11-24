@@ -152,6 +152,9 @@ public:
 	}
 };
 
+//class ListBoxOptionLabel: public osgPango::Label {
+//};
+
 class ListBoxBase: public osgWidget::Frame {
 protected:
 	osg::Vec3 _lineColor;
@@ -302,11 +305,11 @@ public:
 
 		wm->addChild(_lbp.get());
 
-		_lbp->setOrigin(getX(), getY()); // + getHeight());
+		_lbp->setOrigin(getX(), getY() + getHeight());
 		_lbp->hide();
 	}
 
-	virtual bool mouseRelease(double, double, osgWidget::WindowManager*) {
+	virtual bool mousePush(double, double, osgWidget::WindowManager*) {
 		if(_lbp->isVisible()) _lbp->hide();
 
 		else {
@@ -339,7 +342,8 @@ int main(int argc, char** argv) {
 		&viewer,
 		SCREEN_WIDTH,
 		SCREEN_HEIGHT,
-		0x01234
+		0x01234,
+		osgWidget::WindowManager::WM_PICK_DEBUG
 	);
 
 	/*
