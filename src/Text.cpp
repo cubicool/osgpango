@@ -123,13 +123,13 @@ void Text::setText(const std::string& str) {
 	geode->removeDrawables(0, geode->getNumDrawables());
 
 	for(unsigned int i = 0; i < ggv.size(); i++) {
-		if(!ggv[i]->finalize(
-			gc->getImage(i),
-			gc->getImage(i, true),
+		if(!ggv[i]->finalize(GlyphTexEnvCombineState(
+			gc->getTexture(i),
+			gc->getTexture(i, true),
 			_color,
 			_effectsColor,
 			_alpha
-		)) continue;
+		))) continue;
 
 		geode->addDrawable(ggv[i]);
 	}

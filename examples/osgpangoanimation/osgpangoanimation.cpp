@@ -11,11 +11,8 @@
 
 #include <stdlib.h>
 
-// const unsigned int WINDOW_WIDTH  = 720;
-// const unsigned int WINDOW_HEIGHT = 480;
-
-const unsigned int WINDOW_WIDTH  = 1920;
-const unsigned int WINDOW_HEIGHT = 1200;
+const unsigned int WINDOW_WIDTH  = 720;
+const unsigned int WINDOW_HEIGHT = 480;
 
 // A lot of this code is by:
 // 
@@ -74,7 +71,9 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 		for(unsigned int g = 0; g < verts->size(); g += 4) {
 			_motions[g / 4].update(dt);
 
-			float val = _motions[g/4].getValue();
+			float val = _motions[g / 4].getValue();
+		
+			osg::notify(osg::WARN) << val << std::endl;
 			
 			(*verts)[g    ].y() = (*_originals)[g + 0].y() - mod * sin(val);
 			(*verts)[g + 1].y() = (*_originals)[g + 1].y() - mod * sin(val);

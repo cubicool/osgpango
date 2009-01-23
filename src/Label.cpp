@@ -36,28 +36,6 @@ void Label::unparented(osgWidget::Window* parent) {
 	// _removeDrawables();
 }
 
-/*
-    osg::Geode* geode = parent->getGeode();
-
-    // If we've been cloned, use the index of the old text Drawable if it's already there.
-    // However, we have a problem here: imagine a Label gets cloned AFTER being added to
-    // a Window; it'll have a _textIndex, but that _textIndex won't apply to the
-    // currently cloned object. In this case, we'll need to check to be SURE.
-    osgText::Text* text = dynamic_cast<osgText::Text*>(geode->getDrawable(_textIndex));
-    
-    if(text) parent->getGeode()->setDrawable(_textIndex, _text.get());
-
-    // Otherwise, add it as new.
-    else _textIndex = parent->addDrawableAndGetIndex(_text.get());
-}
-
-void Label::unparented(Window* parent) {
-    if(_textIndex) parent->getGeode()->removeDrawable(_text.get());
-
-    _textIndex = 0;
-}
-*/
-
 void Label::positioned() {
 	osgWidget::XYCoord    size   = _text->getSize();
 	osgWidget::XYCoord    origin = _text->getOriginTranslated();
