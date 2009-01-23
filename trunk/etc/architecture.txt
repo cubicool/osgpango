@@ -1,0 +1,129 @@
+===============================================================================
+osgPango::Font
+===============================================================================
+
+For most people working with osgPango, the first concept you'll want to wrap
+your head around is exactly what IS a Font? In osgPango, a Font object is
+derived from osg::Referenced and serves as a "handle" to a font instance.
+The Font object manages a GlyphCache (more on this later) which can be
+quickly described as a special font character "caching" object. Font objects
+are not created by loading a file directly (such as .ttf or .otf), but rather
+are requested from the local Pango service using a very flexible and generic
+description syntax. For example, the following lines of code demonstrate
+various ways of creating your Font object pointer for later use in the
+osgPango API:
+
+	osgPango::Font::init();
+
+	osgPango::Font* f1 = new osgPango::Font("Sans 3")
+	osgPango::Font* f2 = new osgPango::Font("Monospace Bold 10")
+	osgPango::Font* f3 = new osgPango::Font("Verdana Bold Italic 5px")
+	osgPango::Font* f4 = new osgPango::Font("Tahoma 190px")
+
+Notice the call to osgPango::Font::init; internally, the Font class manages
+a static Pango context, and this call is used to set the various parameters
+for font rendering such as hinting style and DPI (among others). The defaults
+are generally acceptable, though you're welcome to experiment with different
+settings. Keep in mind that currently this internal Pango context is global,
+and applies to all fonts for the life of your application. This may change
+in the future, but for the time being such a design decision significantly
+simplifies matters.
+
+Though not demonstrated above, the Font constructor optionally takes a
+pointer to a newly created GlyphCache object (rather than create its
+own internally). It is through this mechanism that you can apply
+interesting effects to your Font when it is rendered, such as drop
+shadows, outlines, custom fades, or anything else you can imagine using
+Cairo drawing. Currently, osgPango is limited to a simple 2-unit
+multitexture, so any custom effects you create (again, more on this
+later) must be achieveable using a combination of 2 images.
+
+At this point we should discuss in a bit more detail the static Font::init
+method and what its arguments mean. The signature is below:
+
+	static bool osgPango::Font::init(
+		unsigned int                 dpi = 72,
+		osgCairo::CairoAntialias     aa  = CAIRO_ANTIALIAS_SUBPIXEL,
+		osgCairo::CairoHintStyle     hs  = CAIRO_HINT_STYLE_FULL,
+		osgCairo::CairoSubpixelOrder spo = CAIRO_SUBPIXEL_ORDER_RGB
+	);
+
+The first argument, DPI, is a value representing a kind of "scale"
+factor that Pango uses internally when determining what it means when
+you say "Sans 10" as your font size. The algorithm is as follows:
+
+	actualSizeInPixels = requestedSize * (DPI / 72.0f)
+
+As you can see, using the deault DPI means that the units you specify in the
+string description when creating a Font object do, in fact, correspond to
+pixels. However, in many cases, you may want to use the ACTUAL DPI for the
+display in question, as this can often produce higher quality fonts. For
+example, on my display, a DPI of 132 results in fonts at size 6 (9.1 pixels in
+size) looking quite good, much better than the equivalent 9 or 10 value when
+using 72 DPI. You'll just need to experiment and see what you like. Keep in
+mind that Pango always allows you to use a size description in the form "10px",
+which will bypass the DPI setting and simply create a 10 pixel font.
+
+The AA, HS, and SPO arguments give clues to the Pangocairo backend as to how
+actually render each glyph inside the Font object's GlyphCache. I will defer
+to the great documentaion in cairo.h for full descriptions on these arguments.
+Again, the defaults here should be fine, and in my opinion give the sharpest,
+highest contrast results.
+
+A Font object in osgPango is locked in at construction; that is to say, you
+cannot create a "Sans 10" font and later change that same object to a
+"Monospace 20" font. This is a simple but important caveat to remember when
+working with osgCairo, and in my opinion gives the programmer a much
+easier task of understanding the life and scope of a Font.
+
+
+
+===============================================================================
+osgPango::GlyphCache
+===============================================================================
+
+The GlyphCache class is an object that manages the speedy lookup and internal
+rendering-to-texture (by Cairo) of the individual font glyphs--or characters--
+by the Font object to which it is attached. That's one hell of a sentence, I
+know, but I'll try and break it down here in simpler terms (the word "glyph"
+just means "character" for our purposes, though this isn't technically
+100% correct).
+
+osgPango "puts text on the screen" by creating and positioning groups of 2D
+quads in the XY plane around a 0,0 origin (which are generally stuffed into a
+GlyphGeometry instance by some managing object such as osgPango::Text). These
+quads are then textured using the image data stored internally in the
+GlyphCache object. The GlyphCache class stores the texture coordinates and
+dimenions of each glyph as it renders them for later lookup, so that this
+process must only be done once. It does not make sense to use the same
+GlyphCache object for multiple Fonts, and there is code in place to prevent
+such usage at runtime.
+
+In it's current incarnation, a GlyphCache object maintains two vector members
+for storing texture data. Generally, the first is referred to as the "normal"
+glyph textures, and the second is the "effects" textures, though you're
+perfectly welcome to use only one container or use them both for whatever
+purpose you like. When creating a custom GlyphCache--which can be thought
+of as a custom glyph renderer--you are required to derive from GlyphCache and
+override one or both of the renderGlyph and renderGlyphEffects methods.
+There are three default examples of this in osgPango: GlyphCacheOutline,
+GlyphCacheShadowOffset, and GlyphCacheShadowGaussian.
+
+The size of the Texture objects used internally is defined at GlyphCache
+construction and defaults to 512x512. Obviously, if you are using only a
+small set of glyphs from a certain Font at a small size, you'll want to
+reduce this to the appropriate dimensions to save memory. However, you
+should attempt to keep all of the glyphs you'll want to use on one texture
+to minimize OpenGL state change. For larger fonts, however, this can be
+difficult to do.
+
+
+
+===============================================================================
+osgPango::Text
+================================================================================
+
+The Text object is a subclass of osg::MatrixTransform which contains a single
+Geode into which it stores one or more GlyphGeometry objects. Since it is
+possible that a Font's internal GlyphCache texture vector may span across
+multiple textures, one GlyphGeometry object per texture is used.

@@ -5,6 +5,7 @@
 
 #include <map>
 #include <osg/Geometry>
+#include <osg/Texture>
 #include <osgCairo/Image>
 #include <osgPango/Export>
 
@@ -35,6 +36,23 @@ struct OSGPANGO_EXPORT CachedGlyph {
 	osg::Vec2    ul;
 };
 
+// This object packages up all the state stuff we need to shimmy around.
+struct OSGPANGO_EXPORT GlyphTexEnvCombineState {
+	GlyphTexEnvCombineState(
+		osg::Texture*,
+		osg::Texture*,
+		const osg::Vec3&,
+		const osg::Vec3&,
+		double
+	);
+
+	osg::Texture* texture;
+	osg::Texture* effectsTexture;
+	osg::Vec3     color;
+	osg::Vec3     effectsColor;
+	double        alpha;
+};
+
 typedef std::pair<unsigned int, osg::Vec2> GlyphPositionPair;
 typedef std::list<GlyphPositionPair>       GlyphPositionList;
 
@@ -46,8 +64,9 @@ enum GlyphEffectsMethod {
 // There is one GlyphCache object PER FONT object.
 class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {
 public:
-	typedef std::map<unsigned int, CachedGlyph>                GlyphMap;
-	typedef std::vector<osg::ref_ptr<osgCairo::Image> > ImageVector;
+	typedef std::map<unsigned int, CachedGlyph>              GlyphMap;
+	typedef std::vector<osg::observer_ptr<osgCairo::Image> > ImageVector;
+	typedef std::vector<osg::observer_ptr<osg::Texture> >    TextureVector;
 
 	GlyphCache(unsigned int = 0, unsigned int = 0, bool = false);
 
@@ -83,8 +102,24 @@ public:
 		return _getImage(index, effects);
 	}
 
+	osg::Texture* getTexture(unsigned int index, bool effects = false) {
+		return _getTexture(index, effects);
+	}
+
+	const osg::Texture* getTexture(unsigned int index, bool effects = false) const {
+		return _getTexture(index, effects);
+	}
+
 	unsigned int getNumImages() const {
 		return _images.size();
+	}
+
+	unsigned int getImageWidth() const {
+		return _imgWidth;
+	}
+
+	unsigned int getImageHeight() const {
+		return _imgHeight;
 	}
 
 	bool hasEffects() const {
@@ -92,7 +127,7 @@ public:
 	}
 
 private:
-	bool _newImage(ImageVector&);
+	bool _newImageAndTexture(ImageVector&, TextureVector&);
 
 	void _writeImageVectorFiles(
 		const std::string&,
@@ -100,11 +135,14 @@ private:
 		const ImageVector&
 	) const;
 
-	osgCairo::Image* _getImage(unsigned int, bool) const;
+	osgCairo::Image* _getImage   (unsigned int, bool) const;
+	osg::Texture*    _getTexture (unsigned int, bool) const;
 
 	// A container of texture image data where the glyphs are cached.
-	ImageVector _images;
-	ImageVector _effects;
+	ImageVector   _images;
+	ImageVector   _effects;
+	TextureVector _textures;
+	TextureVector _effectsTextures;
 
 	// A map of external Pango glyph indexes to their internally CachedGlyph data structures.
 	// We also have a flag of what effects to use, though their rendering method is passed
@@ -119,16 +157,15 @@ private:
 	bool         _hasEffects;
 };
 
-void setGlyphTexEnvCombineState(osg::Drawable*);
-void setGlyphTexEnvCombineState(osg::Node*);
+bool setGlyphTexEnvCombineState (osg::Drawable*, const GlyphTexEnvCombineState&);
+bool setGlyphTexEnvCombineState (osg::Node*, const GlyphTexEnvCombineState&);
 
 class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
 public:
 	GlyphGeometry(bool = false);
 
-	bool finalize(osg::Image*, osg::Image*, const osg::Vec3&, const osg::Vec3&, double);
-
-	bool pushCachedGlyphAt(const CachedGlyph*, const osg::Vec2&, bool, GlyphEffectsMethod);
+	bool finalize          (const GlyphTexEnvCombineState&);
+	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&, bool, GlyphEffectsMethod);
 
 private:
 	static osg::ref_ptr<osg::Vec3Array> _norms;

@@ -1,7 +1,7 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
-#ifndef OSGPANGO_LAYOUT
-#define OSGPANGO_LAYOUT
+#ifndef OSGPANGO_TEXT
+#define OSGPANGO_TEXT
 
 #include <osg/Geode>
 #include <osg/MatrixTransform>
@@ -12,14 +12,24 @@ namespace osgPango {
 
 class Text;
 
+/*
 struct OSGPANGO_EXPORT Renderer {
 	PangoRenderer parent_instance;
-	Text*       text;
+	Text*         text;
+};
+*/
+
+template<typename T>
+struct OSGPANGO_EXPORT RendererTemplate {
+	PangoRenderer parent_instance;
+	T*            text;
 };
 
 struct OSGPANGO_EXPORT RendererClass {
 	PangoRendererClass class_instance;
 };
+
+typedef RendererTemplate<Text> Renderer;
 
 class OSGPANGO_EXPORT Text: public osg::MatrixTransform {
 public:

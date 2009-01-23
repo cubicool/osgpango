@@ -12,10 +12,23 @@ PangoContext* Font::_context = 0;
 
 Font::Font(const std::string& descr, GlyphCache* gc) {
 	_descr = pango_font_description_from_string(descr.c_str());
-	
+
 	if(!gc) _cache = new GlyphCache(DEFAULT_GCW, DEFAULT_GCH);
 
-	else _cache = gc;
+	else {
+		// It doesn't make sense to use the same GlyphCache object for two different
+		// fonts, so make sure there is no reference count.
+		if(gc->referenceCount() >= 1) {
+			osg::notify(osg::WARN)
+				<< "Cannot use a previously referenced GlyphCache pointer when "
+				<< "creating a new Font; creating a default." << std::endl
+			;
+
+			_cache = new GlyphCache(gc->getImageWidth(), gc->getImageHeight());
+		}
+
+		else _cache = gc;
+	}
 }
 
 Font::~Font() {
