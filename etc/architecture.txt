@@ -121,9 +121,48 @@ difficult to do.
 
 ===============================================================================
 osgPango::Text
-================================================================================
+===============================================================================
 
 The Text object is a subclass of osg::MatrixTransform which contains a single
 Geode into which it stores one or more GlyphGeometry objects. Since it is
 possible that a Font's internal GlyphCache texture vector may span across
-multiple textures, one GlyphGeometry object per texture is used.
+multiple textures, one GlyphGeometry object per texture is used to minimize
+state wonkiness as much as possible.
+
+When considering optimization of Text objects, you must keep in mind that each
+instance of Text will introduce some degree of overheard due to each object
+having it's own StateSet. To help reduce this, osgPango provides a MultiText
+class that--while less flexible--is much faster.
+
+
+
+===============================================================================
+osgPango::MultiText
+===============================================================================
+
+A MultiText differs primarily from a regular Text object in that is allows
+you to add conceptually individual "blocks" of text (Pango Layouts) into
+one Node that shares the same state. There are a number of tradeoffs for
+this, however:
+	
+	1. The internal GlyphCache object cannot span multiple textures;
+	this means you'll need to make sure your font and the glyphs in
+	use all fit in one texture.
+
+	2. Since a single state is shared for all of the "blocks" in the
+	MultiText, they must all use the same GlyphCache object and will
+	therefore share the same font and effects.
+
+Given the above restrictions, you might begin to wonder why even create a
+MultiText object in the first place! Well, when designing an OpenGL GUI,
+there will be instances where you have a large group of text that uses the
+same styling but wherein each element must be queryable individually. For
+example, a drop down box with 20 text options or an in-game chat interface.
+It doesn't make sense to have a Text object for each individual element
+given the inherit overhead, and the underlying Pango library allows us
+to specify a 2D XY coordinate when rendering. We can expose this
+functionality in MutliText (unlike Text, which defaults to always being
+drawn around a 0,0 origin) safely and achieve substantial speedup as
+long as we continue to keep state changes to a minimum (changing the
+color settings in the middle of a MultiText pushes a small out of new
+state, so care must be take when doing this).

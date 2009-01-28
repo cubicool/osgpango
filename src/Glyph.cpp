@@ -450,9 +450,16 @@ bool setGlyphTexEnvCombineState(osg::Node* node, const GlyphTexEnvCombineState& 
 bool GlyphGeometry::finalize(const GlyphTexEnvCombineState& gs) {
 	setGlyphTexEnvCombineState(this, gs);
 	addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, _numQuads * 4));
+	
+	/*
 	setDataVariance(osg::Object::STATIC);
 	setUseDisplayList(false);
 	setUseVertexBufferObjects(true);
+	*/
+
+	setDataVariance(osg::Object::DYNAMIC);
+	setUseDisplayList(false);
+	setUseVertexBufferObjects(false);
 
 	return true;
 }

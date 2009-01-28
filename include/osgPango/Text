@@ -10,28 +10,47 @@
 
 namespace osgPango {
 
-class Text;
+class TextRenderer;
 
-/*
 struct OSGPANGO_EXPORT Renderer {
 	PangoRenderer parent_instance;
-	Text*         text;
-};
-*/
+	TextRenderer* renderer;
 
-template<typename T>
-struct OSGPANGO_EXPORT RendererTemplate {
-	PangoRenderer parent_instance;
-	T*            text;
+	osg::Vec3 fg;
+
+	mutable OpenThreads::Mutex* mutex;
 };
 
 struct OSGPANGO_EXPORT RendererClass {
 	PangoRendererClass class_instance;
 };
 
-typedef RendererTemplate<Text> Renderer;
+class OSGPANGO_EXPORT TextRenderer {
+public:
+	TextRenderer();
 
-class OSGPANGO_EXPORT Text: public osg::MatrixTransform {
+	static void _drawGlyphs(PangoRenderer*, PangoFont*, PangoGlyphString*, int, int);
+
+	static void cleanup() {
+		delete _renderer->mutex;
+
+		g_object_unref(_renderer);
+	}
+
+	// Derived classes be sure and override this.
+	virtual void drawGlyphs(PangoFont*, PangoGlyphString*, int, int) = 0;
+
+	// A lot of the context magic happens here.
+	void drawLayout(PangoLayout* layout, unsigned int x = 0, unsigned int y = 0);
+
+protected:
+	const osg::Vec3* _getRequestedPangoColor() const;
+
+private:
+	static Renderer* _renderer;
+};
+
+class OSGPANGO_EXPORT Text: public TextRenderer, public osg::MatrixTransform {
 public:
 	enum Alignment {
 		ALIGN_LEFT,
@@ -46,13 +65,15 @@ public:
 		g_object_unref(_layout);
 	}
 	
+	virtual void drawGlyphs(PangoFont*, PangoGlyphString*, int, int);
+	
 	void setText         (const std::string&);
 	void setAlignment    (Alignment);
 	void setWidth        (unsigned int);
+	void setPosition     (const osg::Vec3&);
 	void setColor        (const osg::Vec3&);
 	void setEffectsColor (const osg::Vec3&);
 	void setAlpha        (double);
-	void setPosition     (const osg::Vec3&);
 
 	Font* getFont() {
 		return _font.get();
@@ -62,7 +83,7 @@ public:
 		return _font.get();
 	}
 
-	osg::Vec3 getColor() {
+	const osg::Vec3& getColor() {
 		return _color;
 	}
 
@@ -82,7 +103,7 @@ public:
 		return _alpha;
 	}
 
-	osg::Vec2 getSize() {
+	const osg::Vec2& getSize() {
 		return _size;
 	}
 
@@ -122,39 +143,19 @@ public:
 	osg::Vec2 getOriginBaseline   () const;
 	osg::Vec2 getOriginTranslated () const;
 
-	static void drawGlyphs    (PangoRenderer*, PangoFont*, PangoGlyphString*, int, int);
-	static void drawRectangle (PangoRenderer*, PangoRenderPart, int, int, int, int);
-
-	static void drawTrapezoid(
-		PangoRenderer*,
-		PangoRenderPart,
-		double,
-		double,
-		double,
-		double,
-		double,
-		double
-	);
-
-	static void cleanup() {
-		g_object_unref(_renderer);
-	}
-
 private:
-	static Renderer* _renderer;
-
-	osg::ref_ptr<Font>  _font;
-	String              _text;
-	PangoLayout*        _layout;
-	GlyphPositionList   _pos;
-	GlyphEffectsMethod  _gem;
-	osg::Vec3           _color;
-	osg::Vec3           _effectsColor;
-	double              _alpha;
-	osg::Vec2           _size;
-	osg::Vec2           _effectsSize;
-	osg::Vec2           _origin;
-	unsigned int        _baseline;
+	osg::ref_ptr<Font> _font;
+	String             _text;
+	PangoLayout*       _layout;
+	GlyphPositionList  _pos;
+	GlyphEffectsMethod _gem;
+	osg::Vec3          _color;
+	osg::Vec3          _effectsColor;
+	double             _alpha;
+	osg::Vec2          _size;
+	osg::Vec2          _effectsSize;
+	osg::Vec2          _origin;
+	unsigned int       _baseline;
 };
 
 }
