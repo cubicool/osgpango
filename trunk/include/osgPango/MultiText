@@ -1,0 +1,24 @@
+// -*-c++-*- osgPango - Copyright (C) 2009 Jeremy Moles
+
+#ifndef OSGPANGO_MULTITEXT
+#define OSGPANGO_MULTITEXT
+
+#include <osgPango/Text>
+
+namespace osgPango {
+
+class OSGPANGO_EXPORT MultiText: public TextRenderer, o {
+public:
+	MultiText(Font* = 0, GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT);
+
+	virtual ~MultiText() {}
+	
+	virtual void drawGlyphs(PangoFont*, PangoGlyphString*, int, int);
+
+	bool addTextAbs (const std::string&, unsigned int, unsigned int);
+	bool addTextRel (const std::string&, unsigned int, unsigned int);
+};
+
+}
+
+#endif

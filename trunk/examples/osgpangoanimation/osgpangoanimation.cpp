@@ -20,8 +20,8 @@ const unsigned int WINDOW_HEIGHT = 480;
 //
 // ...who is also the author of AnimTK. Many thanks, Ced. :)
 struct GlyphSampler: public osg::Drawable::UpdateCallback {
-	typedef osgAnimation::OutCubicMotion MyMotion;
-	// typedef osgAnimation::OutBounceMotion MyMotion;
+	// typedef osgAnimation::OutCubicMotion MyMotion;
+	typedef osgAnimation::OutBounceMotion MyMotion;
 
 	float _previous;
 
@@ -73,8 +73,6 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 
 			float val = _motions[g / 4].getValue();
 		
-			osg::notify(osg::WARN) << val << std::endl;
-			
 			(*verts)[g    ].y() = (*_originals)[g + 0].y() - mod * sin(val);
 			(*verts)[g + 1].y() = (*_originals)[g + 1].y() - mod * sin(val);
 			(*verts)[g + 2].y() = (*_originals)[g + 2].y() + mod * sin(val);

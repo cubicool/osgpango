@@ -1,100 +1,8 @@
-// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+// -*-c++-*- osgPango - Copyright (C) 2009 Jeremy Moles
 
 #include <osgPango/Text>
 
 namespace osgPango {
-
-Renderer* TextRenderer::_renderer = 0;
-
-G_DEFINE_TYPE(Renderer, renderer, PANGO_TYPE_RENDERER);
-
-#define TYPE_RENDERER (renderer_get_type())
-#define RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), TYPE_RENDERER, Renderer))
-
-static GObjectClass* _pangoClass = 0;
-
-void renderer_finalize(GObject* object) {
-	Renderer* priv = RENDERER(object);
-
-	G_OBJECT_CLASS(_pangoClass)->finalize(object);
-}
-
-void renderer_init(Renderer* priv) {
-}
-
-void renderer_class_init(RendererClass* klass) {
-	GObjectClass*       object_class   = G_OBJECT_CLASS(klass);
-	PangoRendererClass* renderer_class = PANGO_RENDERER_CLASS(klass);
-
-	_pangoClass = static_cast<GObjectClass*>(g_type_class_peek_parent(klass));
-
-	object_class->finalize = renderer_finalize;
-
-	renderer_class->draw_glyphs = &TextRenderer::_drawGlyphs;
-}
-
-TextRenderer::TextRenderer() {
-	if(!_renderer) {
-		_renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
-
-		_renderer->renderer = 0;
-		_renderer->mutex    = new OpenThreads::Mutex();
-	}
-}
-
-void TextRenderer::_drawGlyphs(
-	PangoRenderer*    renderer,
-	PangoFont*        font,
-	PangoGlyphString* glyphs,
-	int               x,
-	int               y
-) {
-	PangoColor* fg = pango_renderer_get_color(renderer, PANGO_RENDER_PART_FOREGROUND);
-
-	if(fg) _renderer->fg.set(
-		fg->red / 65535.0f,
-		fg->green / 65535.0f,
-		fg->blue / 65535.0f
-	);
-
-	else _renderer->fg.set(-1.0f, -1.0, -1.0f);
-
-	RENDERER(renderer)->renderer->drawGlyphs(font, glyphs, x, y);
-}
-
-const osg::Vec3* TextRenderer::_getRequestedPangoColor() const {
-	if(_renderer->fg[0] != -1.0f) return &_renderer->fg;
-
-	else return 0;
-}
-
-void TextRenderer::drawLayout(PangoLayout* layout, unsigned int x, unsigned int y) {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*_renderer->mutex);
-
-	_renderer->renderer = const_cast<TextRenderer*>(this);
-
-	pango_renderer_draw_layout(
-		PANGO_RENDERER(_renderer),
-		layout,
-		x * PANGO_SCALE,
-		-(y * PANGO_SCALE)
-	);
-}
-
-Text::Text(Font* font, GlyphEffectsMethod gem):
-_font         (font ? font : new Font()),
-_text         ("", osgText::String::ENCODING_UTF8),
-_layout       (pango_layout_new(Font::getPangoContext())),
-_gem          (gem),
-_color        (1.0f, 1.0f, 1.0f),
-_effectsColor (0.0f, 0.0f, 0.0f),
-_alpha        (1.0f),
-_baseline     (0) {
-	pango_layout_set_font_description(_layout, _font->getDescription());
-
-	// Add the child Geode that we use throughout the API.
-	addChild(new osg::Geode());
-}
 
 void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	GlyphCache* gc = getFont()->getGlyphCache();
@@ -144,6 +52,21 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	_baseline = y / PANGO_SCALE;
 
 	if(_effectsSize.x() < effectsWidth) _effectsSize.x() = effectsWidth;
+}
+
+Text::Text(Font* font, GlyphEffectsMethod gem):
+_font         (font ? font : new Font()),
+_text         ("", osgText::String::ENCODING_UTF8),
+_layout       (pango_layout_new(Font::getPangoContext())),
+_gem          (gem),
+_color        (1.0f, 1.0f, 1.0f),
+_effectsColor (0.0f, 0.0f, 0.0f),
+_alpha        (1.0f),
+_baseline     (0) {
+	pango_layout_set_font_description(_layout, _font->getDescription());
+
+	// Add the child Geode that we use throughout the API.
+	addChild(new osg::Geode());
 }
 
 void Text::setText(const std::string& str) {
