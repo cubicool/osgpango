@@ -28,7 +28,9 @@ public:
 	static unsigned int getFontList(FontList&, bool = true);
 
 	static void cleanup() {
-		g_object_unref(_map);
+		// TODO: This causes Windows to segfault.
+		// g_object_unref(_map);
+
 		g_object_unref(_context);
 	}
 

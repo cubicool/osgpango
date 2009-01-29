@@ -1,3 +1,4 @@
+#include <iostream>
 #include <osg/BlendFunc>
 #include <osgDB/ReadFile>
 #include <osgWidget/WindowManager>
@@ -197,6 +198,20 @@ public:
 	}
 };
 
+bool overCallback(osgWidget::Event& ev) {
+	if(!ev.getWidget()) return false;
+	
+	osgWidget::Widget* w = ev.getWidget();
+
+	if(ev.type == osgWidget::EVENT_MOUSE_ENTER) w->setColor(1.0f, 1.0f, 1.0f, 1.0f);
+	
+	else if(ev.type == osgWidget::EVENT_MOUSE_LEAVE) w->setColor(1.0f, 1.0f, 1.0f, 0.0f);
+
+	else return false;
+
+	return true;
+}
+
 class ListBoxPopup: public ListBoxBase {
 public:
 	ListBoxPopup(bool useOsgText = false):
@@ -205,7 +220,7 @@ public:
 
 		osgPango::Font::getFontList(fl, false);
 
-		osgWidget::Box* fonts = new osgWidget::Box("fonts", osgWidget::Box::VERTICAL);
+		osgWidget::Box* fonts = new osgWidget::Box("fonts", osgWidget::Box::VERTICAL, true);
 
 		for(osgPango::Font::FontList::iterator i = fl.begin(); i != fl.end(); i++) {
 			osgWidget::Widget* label = 0;
@@ -227,13 +242,17 @@ public:
 				l->getText()->setColor(_lineColor);
 				l->getText()->setText(*i);
 				l->textUpdated();
+				//l->setEventMask(osgWidget::EVENT_MASK_MOUSE_MOVE);
+				//l->addCallback(new osgWidget::Callback(&overCallback, osgWidget::EVENT_MOUSE_ENTER));
+				//l->addCallback(new osgWidget::Callback(&overCallback, osgWidget::EVENT_MOUSE_LEAVE));
 
 				label = l;
 			}
 
 			label->setAlignHorizontal(osgWidget::Widget::HA_LEFT);
 			label->setColor(osg::Vec4(_fillColor, 1.0f));
-			label->setPadding(3.0f);
+			label->setCanFill(true);
+			label->setPadding(1.0f);
 			
 			fonts->addWidget(label);
 		}

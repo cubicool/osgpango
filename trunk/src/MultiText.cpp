@@ -1,19 +1,36 @@
 // -*-c++-*- osgPango - Copyright (C) 2009 Jeremy Moles
 
-#include <osgPango/Text>
+#include <iostream>
+#include <sstream>
+#include <algorithm>
+#include <osgPango/MultiText>
 
 namespace osgPango {
 
-void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
-	GlyphCache* gc = getFont()->getGlyphCache();
+MultiText::MultiText():
+TextRenderer(),
+osg::MatrixTransform() {
+	addChild(new osg::Geode());
+}
 
-	if(!gc) return;
+void MultiText::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
+	GlyphCache* gc = _fontMap[font].get();
 
-	osg::Vec2 layoutPos(x / PANGO_SCALE, -(y / PANGO_SCALE));
+	if(!gc) {
+		gc = new GlyphCache(); //Outline(512, 512, 1);
 
-	osg::Vec4 extents = gc->getExtraGlyphExtents();
+		_fontMap[font] = gc;
+	}
 
-	unsigned int effectsWidth = 0;
+	osg::Vec2::value_type currentY = -(y / PANGO_SCALE);
+
+	osg::Vec2 layoutPos(x / PANGO_SCALE, currentY);
+
+	if(static_cast<int>(currentY) == _lastY) layoutPos[0] += _lastX;
+
+	else _lastX = 0.0f;
+
+	osg::Vec4 extents = osg::Vec4(); //gc->getExtraGlyphExtents();
 
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
@@ -32,63 +49,80 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 		if(!cg) continue;
 
+		GlyphGeometryVector& ggv = _ggMap[font];
+	
 		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
 			osg::Vec2 pos(
 				(gi->geometry.x_offset / PANGO_SCALE) + extents[0],
 				(gi->geometry.y_offset / PANGO_SCALE) + extents[1]
 			);
+
+			if(cg->img >= ggv.size()) ggv.push_back(
+				new GlyphGeometry(gc->hasEffects())
+			);
 	
-			_pos.push_back(GlyphPositionPair(
-				gi->glyph,
-				pos + layoutPos
-			));
+			ggv[cg->img]->pushCachedGlyphAt(
+				cg,
+				pos + layoutPos,
+				gc->hasEffects(),
+				GLYPH_EFFECTS_METHOD_DEFAULT
+			);
 		}
 		
 		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE) + extents[0], 0.0f);
-
-		effectsWidth += extents[0];
+		_lastX    += extents[0];
 	}
 
-	_baseline = y / PANGO_SCALE;
-
-	if(_effectsSize.x() < effectsWidth) _effectsSize.x() = effectsWidth;
+	_lastY = currentY;
 }
 
-Text::Text(Font* font, GlyphEffectsMethod gem):
-_font         (font ? font : new Font()),
-_text         ("", osgText::String::ENCODING_UTF8),
-_layout       (pango_layout_new(Font::getPangoContext())),
-_gem          (gem),
-_color        (1.0f, 1.0f, 1.0f),
-_effectsColor (0.0f, 0.0f, 0.0f),
-_alpha        (1.0f),
-_baseline     (0) {
-	pango_layout_set_font_description(_layout, _font->getDescription());
+bool MultiText::finalize() {
+	osg::Geode* geode = dynamic_cast<osg::Geode*>(getChild(0));
 
-	// Add the child Geode that we use throughout the API.
-	addChild(new osg::Geode());
+	if(!geode) return false;
+
+	geode->removeDrawables(0, geode->getNumDrawables());
+
+	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
+		GlyphGeometryVector& ggv = g->second;
+
+		for(unsigned int i = 0; i < ggv.size(); i++) {
+			if(!ggv[i]->finalize(GlyphTexEnvCombineState(
+				_fontMap[g->first]->getTexture(i),
+				_fontMap[g->first]->getTexture(i, true),
+				osg::Vec3(1.0f, 1.0f, 1.0f),
+				osg::Vec3(0.0f, 0.0f, 0.0f),
+				1.0f
+			))) continue;
+
+			geode->addDrawable(ggv[i]);
+		}
+	}
+
+	return true;
 }
 
-void Text::setText(const std::string& str) {
+void MultiText::addText(const std::string& str, int x, int y) {
+	String       text;
+	PangoLayout* layout = pango_layout_new(Font::getPangoContext());
+
 	if(str.size()) {
-		_text.set(str, osgText::String::ENCODING_UTF8);
+		text.set(str, osgText::String::ENCODING_UTF8);
 
-		std::string utf8 = _text.createUTF8EncodedString();
+		std::string utf8 = text.createUTF8EncodedString();
 
-		_pos.clear();
-
-		pango_layout_set_text(_layout, utf8.c_str(), -1);
+		pango_layout_set_width(layout, 500 * PANGO_SCALE);
+		pango_layout_set_justify(layout, true);
+		pango_layout_set_markup(layout, utf8.c_str(), -1);
 	}
 
-	drawLayout(_layout);
-	
-	// Here we calculate the size of the text we just rendered. This may be possible to do
-	// WHILE we render it in drawGlyphs later, but for the time being it's simply too
-	// difficult.
+	drawLayout(layout, x, y);
+
 	PangoRectangle rect;
 
-	pango_layout_get_pixel_extents(_layout, &rect, 0);
+	pango_layout_get_pixel_extents(layout, &rect, 0);
 
+	/*
 	GlyphCache* gc = _font->getGlyphCache();
 
 	const osg::Vec4& extents = gc->getExtraGlyphExtents();
@@ -100,100 +134,28 @@ void Text::setText(const std::string& str) {
 	_size.set(rect.width, rect.height);
 
 	_size += _effectsSize;
-
-	// Now we set the texture values, etc...
-	GlyphGeometryVector ggv(gc->getNumImages(), 0);
-
-	for(unsigned int i = 0; i < ggv.size(); i++) ggv[i] = new GlyphGeometry(gc->hasEffects());
-
-	/*
-	typedef std::pair<const CachedGlyph*, const osg::Vec2&> ReversedListItem;
-	typedef std::list<ReversedListItem>                     ReversedList;
-
-	ReversedList rlist;
-
-	for(GlyphPositionList::iterator i = _pos.begin(); i != _pos.end(); i++) rlist.push_front(
-		ReversedListItem(gc->getCachedGlyph(i->first), i->second)
-	);
-
-	for(ReversedList::const_iterator i = rlist.begin(); i != rlist.end(); i++) {
-		const CachedGlyph* cg = i->first;
-	
-		std::cout << i->second << std::endl;
-
-		ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);	
-	}
 	*/
 
-	for(GlyphPositionList::iterator i = _pos.begin(); i != _pos.end(); i++) {
-		const CachedGlyph* cg = gc->getCachedGlyph(i->first);
+	g_object_unref(layout);
+}
 
-		ggv[cg->img]->pushCachedGlyphAt(cg, i->second, gc->hasEffects(), _gem);
+void MultiText::writeAllImages(const std::string& path) {
+	for(FontMap::iterator i = _fontMap.begin(); i != _fontMap.end(); i++) {
+		PangoFontDescription* d  = pango_font_describe(i->first);
+		GlyphCache*           gc = i->second.get();
+
+		std::ostringstream os;
+
+		std::string family(pango_font_description_get_family(d));
+
+		std::replace(family.begin(), family.end(), ' ', '_');
+
+		os << path << "_" << family << "_" << pango_font_description_get_size(d);
+
+		gc->writeImagesAsFiles(os.str());
+
+		pango_font_description_free(d);
 	}
-
-	osg::Geode* geode = getGeode();
-
-	if(!geode) return;
-
-	geode->removeDrawables(0, geode->getNumDrawables());
-
-	for(unsigned int i = 0; i < ggv.size(); i++) {
-		if(!ggv[i]->finalize(GlyphTexEnvCombineState(
-			gc->getTexture(i),
-			gc->getTexture(i, true),
-			_color,
-			_effectsColor,
-			_alpha
-		))) continue;
-
-		geode->addDrawable(ggv[i]);
-	}
-}
-
-void Text::setAlignment(Text::Alignment align) {
-	if(align != ALIGN_JUSTIFY) {
-		PangoAlignment pa = PANGO_ALIGN_LEFT;
-
-		if(align == ALIGN_CENTER) pa = PANGO_ALIGN_CENTER;
-
-		else if(align == ALIGN_RIGHT) pa = PANGO_ALIGN_RIGHT;
-	
-		pango_layout_set_alignment(_layout, pa);
-	}
-
-	else pango_layout_set_justify(_layout, true);
-}
-
-void Text::setWidth(unsigned int width) {
-	pango_layout_set_width(_layout, width * PANGO_SCALE);
-}
-
-void Text::setColor(const osg::Vec3& color) {
-	_color = color;
-}
-
-void Text::setEffectsColor(const osg::Vec3& color) {
-	_effectsColor = color;
-}
-
-void Text::setAlpha(double alpha) {
-	_alpha = alpha;
-}
-
-void Text::setPosition(const osg::Vec3& pos) {
-	setMatrix(osg::Matrix::translate(pos));
-}
-
-osg::Vec3 Text::getPosition() const {
-	return getMatrix().getTrans();
-}
-
-osg::Vec2 Text::getOriginBaseline() const {
-	return osg::Vec2(-_origin.x(), _baseline);
-}
-
-osg::Vec2 Text::getOriginTranslated() const {
-	return osg::Vec2(-_origin.x(), _size.y() + _origin.y());
 }
 
 }
