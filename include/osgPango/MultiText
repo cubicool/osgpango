@@ -7,16 +7,28 @@
 
 namespace osgPango {
 
-class OSGPANGO_EXPORT MultiText: public TextRenderer, o {
+class OSGPANGO_EXPORT MultiText: public TextRenderer, public osg::MatrixTransform {
 public:
-	MultiText(Font* = 0, GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT);
+	typedef std::map<PangoFont*, osg::ref_ptr<GlyphCache> > FontMap;
+	typedef std::map<PangoFont*, GlyphGeometryVector>       GlyphGeometryMap;
+
+	MultiText();
 
 	virtual ~MultiText() {}
 	
 	virtual void drawGlyphs(PangoFont*, PangoGlyphString*, int, int);
 
-	bool addTextAbs (const std::string&, unsigned int, unsigned int);
-	bool addTextRel (const std::string&, unsigned int, unsigned int);
+	void addText        (const std::string&, int, int);
+	void writeAllImages (const std::string&);
+	bool finalize       ();
+
+
+private:
+	FontMap          _fontMap;
+	GlyphGeometryMap _ggMap;
+
+	int _lastX;
+	int _lastY;
 };
 
 }

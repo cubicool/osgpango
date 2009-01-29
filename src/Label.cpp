@@ -59,14 +59,19 @@ void Label::positioned() {
 	_text->setPosition(osg::Vec3(osgWidget::XYCoord(x, y) + origin, z));
 }
 
+float evenNumber(float x) {
+	int xx = static_cast<int>(x);
+
+	return xx % 2 ? x + 1.0f : x;
+}
+
+// TODO: EACH SIZE NEEDS TO BE AN EVEN NUMBER!
 void Label::textUpdated() {
 	osgWidget::XYCoord size = _text->getSize();
 	
-	osgWidget::warn() << "size: " << size << std::endl;
-
-	if(size.x() > getWidth()) setWidth(size.x());
+	if(size.x() > getWidth()) setWidth(evenNumber(size.x()));
 	
-	if(size.y() > getHeight()) setHeight(size.y());
+	if(size.y() > getHeight()) setHeight(evenNumber(size.y()));
 
 	positioned();
 }

@@ -12,5 +12,5 @@ LINK_LIBRARIES(osgPango
 
 ADD_EXECUTABLE(osgpangothreaded osgpangothreaded.cpp)
 
-INSTALL(TARGETS osgpangothreaded DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+INSTALL(TARGETS osgpangothreaded DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenSceneGraph/bin)
 SET_TARGET_PROPERTIES(osgpangothreaded PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
