@@ -9,8 +9,9 @@ namespace osgPango {
 
 class OSGPANGO_EXPORT MultiText: public TextRenderer, public osg::MatrixTransform {
 public:
-	typedef std::map<PangoFont*, osg::ref_ptr<GlyphCache> > FontMap;
-	typedef std::map<PangoFont*, GlyphGeometryVector>       GlyphGeometryMap;
+	typedef std::map<PangoFont*, osg::ref_ptr<GlyphCache> >    FontMap;
+	typedef std::pair<PangoFont*, osg::Vec3>                   GlyphGeometryMapKey;
+	typedef std::map<GlyphGeometryMapKey, GlyphGeometryVector> GlyphGeometryMap;
 
 	MultiText();
 

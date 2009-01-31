@@ -17,7 +17,7 @@ void MultiText::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int
 	GlyphCache* gc = _fontMap[font].get();
 
 	if(!gc) {
-		gc = new GlyphCache(); //Outline(512, 512, 1);
+		gc = new GlyphCacheOutline(512, 512, 1);
 
 		_fontMap[font] = gc;
 	}
@@ -30,6 +30,7 @@ void MultiText::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int
 
 	else _lastX = 0.0f;
 
+	// TODO: Enabling optional honoring of extents...
 	osg::Vec4 extents = osg::Vec4(); //gc->getExtraGlyphExtents();
 
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
@@ -49,7 +50,13 @@ void MultiText::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int
 
 		if(!cg) continue;
 
-		GlyphGeometryVector& ggv = _ggMap[font];
+		osg::Vec3 color(1.0f, 1.0f, 1.0f);
+
+		const osg::Vec3* pangoColor = _getRequestedPangoColor();
+
+		if(pangoColor) color = *pangoColor;
+
+		GlyphGeometryVector& ggv = _ggMap[GlyphGeometryMapKey(font, color)];
 	
 		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
 			osg::Vec2 pos(
@@ -88,9 +95,9 @@ bool MultiText::finalize() {
 
 		for(unsigned int i = 0; i < ggv.size(); i++) {
 			if(!ggv[i]->finalize(GlyphTexEnvCombineState(
-				_fontMap[g->first]->getTexture(i),
-				_fontMap[g->first]->getTexture(i, true),
-				osg::Vec3(1.0f, 1.0f, 1.0f),
+				_fontMap[g->first.first]->getTexture(i),
+				_fontMap[g->first.first]->getTexture(i, true),
+				g->first.second,
 				osg::Vec3(0.0f, 0.0f, 0.0f),
 				1.0f
 			))) continue;
