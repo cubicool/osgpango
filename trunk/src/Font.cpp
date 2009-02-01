@@ -83,7 +83,7 @@ bool Font::init(
 ) {
 	if(_map && _context) return false;
 
-	if(!_map) _map = pango_cairo_font_map_new_for_font_type(CAIRO_FONT_TYPE_FT);
+	if(!_map) _map = pango_cairo_font_map_new();
 	
 	if(_map && !_context) _context = pango_cairo_font_map_create_context(
 		PANGO_CAIRO_FONT_MAP(_map)
@@ -91,6 +91,7 @@ bool Font::init(
 
 	if(!_map || !_context) return false;
 
+	/*
 	// TODO: Fix this...
 	cairo_font_options_t* options = cairo_font_options_create();
 
@@ -102,6 +103,7 @@ bool Font::init(
 	pango_cairo_font_map_set_resolution(PANGO_CAIRO_FONT_MAP(_map), dpi);
 
 	cairo_font_options_destroy(options);
+	*/
 
 	return true;
 }
