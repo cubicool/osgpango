@@ -26,7 +26,7 @@ public:
 		for(unsigned int i = 1; i < 6; i++) {
 			std::cout << "Sleeping: " << _sleep << std::endl;
 
-			sleep(_sleep);
+			// sleep(_sleep);
 
 			_text->setText(LOREM_IPSUM[i]);
 		}

@@ -106,7 +106,7 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 int main(int argc, char** argv) {
 	osgPango::Font::init();
 
-	const std::string font("iNked God 45");
+	const std::string font("Courier New Bold 30");
 
 	osgPango::GlyphCache* cache = new GlyphCacheGradient();
 
@@ -150,6 +150,7 @@ int main(int argc, char** argv) {
 
 	viewer.setSceneData(group);
 	viewer.getCamera()->setClearColor(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
+	viewer.setUpViewInWindow(50, 50, 1280, 1024);
 
 	viewer.run();
 
