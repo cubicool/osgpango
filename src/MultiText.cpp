@@ -17,7 +17,7 @@ void MultiText::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int
 	GlyphCache* gc = _fontMap[font].get();
 
 	if(!gc) {
-		gc = new GlyphCacheOutline(512, 512, 1);
+		gc = new GlyphCache(); //Outline(512, 512, 1);
 
 		_fontMap[font] = gc;
 	}

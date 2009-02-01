@@ -205,7 +205,11 @@ bool GlyphCache::renderGlyph(
 ) {
 	if(!si) return false;
 
-	si->showGlyphs(g);
+	// si->showGlyphs(g);
+	si->glyphPath(g);
+	// si->setLineWidth(0.0f);
+	// si->strokePreserve();
+	si->fill();
 
 	return true;
 }
