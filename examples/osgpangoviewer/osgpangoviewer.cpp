@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
 	f->getGlyphCache()->writeImagesAsFiles("osgpangoviewer");
 
 	osg::Group*  group  = new osg::Group();
-	osg::Camera* camera = createOrthoCamera(1280, 1024);
+	osg::Camera* camera = createOrthoCamera(1920, 1080);
 	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
 	
 	osg::MatrixTransform* mt = new osg::MatrixTransform(

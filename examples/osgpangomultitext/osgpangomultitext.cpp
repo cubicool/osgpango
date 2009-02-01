@@ -7,19 +7,33 @@
 #include <osgPango/MultiText>
 
 const std::string LOREM_IPSUM(
-	"<span font='Sans 8'>"
+	"<span font='Calibri 8'>"
 	"Lorem ipsum dolor sit amet, conse<span color='#fa0'>ctetur adipisicing</span> elit, sed do eiusmod "
 	"</span>"
 	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
 	"quis <b>nostrud exercitation ullamco</b> laboris nisi ut aliquip ex ea commodo consequat. "
 	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
 	"fugiat nulla pariatur. Excepteur sint <i>occaecat cupidatat non proident</i>, sunt in "
-	"<span font='Cyclo 18'><b>"
+	"<span font='Georgia 18'><b>"
 	"culpa qui</b> officia deserunt mollit anim id est laborum."
 	"</span>"
 	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
 	"quis <b>nostrud exercitation ullamco</b> laboris nisi ut aliquip ex ea commodo consequat. "
 	"<span color='#acf' size='larger'>Duis aute irure dolor in reprehenderit</span> in voluptate velit esse cillum dolore eu "
+);
+
+const std::string LOREM_IPSUM_ALT(
+	"<span font='Courier New 8'>"
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+	"culpa qui officia deserunt mollit anim id est laborum."
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu"
+	"</span>"
 );
 
 osg::Camera* createOrthoCamera(float width, float height) {
@@ -53,7 +67,7 @@ int main(int argc, char** argv) {
 
 	if(!t->finalize()) return 1;
 
-	osg::Camera* camera = createOrthoCamera(1280, 1024);
+	osg::Camera* camera = createOrthoCamera(1440, 900);
 	
         viewer.addEventHandler(new osgViewer::StatsHandler());
         viewer.addEventHandler(new osgViewer::WindowSizeHandler());
@@ -64,6 +78,7 @@ int main(int argc, char** argv) {
 	camera->addChild(t);
 
 	viewer.setSceneData(camera);
+	viewer.setUpViewInWindow(50, 50, 1440, 900);
 	viewer.getCamera()->setClearColor(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
 
 	viewer.run();
