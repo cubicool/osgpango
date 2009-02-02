@@ -11,12 +11,9 @@ namespace osgPango {
 
 const std::string OSGPANGO_DEFAULT_FONT = "Sans 6";
 
-class OSGPANGO_EXPORT Font: public osg::Referenced {
+class OSGPANGO_EXPORT Font {
 public:
 	typedef std::list<std::string> FontList;
-
-	Font  (const std::string& = OSGPANGO_DEFAULT_FONT, GlyphCache* = 0);
-	~Font ();
 
 	static bool init(
 		unsigned int                 = 72,
@@ -42,29 +39,13 @@ public:
 		return _context;
 	}
 
-	PangoFontDescription* getDescription() {
-		return _descr;
-	}
-
-	const PangoFontDescription* getDescription() const {
-		return _descr;
-	}
-
-	GlyphCache* getGlyphCache() {
-		return _cache.get();
-	}
-
-	const GlyphCache* getGlyphCache() const {
-		return _cache.get();
-	}
-
 private:
+	// This is NOT an instantiable class.
+	Font() {
+	}
+
 	static PangoFontMap* _map;
 	static PangoContext* _context;
-
-	PangoFontDescription* _descr;
-
-	osg::ref_ptr<GlyphCache> _cache;
 };
 
 }

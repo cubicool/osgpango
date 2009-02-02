@@ -1,6 +1,5 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
-#include <iostream>
 #include <algorithm>
 #include <sstream>
 #include <osgPango/Font>
@@ -9,31 +8,6 @@ namespace osgPango {
 
 PangoFontMap* Font::_map     = 0;
 PangoContext* Font::_context = 0;
-
-Font::Font(const std::string& descr, GlyphCache* gc) {
-	_descr = pango_font_description_from_string(descr.c_str());
-
-	if(!gc) _cache = new GlyphCache(DEFAULT_GCW, DEFAULT_GCH);
-
-	else {
-		// It doesn't make sense to use the same GlyphCache object for two different
-		// fonts, so make sure there is no reference count.
-		if(gc->referenceCount() >= 1) {
-			osg::notify(osg::WARN)
-				<< "Cannot use a previously referenced GlyphCache pointer when "
-				<< "creating a new Font; creating a default." << std::endl
-			;
-
-			_cache = new GlyphCache(gc->getImageWidth(), gc->getImageHeight());
-		}
-
-		else _cache = gc;
-	}
-}
-
-Font::~Font() {
-	pango_font_description_free(_descr);
-}
 
 unsigned int Font::getFontList(FontList& fl, bool faces) {
 	PangoFontFamily** pff = 0;
@@ -91,7 +65,6 @@ bool Font::init(
 
 	if(!_map || !_context) return false;
 
-	/*
 	// TODO: Fix this...
 	cairo_font_options_t* options = cairo_font_options_create();
 
@@ -103,7 +76,6 @@ bool Font::init(
 	pango_cairo_font_map_set_resolution(PANGO_CAIRO_FONT_MAP(_map), dpi);
 
 	cairo_font_options_destroy(options);
-	*/
 
 	return true;
 }

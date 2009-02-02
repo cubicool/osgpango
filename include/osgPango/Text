@@ -1,12 +1,9 @@
-// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+// -*-c++-*- osgPango - Copyright (C) 2009 Jeremy Moles
 
-#ifndef OSGPANGO_TEXT
-#define OSGPANGO_TEXT
+#ifndef OSGPANGO_MULTITEXT
+#define OSGPANGO_MULTITEXT
 
-#include <osg/Geode>
-#include <osg/MatrixTransform>
-#include <osgPango/String>
-#include <osgPango/Font>
+#include <osgPango/Text>
 
 namespace osgPango {
 
@@ -52,56 +49,21 @@ private:
 
 class OSGPANGO_EXPORT Text: public TextRenderer, public osg::MatrixTransform {
 public:
-	enum Alignment {
-		ALIGN_LEFT,
-		ALIGN_CENTER,
-		ALIGN_RIGHT,
-		ALIGN_JUSTIFY
-	};
+	typedef std::map<PangoFont*, osg::ref_ptr<GlyphCache> >    FontMap;
+	typedef std::pair<PangoFont*, osg::Vec3>                   GlyphGeometryMapKey;
+	typedef std::map<GlyphGeometryMapKey, GlyphGeometryVector> GlyphGeometryMap;
 
-	Text(Font* = 0, GlyphEffectsMethod = GLYPH_EFFECTS_METHOD_DEFAULT);
+	Text();
 
 	virtual ~Text() {
-		g_object_unref(_layout);
 	}
 	
 	virtual void drawGlyphs(PangoFont*, PangoGlyphString*, int, int);
-	
-	void setText         (const std::string&);
-	void setAlignment    (Alignment);
-	void setWidth        (unsigned int);
-	void setPosition     (const osg::Vec3&);
-	void setColor        (const osg::Vec3&);
-	void setEffectsColor (const osg::Vec3&);
-	void setAlpha        (double);
 
-	Font* getFont() {
-		return _font.get();
-	}
-
-	const Font* getFont() const {
-		return _font.get();
-	}
-
-	const osg::Vec3& getColor() {
-		return _color;
-	}
-
-	const osg::Vec3& getColor() const {
-		return _color;
-	}
-
-	osg::Vec3 getEffectsColor() {
-		return _effectsColor;
-	}
-
-	const osg::Vec3& getEffectsColor() const {
-		return _effectsColor;
-	}
-
-	double getAlpha() const {
-		return _alpha;
-	}
+	void addText        (const std::string&, int, int);
+	void writeAllImages (const std::string&);
+	bool finalize       ();
+	void setPosition    (const osg::Vec3&);
 
 	const osg::Vec2& getSize() {
 		return _size;
@@ -144,18 +106,16 @@ public:
 	osg::Vec2 getOriginTranslated () const;
 
 private:
-	osg::ref_ptr<Font> _font;
-	String             _text;
-	PangoLayout*       _layout;
-	GlyphPositionList  _pos;
-	GlyphEffectsMethod _gem;
-	osg::Vec3          _color;
-	osg::Vec3          _effectsColor;
-	double             _alpha;
-	osg::Vec2          _size;
-	osg::Vec2          _effectsSize;
-	osg::Vec2          _origin;
-	unsigned int       _baseline;
+	FontMap          _fontMap;
+	GlyphGeometryMap _ggMap;
+
+	osg::Vec2 _size;
+	osg::Vec2 _effectsSize;
+	osg::Vec2 _origin;
+
+	int _lastX;
+	int _lastY;
+	int _baseline;
 };
 
 }
