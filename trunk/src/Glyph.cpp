@@ -205,10 +205,11 @@ bool GlyphCache::renderGlyph(
 ) {
 	if(!si) return false;
 
+	// TODO: With the Win32 backend, the following doesn't work properly.
+	// With Linux, it doesn't matter.
 	// si->showGlyphs(g);
+	
 	si->glyphPath(g);
-	// si->setLineWidth(0.0f);
-	// si->strokePreserve();
 	si->fill();
 
 	return true;
