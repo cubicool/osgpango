@@ -6,6 +6,7 @@
 #include <pango/pangocairo.h>
 
 #include <osgPango/Glyph>
+#include <osgPango/Text>
 
 namespace osgPango {
 
@@ -13,9 +14,22 @@ const std::string OSGPANGO_DEFAULT_FONT = "Sans 6";
 
 typedef std::list<std::string> FontList;
 
+struct OSGPANGO_EXPORT Renderer {
+	PangoRenderer parent_instance;
+};
+
+struct OSGPANGO_EXPORT RendererClass {
+	PangoRendererClass class_instance;
+};
+
 class OSGPANGO_EXPORT Context {
 public:
+	~Context();
+
 	static Context& instance();
+
+	// This is the "entry" into our system from Pango's rendering backend.
+	static void drawGlyphs(PangoRenderer*, PangoFont*, PangoGlyphString*, int, int);
 
 	bool init(
 		unsigned int                 = 72,
@@ -24,15 +38,14 @@ public:
 		osgCairo::CairoSubpixelOrder = CAIRO_SUBPIXEL_ORDER_RGB
 	);
 
-	unsigned int getFontList      (FontList&, bool = true);
-	bool         addGlyphRenderer (const std::string&, GlyphRenderer*);
-	GlyphCache*  getGlyphCache    (PangoFont*, const std::string&);
-
-	~Context() {
-		// TODO: This causes Windows to segfault.
-		// g_object_unref(_map);
-
-		g_object_unref(_pContext);
+	unsigned int getFontList           (FontList&, bool = true);
+	GlyphCache*  getGlyphCache         (PangoFont*, const std::string&);
+	void         drawLayout            (Text*, PangoLayout*, int, int);
+	void         writeCachesToPNGFiles (const std::string&);
+	bool         addGlyphRenderer      (const std::string&, GlyphRenderer*);
+	
+	const osg::Vec3& getCurrentColor() const {
+		return _color;
 	}
 
 	PangoFontMap* getPangoFontMap() {
@@ -52,10 +65,14 @@ private:
 
 	static Context _context;
 	
-	GlyphRendererMap  _grMap;
-	GlyphCacheFontMap _gcfMap;
-	PangoFontMap*     _pfMap;
-	PangoContext*     _pContext;
+	GlyphRendererMap   _grMap;
+	GlyphCacheFontMap  _gcfMap;
+	PangoFontMap*      _pfMap;
+	PangoContext*      _pContext;
+	Renderer*          _renderer;
+	osg::ref_ptr<Text> _text;
+	OpenThreads::Mutex _mutex;
+	osg::Vec3          _color;
 };
 
 }

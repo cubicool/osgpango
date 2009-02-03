@@ -28,7 +28,7 @@ ur     (_ur),
 ul     (_ul) {
 }
 
-GlyphTexEnvCombineState::GlyphTexEnvCombineState(
+GlyphGeometryState::GlyphGeometryState(
 	osg::Texture*    _texture,
 	osg::Texture*    _effectsTexture,
 	const osg::Vec3& _color,
@@ -343,7 +343,7 @@ _numQuads(0) {
 }
 
 template<typename T>
-bool _setGlyphTexEnvCombineState(T* obj, const GlyphTexEnvCombineState& gs) {
+bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 	if(!gs.texture) return false;
 
 	osg::TexEnvCombine* te0   = new osg::TexEnvCombine();
@@ -451,16 +451,16 @@ bool _setGlyphTexEnvCombineState(T* obj, const GlyphTexEnvCombineState& gs) {
 	return true;
 }
 
-bool setGlyphTexEnvCombineState(osg::Drawable* drawable, const GlyphTexEnvCombineState& gs) {
-	return _setGlyphTexEnvCombineState(drawable, gs);
+bool setGlyphGeometryState(osg::Drawable* drawable, const GlyphGeometryState& gs) {
+	return _setGlyphGeometryState(drawable, gs);
 }
 
-bool setGlyphTexEnvCombineState(osg::Node* node, const GlyphTexEnvCombineState& gs) {
-	return _setGlyphTexEnvCombineState(node, gs);
+bool setGlyphGeometryState(osg::Node* node, const GlyphGeometryState& gs) {
+	return _setGlyphGeometryState(node, gs);
 }
 
-bool GlyphGeometry::finalize(const GlyphTexEnvCombineState& gs) {
-	setGlyphTexEnvCombineState(this, gs);
+bool GlyphGeometry::finalize(const GlyphGeometryState& gs) {
+	setGlyphGeometryState(this, gs);
 	addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, _numQuads * 4));
 	
 	setDataVariance(osg::Object::STATIC);

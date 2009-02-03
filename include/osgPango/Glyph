@@ -37,8 +37,8 @@ struct OSGPANGO_EXPORT CachedGlyph {
 };
 
 // This object packages up all the state stuff we need to shimmy around.
-struct OSGPANGO_EXPORT GlyphTexEnvCombineState {
-	GlyphTexEnvCombineState(
+struct OSGPANGO_EXPORT GlyphGeometryState {
+	GlyphGeometryState(
 		osg::Texture*,
 		osg::Texture*,
 		const osg::Vec3&,
@@ -163,14 +163,14 @@ private:
 	bool         _hasEffects;
 };
 
-bool setGlyphTexEnvCombineState (osg::Drawable*, const GlyphTexEnvCombineState&);
-bool setGlyphTexEnvCombineState (osg::Node*, const GlyphTexEnvCombineState&);
+bool setGlyphGeometryState (osg::Drawable*, const GlyphGeometryState&);
+bool setGlyphGeometryState (osg::Node*, const GlyphGeometryState&);
 
 class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
 public:
 	GlyphGeometry(bool = false);
 
-	bool finalize          (const GlyphTexEnvCombineState&);
+	bool finalize          (const GlyphGeometryState&);
 	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&, bool, GlyphEffectsMethod);
 
 private:

@@ -3,92 +3,9 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <osgPango/Text>
+#include <osgPango/Context>
 
 namespace osgPango {
-
-Renderer*   TextRenderer::_renderer = 0;
-std::string TextRenderer::_gcr;
-osg::Vec3   TextRenderer::_fg;
-
-G_DEFINE_TYPE(Renderer, renderer, PANGO_TYPE_RENDERER);
-
-#define TYPE_RENDERER (renderer_get_type())
-#define RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), TYPE_RENDERER, Renderer))
-
-static GObjectClass* _pangoClass = 0;
-
-void renderer_finalize(GObject* object) {
-	Renderer* priv = RENDERER(object);
-
-	G_OBJECT_CLASS(_pangoClass)->finalize(object);
-}
-
-void renderer_init(Renderer* priv) {
-}
-
-void renderer_class_init(RendererClass* klass) {
-	GObjectClass*       object_class   = G_OBJECT_CLASS(klass);
-	PangoRendererClass* renderer_class = PANGO_RENDERER_CLASS(klass);
-
-	_pangoClass = static_cast<GObjectClass*>(g_type_class_peek_parent(klass));
-
-	object_class->finalize = renderer_finalize;
-
-	renderer_class->draw_glyphs = &TextRenderer::_drawGlyphs;
-}
-
-TextRenderer::TextRenderer() {
-	if(!_renderer) {
-		_renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
-
-		_renderer->renderer = 0;
-		// _mutex              = new OpenThreads::Mutex();
-	}
-}
-
-void TextRenderer::_drawGlyphs(
-	PangoRenderer*    renderer,
-	PangoFont*        font,
-	PangoGlyphString* glyphs,
-	int               x,
-	int               y
-) {
-	PangoColor* fg = pango_renderer_get_color(renderer, PANGO_RENDER_PART_FOREGROUND);
-
-	if(fg) _fg.set(
-		fg->red / 65535.0f,
-		fg->green / 65535.0f,
-		fg->blue / 65535.0f
-	);
-
-	else _fg.set(-1.0f, -1.0, -1.0f);
-
-	RENDERER(renderer)->renderer->drawGlyphs(font, glyphs, x, y);
-}
-
-const osg::Vec3* TextRenderer::_getRequestedPangoColor() const {
-	if(_fg[0] != -1.0f) return &_fg;
-
-	else return 0;
-}
-
-const std::string& TextRenderer::_getRequestedGlyphCacheRenderer() const {
-	return _gcr;
-}
-
-void TextRenderer::drawLayout(PangoLayout* layout, unsigned int x, unsigned int y) {
-	// OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*_mutex);
-
-	_renderer->renderer = const_cast<TextRenderer*>(this);
-
-	pango_renderer_draw_layout(
-		PANGO_RENDERER(_renderer),
-		layout,
-		x * PANGO_SCALE,
-		-(y * PANGO_SCALE)
-	);
-}
 
 TextOptions::TextOptions(const std::string& d, Alignment a, int w, int h, int i, int s):
 alignment    (a),
@@ -163,21 +80,20 @@ void TextOptions::_unrefFontDescription() {
 }
 
 Text::Text():
-TextRenderer(),
 osg::MatrixTransform(),
 _lastX    (0),
 _lastY    (0),
-_baseline (0) {
+_baseline (0),
+_alpha    (1.0f) {
 	addChild(new osg::Geode());
 }
 
 void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// Get the GlyphCache from a key, which may or may not be set via PangoAttr if I
 	// can it to work properly. :)
-	GlyphCache* gc = Context::instance().getGlyphCache(
-		font,
-		_getRequestedGlyphCacheRenderer()
-	);
+	GlyphCache* gc = Context::instance().getGlyphCache(font, ""); //_glyphRenderer);
+
+	if(!gc) return;
 
 	osg::Vec2::value_type currentY = -(y / PANGO_SCALE);
 
@@ -190,6 +106,8 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// TODO: Enabling optional honoring of extents...
 	osg::Vec4 extents = osg::Vec4(); //gc->getExtraGlyphExtents();
 
+	const osg::Vec3& color = Context::instance().getCurrentColor();
+		
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
 
@@ -206,12 +124,6 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 		if(!cg) cg = gc->createCachedGlyph(font, gi);
 
 		if(!cg) continue;
-
-		osg::Vec3 color(1.0f, 1.0f, 1.0f);
-
-		const osg::Vec3* pangoColor = _getRequestedPangoColor();
-
-		if(pangoColor) color = *pangoColor;
 
 		GlyphGeometryVector& ggv = _ggMap[GlyphGeometryMapKey(font, color)];
 	
@@ -254,15 +166,15 @@ bool Text::finalize() {
 		for(unsigned int i = 0; i < ggv.size(); i++) {
 			GlyphCache* gc = Context::instance().getGlyphCache(
 				g->first.first,
-				_getRequestedGlyphCacheRenderer()
+				"" //_getRequestedGlyphCacheRenderer()
 			);
 
-			if(!ggv[i]->finalize(GlyphTexEnvCombineState(
+			if(!ggv[i]->finalize(GlyphGeometryState(
 				gc->getTexture(i),
 				gc->getTexture(i, true),
 				g->first.second,
 				osg::Vec3(0.0f, 0.0f, 0.0f),
-				1.0f
+				_alpha
 			))) continue;
 
 			geode->addDrawable(ggv[i]);
@@ -286,7 +198,7 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 
 	to.setupPangoLayout(layout);
 
-	drawLayout(layout, x, y);
+	Context::instance().drawLayout(this, layout, x, y);
 
 	/*
 	// Get text dimensions and whatnot...

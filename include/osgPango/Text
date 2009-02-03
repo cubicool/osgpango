@@ -3,53 +3,14 @@
 #ifndef OSGPANGO_TEXT
 #define OSGPANGO_TEXT
 
+#include <pango/pangocairo.h>
+
 #include <osg/Geode>
 #include <osg/MatrixTransform>
 #include <osgPango/String>
-#include <osgPango/Context>
+#include <osgPango/Glyph>
 
 namespace osgPango {
-
-class TextRenderer;
-
-struct OSGPANGO_EXPORT Renderer {
-	PangoRenderer parent_instance;
-	TextRenderer* renderer;
-};
-
-struct OSGPANGO_EXPORT RendererClass {
-	PangoRendererClass class_instance;
-};
-
-class OSGPANGO_EXPORT TextRenderer {
-public:
-	TextRenderer();
-
-	static void _drawGlyphs(PangoRenderer*, PangoFont*, PangoGlyphString*, int, int);
-
-	static void cleanup() {
-		// delete _mutex;
-
-		g_object_unref(_renderer);
-	}
-
-	// Derived classes be sure and override this.
-	virtual void drawGlyphs(PangoFont*, PangoGlyphString*, int, int) = 0;
-
-	// A lot of the context magic happens here.
-	void drawLayout(PangoLayout* layout, unsigned int x = 0, unsigned int y = 0);
-
-protected:
-	const osg::Vec3*   _getRequestedPangoColor() const;
-	const std::string& _getRequestedGlyphCacheRenderer() const;
-
-private:
-	static Renderer*   _renderer;
-	static std::string _gcr;
-	static osg::Vec3   _fg;
-
-	// mutable OpenThreads::Mutex* _mutex;
-};
 
 class OSGPANGO_EXPORT TextOptions: public osg::Referenced {
 public:
@@ -91,22 +52,18 @@ private:
 	PangoFontDescription* _description;
 };
 
-class OSGPANGO_EXPORT Text: public TextRenderer, public osg::MatrixTransform {
+class OSGPANGO_EXPORT Text: public osg::MatrixTransform {
 public:
 	typedef std::pair<PangoFont*, osg::Vec3>                   GlyphGeometryMapKey;
 	typedef std::map<GlyphGeometryMapKey, GlyphGeometryVector> GlyphGeometryMap;
 
 	Text();
 
-	virtual ~Text() {
-	}
-	
-	virtual void drawGlyphs(PangoFont*, PangoGlyphString*, int, int);
-
-	void addText        (const std::string&, int, int, const TextOptions& = TextOptions());
-	void writeAllImages (const std::string&);
-	bool finalize       ();
-	void setPosition    (const osg::Vec3&);
+	void drawGlyphs       (PangoFont*, PangoGlyphString*, int, int);
+	void addText          (const std::string&, int, int, const TextOptions& = TextOptions());
+	void writeAllImages   (const std::string&);
+	bool finalize         ();
+	void setPosition      (const osg::Vec3&);
 
 	const osg::Vec2& getSize() {
 		return _size;
@@ -156,6 +113,7 @@ private:
 	int              _lastX;
 	int              _lastY;
 	int              _baseline;
+	double           _alpha;
 };
 
 }
