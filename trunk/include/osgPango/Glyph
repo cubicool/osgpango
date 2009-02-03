@@ -13,9 +13,6 @@ namespace osgPango {
 
 class Font;
 
-const unsigned int DEFAULT_GCW = 512;
-const unsigned int DEFAULT_GCH = 512;
-
 struct OSGPANGO_EXPORT CachedGlyph {
 	CachedGlyph(
 		unsigned int     = 0,
@@ -63,6 +60,10 @@ enum GlyphEffectsMethod {
 
 class OSGPANGO_EXPORT GlyphRenderer: public osg::Referenced {
 public:
+	virtual bool hasEffects() const {
+		return false;
+	}
+
 	// This method returns an osg::Vec4 object whose values correspond to the following:
 	// the x origin offset, y origin offset, extra width, and extra height respectively.
 	// It is used when custom "effects" implementations needs to inform the cache object
@@ -91,7 +92,7 @@ public:
 	typedef std::vector<osg::observer_ptr<osgCairo::Image> > ImageVector;
 	typedef std::vector<osg::observer_ptr<osg::Texture> >    TextureVector;
 
-	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0, bool = false);
+	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0);
 
 	const CachedGlyph* getCachedGlyph     (unsigned int);
 	const CachedGlyph* createCachedGlyph  (PangoFont*, PangoGlyphInfo*);
@@ -125,8 +126,12 @@ public:
 		return _imgHeight;
 	}
 
-	bool hasEffects() const {
-		return _hasEffects;
+	GlyphRenderer* getGlyphRenderer() {
+		return _renderer.get();
+	}
+
+	const GlyphRenderer* getGlyphRenderer() const {
+		return _renderer.get();
 	}
 
 private:
@@ -160,7 +165,6 @@ private:
 	double       _h;
 	unsigned int _imgWidth;
 	unsigned int _imgHeight;
-	bool         _hasEffects;
 };
 
 bool setGlyphGeometryState (osg::Drawable*, const GlyphGeometryState&);
@@ -186,6 +190,10 @@ class OSGPANGO_EXPORT GlyphRendererOutline: public GlyphRenderer {
 public:
 	GlyphRendererOutline(unsigned int = 2);
 
+	virtual bool hasEffects() const {
+		return true;
+	}
+
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(
@@ -210,6 +218,10 @@ class OSGPANGO_EXPORT GlyphRendererShadowOffset: public GlyphRenderer {
 public:
 	GlyphRendererShadowOffset(int = 1, int = 1);
 
+	virtual bool hasEffects() const {
+		return true;
+	}
+	
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(

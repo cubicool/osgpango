@@ -22,34 +22,26 @@ public:
 	};
 	
 	TextOptions(
-		const std::string& = "",
-		Alignment          = ALIGN_LEFT,
-		int                = -1,
-		int                = -1,
-		int                = -1,
-		int                = -1
-	);
+		Alignment a  = ALIGN_LEFT,
+		int       w  = -1,
+		int       h  = -1,
+		int       i  = -1,
+		int       s  = -1
+	):
+	alignment (a),
+	width     (w),
+	height    (h),
+	indent    (i),
+	spacing   (s) {
+	}
 
-	virtual ~TextOptions();
-
-	void setFontDescription (const std::string&);
-	void setFontFamily      (const std::string&);
-	void setFontStyle       (PangoStyle);
-	void setFontVariant     (PangoVariant);
-	void setFontWeight      (PangoWeight);
-	void setFontSize        (int);
-	bool setupPangoLayout   (PangoLayout*) const;
+	bool setupPangoLayout(PangoLayout*) const;
 
 	Alignment alignment;
 	int       width;
 	int       height;
 	int       indent;
 	int       spacing;
-
-private:
-	void _unrefFontDescription();
-	
-	PangoFontDescription* _description;
 };
 
 class OSGPANGO_EXPORT Text: public osg::MatrixTransform {
@@ -64,6 +56,8 @@ public:
 	void writeAllImages   (const std::string&);
 	bool finalize         ();
 	void setPosition      (const osg::Vec3&);
+	void setAlpha         (double);
+	void setGlyphRenderer (const std::string&);
 
 	const osg::Vec2& getSize() {
 		return _size;
@@ -114,6 +108,7 @@ private:
 	int              _lastY;
 	int              _baseline;
 	double           _alpha;
+	std::string      _glyphRenderer;
 };
 
 }
