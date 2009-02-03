@@ -7,15 +7,17 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/Text>
+#include <osgPango/Context>
 
 const std::string LOREM_IPSUM(
+	"<span color='white' font='monospace 6'>"
 	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod\n"
 	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,\n"
 	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n"
 	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu\n"
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in\n"
+	"<b>fugiat</b> nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in\n"
 	"culpa qui officia deserunt mollit anim id est laborum."
+	"</span>"
 );
 
 osg::Matrix createInvertedYOrthoProjectionMatrix(float width, float height) {
@@ -130,7 +132,7 @@ int main(int argc, char** argv) {
 	// All of our temporary variables.
 	std::string cache, cacheSize, red, green, blue, alpha, alignment, width;
 
-	osgPango::Context::instance().init();
+	osgPango::Context::instance().init(132);
 
 	/*
 	osgPango::GlyphCache* c = 0;
@@ -233,7 +235,7 @@ int main(int argc, char** argv) {
 
 	viewer.run();
 
-	osgPango::Text::cleanup();
-
+	osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
+	
 	return 0;
 }

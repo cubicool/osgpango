@@ -1,11 +1,45 @@
 // -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
 
+#include <algorithm>
 #include <sstream>
 #include <osgPango/Context>
 
 namespace osgPango {
 
 Context Context::_context;
+
+G_DEFINE_TYPE(Renderer, renderer, PANGO_TYPE_RENDERER);
+
+#define TYPE_RENDERER (renderer_get_type())
+#define RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), TYPE_RENDERER, Renderer))
+
+static GObjectClass* _pangoClass = 0;
+
+void renderer_finalize(GObject* object) {
+	Renderer* priv = RENDERER(object);
+
+	G_OBJECT_CLASS(_pangoClass)->finalize(object);
+}
+
+void renderer_init(Renderer* priv) {
+}
+
+void renderer_class_init(RendererClass* klass) {
+	GObjectClass*       object_class   = G_OBJECT_CLASS(klass);
+	PangoRendererClass* renderer_class = PANGO_RENDERER_CLASS(klass);
+
+	_pangoClass = static_cast<GObjectClass*>(g_type_class_peek_parent(klass));
+
+	object_class->finalize = renderer_finalize;
+
+	renderer_class->draw_glyphs = &Context::drawGlyphs;
+}
+
+Context::~Context() {
+	g_object_unref(_renderer);
+	g_object_unref(_pfMap);
+	g_object_unref(_pContext);
+}
 
 Context& Context::instance() {
 	return _context;
@@ -38,6 +72,9 @@ bool Context::init(
 	pango_cairo_font_map_set_resolution(PANGO_CAIRO_FONT_MAP(_pfMap), dpi);
 
 	cairo_font_options_destroy(options);
+
+	// TODO: This???
+	_renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
 
 	return true;
 }
@@ -84,12 +121,6 @@ unsigned int Context::getFontList(FontList& fl, bool faces) {
 	return static_cast<unsigned int>(num);
 }
 
-bool Context::addGlyphRenderer(const std::string& key, GlyphRenderer* gr) {
-	_grMap[key] = gr;
-
-	return true;
-}
-
 GlyphCache* Context::getGlyphCache(PangoFont* font, const std::string& renderer) {
 	GlyphCacheFontMapKey key(font, renderer);
 
@@ -102,6 +133,94 @@ GlyphCache* Context::getGlyphCache(PangoFont* font, const std::string& renderer)
 	}
 
 	return gc;
+}
+
+void Context::drawGlyphs(
+	PangoRenderer*    renderer,
+	PangoFont*        font,
+	PangoGlyphString* glyphs,
+	int               x,
+	int               y
+) {
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(instance()._mutex);
+
+	Text* text  = instance()._text.get();
+
+	if(!text) return;
+
+	// Setup any kind of new "state" here.
+	osg::Vec3& color = instance()._color;
+
+	// Begin querying Pango context variables.
+	PangoColor* fg = pango_renderer_get_color(renderer, PANGO_RENDER_PART_FOREGROUND);
+
+	if(fg) color.set(
+		fg->red / 65535.0f,
+		fg->green / 65535.0f,
+		fg->blue / 65535.0f
+	);
+
+	else color.set(1.0f, 1.0f, 1.0f);
+
+	text->drawGlyphs(font, glyphs, x, y);
+
+	text = 0;
+}
+
+void Context::drawLayout(Text* text, PangoLayout* layout, int x, int y) {
+	_text = text;
+
+	pango_renderer_draw_layout(
+		PANGO_RENDERER(_renderer),
+		layout,
+		x * PANGO_SCALE,
+		-(y * PANGO_SCALE)
+	);
+}
+
+void Context::writeCachesToPNGFiles(const std::string& path) {
+	// TODO: Temporary hack!
+	static int count = 0;
+
+	for(GlyphCacheFontMap::iterator i = _gcfMap.begin(); i != _gcfMap.end(); i++) {
+		PangoFontDescription* d  = pango_font_describe(i->first.first);
+		GlyphCache*           gc = i->second.get();
+
+		std::ostringstream os;
+
+		/*
+		std::string family(pango_font_description_get_family(d));
+
+		// Get the PangoStyle and convert it to a string.
+		std::string style("Normal");
+		
+		PangoStyle pStyle = pango_font_description_get_style(d);
+
+		if(pStyle == PANGO_STYLE_OBLIQUE) style = "Oblique";
+
+		else if(pStyle == PANGO_STYLE_ITALIC) style = "Italic";
+
+		unsigned int size = pango_font_description_get_size(d) / PANGO_SCALE;
+
+		std::replace(family.begin(), family.end(), ' ', '_');
+
+		os << path << "_" << family << "_" << style << "_" << size;
+		*/
+
+		os << path << count;
+
+		count++;
+
+		gc->writeImagesAsFiles(os.str());
+
+		pango_font_description_free(d);
+	}
+}
+
+bool Context::addGlyphRenderer(const std::string& key, GlyphRenderer* gr) {
+	_grMap[key] = gr;
+
+	return true;
 }
 
 Context::Context():
