@@ -10,12 +10,12 @@
 #include <osgPango/Text>
 
 const std::string LOREM_IPSUM(
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum. "
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod\n"
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,\n"
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n"
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu\n"
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in\n"
+	"culpa qui officia deserunt mollit anim id est laborum."
 );
 
 osg::Matrix createInvertedYOrthoProjectionMatrix(float width, float height) {
@@ -96,6 +96,18 @@ void setupArguments(osg::ArgumentParser& args) {
 	);
 }
 
+int mainTest(int, char**) {
+	osgPango::Context& context = osgPango::Context::instance();
+	
+	context.init();
+	context.addGlyphRenderer("shadowOffset-1", new osgPango::GlyphRendererShadowOffset(1, 1));
+	context.addGlyphRenderer("shadowOffset-2", new osgPango::GlyphRendererShadowOffset(2, 2));
+	context.addGlyphRenderer("outline-1", new osgPango::GlyphRendererOutline(1));
+	context.addGlyphRenderer("outline-2", new osgPango::GlyphRendererOutline(2));
+	
+	return 0;
+}
+
 int main(int argc, char** argv) {
 	osg::ArgumentParser args(&argc, argv);
 
@@ -118,8 +130,9 @@ int main(int argc, char** argv) {
 	// All of our temporary variables.
 	std::string cache, cacheSize, red, green, blue, alpha, alignment, width;
 
-	osgPango::Font::init();
+	osgPango::Context::instance().init();
 
+	/*
 	osgPango::GlyphCache* c = 0;
 
 	while(args.read("--font", font)) {};
@@ -136,10 +149,11 @@ int main(int argc, char** argv) {
 			s
 		);
 	}
+	*/
 
-	osgPango::Font* f = new osgPango::Font(font, c);
-	osgPango::Text* t = new osgPango::Text(f);
+	osgPango::Text* t = new osgPango::Text();
 
+	/*
 	while(args.read("--color", red, green, blue)) {
 		float r = std::atof(red.c_str());
 		float g = std::atof(green.c_str());
@@ -185,16 +199,24 @@ int main(int argc, char** argv) {
 	t->setText(text);
 
 	f->getGlyphCache()->writeImagesAsFiles("osgpangoviewer");
+	*/
+
+	t->addText(text, 300, 300);
+	t->setMatrix(osg::Matrix::translate(0, 0, 0)); //osg::Vec3(t->getOriginTranslated(), 0.0f)));
+
+	if(!t->finalize()) return 1;
 
 	osg::Group*  group  = new osg::Group();
-	osg::Camera* camera = createOrthoCamera(1920, 1080);
+	osg::Camera* camera = createOrthoCamera(1280, 1024);
 	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
-	
+
+	/*
 	osg::MatrixTransform* mt = new osg::MatrixTransform(
 		osg::Matrix::translate(osg::Vec3(t->getOriginTranslated(), 0.0f))
 	);
 
 	mt->addChild(t);
+	*/
 
         viewer.addEventHandler(new osgViewer::StatsHandler());
         viewer.addEventHandler(new osgViewer::WindowSizeHandler());
@@ -202,7 +224,7 @@ int main(int argc, char** argv) {
                 viewer.getCamera()->getOrCreateStateSet()
         ));
 
-	camera->addChild(mt);
+	camera->addChild(t);
 
 	group->addChild(node);
 	group->addChild(camera);
@@ -211,7 +233,6 @@ int main(int argc, char** argv) {
 
 	viewer.run();
 
-	osgPango::Font::cleanup();
 	osgPango::Text::cleanup();
 
 	return 0;

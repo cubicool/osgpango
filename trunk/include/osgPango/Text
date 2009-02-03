@@ -1,9 +1,12 @@
 // -*-c++-*- osgPango - Copyright (C) 2009 Jeremy Moles
 
-#ifndef OSGPANGO_MULTITEXT
-#define OSGPANGO_MULTITEXT
+#ifndef OSGPANGO_TEXT
+#define OSGPANGO_TEXT
 
-#include <osgPango/Text>
+#include <osg/Geode>
+#include <osg/MatrixTransform>
+#include <osgPango/String>
+#include <osgPango/Context>
 
 namespace osgPango {
 
@@ -12,10 +15,6 @@ class TextRenderer;
 struct OSGPANGO_EXPORT Renderer {
 	PangoRenderer parent_instance;
 	TextRenderer* renderer;
-
-	osg::Vec3 fg;
-
-	mutable OpenThreads::Mutex* mutex;
 };
 
 struct OSGPANGO_EXPORT RendererClass {
@@ -29,7 +28,7 @@ public:
 	static void _drawGlyphs(PangoRenderer*, PangoFont*, PangoGlyphString*, int, int);
 
 	static void cleanup() {
-		delete _renderer->mutex;
+		// delete _mutex;
 
 		g_object_unref(_renderer);
 	}
@@ -41,15 +40,59 @@ public:
 	void drawLayout(PangoLayout* layout, unsigned int x = 0, unsigned int y = 0);
 
 protected:
-	const osg::Vec3* _getRequestedPangoColor() const;
+	const osg::Vec3*   _getRequestedPangoColor() const;
+	const std::string& _getRequestedGlyphCacheRenderer() const;
 
 private:
-	static Renderer* _renderer;
+	static Renderer*   _renderer;
+	static std::string _gcr;
+	static osg::Vec3   _fg;
+
+	// mutable OpenThreads::Mutex* _mutex;
+};
+
+class OSGPANGO_EXPORT TextOptions: public osg::Referenced {
+public:
+	enum Alignment {
+		ALIGN_LEFT,
+		ALIGN_CENTER,
+		ALIGN_RIGHT,
+		ALIGN_JUSTIFY
+	};
+	
+	TextOptions(
+		const std::string& = "",
+		Alignment          = ALIGN_LEFT,
+		int                = -1,
+		int                = -1,
+		int                = -1,
+		int                = -1
+	);
+
+	virtual ~TextOptions();
+
+	void setFontDescription (const std::string&);
+	void setFontFamily      (const std::string&);
+	void setFontStyle       (PangoStyle);
+	void setFontVariant     (PangoVariant);
+	void setFontWeight      (PangoWeight);
+	void setFontSize        (int);
+	bool setupPangoLayout   (PangoLayout*) const;
+
+	Alignment alignment;
+	int       width;
+	int       height;
+	int       indent;
+	int       spacing;
+
+private:
+	void _unrefFontDescription();
+	
+	PangoFontDescription* _description;
 };
 
 class OSGPANGO_EXPORT Text: public TextRenderer, public osg::MatrixTransform {
 public:
-	typedef std::map<PangoFont*, osg::ref_ptr<GlyphCache> >    FontMap;
 	typedef std::pair<PangoFont*, osg::Vec3>                   GlyphGeometryMapKey;
 	typedef std::map<GlyphGeometryMapKey, GlyphGeometryVector> GlyphGeometryMap;
 
@@ -60,7 +103,7 @@ public:
 	
 	virtual void drawGlyphs(PangoFont*, PangoGlyphString*, int, int);
 
-	void addText        (const std::string&, int, int);
+	void addText        (const std::string&, int, int, const TextOptions& = TextOptions());
 	void writeAllImages (const std::string&);
 	bool finalize       ();
 	void setPosition    (const osg::Vec3&);
@@ -106,16 +149,13 @@ public:
 	osg::Vec2 getOriginTranslated () const;
 
 private:
-	FontMap          _fontMap;
 	GlyphGeometryMap _ggMap;
-
-	osg::Vec2 _size;
-	osg::Vec2 _effectsSize;
-	osg::Vec2 _origin;
-
-	int _lastX;
-	int _lastY;
-	int _baseline;
+	osg::Vec2        _size;
+	osg::Vec2        _effectsSize;
+	osg::Vec2        _origin;
+	int              _lastX;
+	int              _lastY;
+	int              _baseline;
 };
 
 }

@@ -7,7 +7,9 @@
 
 namespace osgPango {
 
-Renderer* TextRenderer::_renderer = 0;
+Renderer*   TextRenderer::_renderer = 0;
+std::string TextRenderer::_gcr;
+osg::Vec3   TextRenderer::_fg;
 
 G_DEFINE_TYPE(Renderer, renderer, PANGO_TYPE_RENDERER);
 
@@ -41,7 +43,7 @@ TextRenderer::TextRenderer() {
 		_renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
 
 		_renderer->renderer = 0;
-		_renderer->mutex    = new OpenThreads::Mutex();
+		// _mutex              = new OpenThreads::Mutex();
 	}
 }
 
@@ -54,25 +56,29 @@ void TextRenderer::_drawGlyphs(
 ) {
 	PangoColor* fg = pango_renderer_get_color(renderer, PANGO_RENDER_PART_FOREGROUND);
 
-	if(fg) _renderer->fg.set(
+	if(fg) _fg.set(
 		fg->red / 65535.0f,
 		fg->green / 65535.0f,
 		fg->blue / 65535.0f
 	);
 
-	else _renderer->fg.set(-1.0f, -1.0, -1.0f);
+	else _fg.set(-1.0f, -1.0, -1.0f);
 
 	RENDERER(renderer)->renderer->drawGlyphs(font, glyphs, x, y);
 }
 
 const osg::Vec3* TextRenderer::_getRequestedPangoColor() const {
-	if(_renderer->fg[0] != -1.0f) return &_renderer->fg;
+	if(_fg[0] != -1.0f) return &_fg;
 
 	else return 0;
 }
 
+const std::string& TextRenderer::_getRequestedGlyphCacheRenderer() const {
+	return _gcr;
+}
+
 void TextRenderer::drawLayout(PangoLayout* layout, unsigned int x, unsigned int y) {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*_renderer->mutex);
+	// OpenThreads::ScopedLock<OpenThreads::Mutex> lock(*_mutex);
 
 	_renderer->renderer = const_cast<TextRenderer*>(this);
 
@@ -82,6 +88,78 @@ void TextRenderer::drawLayout(PangoLayout* layout, unsigned int x, unsigned int 
 		x * PANGO_SCALE,
 		-(y * PANGO_SCALE)
 	);
+}
+
+TextOptions::TextOptions(const std::string& d, Alignment a, int w, int h, int i, int s):
+alignment    (a),
+width        (w),
+height       (h),
+indent       (i),
+spacing      (s),
+_description (0) {
+	setFontDescription(d);
+}
+
+TextOptions::~TextOptions() {
+	// _unrefFontDescription();
+}
+
+void TextOptions::setFontDescription(const std::string& descr) {
+	_unrefFontDescription();
+
+	_description = pango_font_description_from_string(descr.c_str());
+}
+
+void TextOptions::setFontFamily(const std::string& family) {
+	if(_description) pango_font_description_set_family(_description, family.c_str());
+}
+
+void TextOptions::setFontStyle(PangoStyle style) {
+	if(_description) pango_font_description_set_style(_description, style);
+}
+
+void TextOptions::setFontVariant(PangoVariant variant) {
+	if(_description) pango_font_description_set_variant(_description, variant);
+}
+
+void TextOptions::setFontWeight(PangoWeight weight) {
+	if(_description) pango_font_description_set_weight(_description, weight);
+}
+
+void TextOptions::setFontSize(int size) {
+	if(_description) pango_font_description_set_size(_description, size * PANGO_SCALE);
+}
+
+bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
+	if(alignment != ALIGN_JUSTIFY) {
+		PangoAlignment pa = PANGO_ALIGN_LEFT;
+
+		if(alignment == ALIGN_CENTER) pa = PANGO_ALIGN_CENTER;
+
+		else if(alignment == ALIGN_RIGHT) pa = PANGO_ALIGN_RIGHT;
+	
+		pango_layout_set_alignment(layout, pa);
+	}
+
+	else pango_layout_set_justify(layout, true);
+
+	if(_description) pango_layout_set_font_description(layout, _description);
+
+	if(width > 0) pango_layout_set_width(layout, width * PANGO_SCALE);
+
+	if(height > 0) pango_layout_set_height(layout, height * PANGO_SCALE);
+
+	if(indent > 0) pango_layout_set_indent(layout, indent * PANGO_SCALE);
+
+	if(spacing > 0) pango_layout_set_spacing(layout, spacing * PANGO_SCALE);
+
+	return true;
+}
+
+void TextOptions::_unrefFontDescription() {
+	if(_description) g_object_unref(_description);
+
+	_description = 0;
 }
 
 Text::Text():
@@ -94,13 +172,12 @@ _baseline (0) {
 }
 
 void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
-	GlyphCache* gc = _fontMap[font].get();
-
-	if(!gc) {
-		gc = new GlyphCache(); //Outline(512, 512, 1);
-
-		_fontMap[font] = gc;
-	}
+	// Get the GlyphCache from a key, which may or may not be set via PangoAttr if I
+	// can it to work properly. :)
+	GlyphCache* gc = Context::instance().getGlyphCache(
+		font,
+		_getRequestedGlyphCacheRenderer()
+	);
 
 	osg::Vec2::value_type currentY = -(y / PANGO_SCALE);
 
@@ -175,9 +252,14 @@ bool Text::finalize() {
 		GlyphGeometryVector& ggv = g->second;
 
 		for(unsigned int i = 0; i < ggv.size(); i++) {
+			GlyphCache* gc = Context::instance().getGlyphCache(
+				g->first.first,
+				_getRequestedGlyphCacheRenderer()
+			);
+
 			if(!ggv[i]->finalize(GlyphTexEnvCombineState(
-				_fontMap[g->first.first]->getTexture(i),
-				_fontMap[g->first.first]->getTexture(i, true),
+				gc->getTexture(i),
+				gc->getTexture(i, true),
 				g->first.second,
 				osg::Vec3(0.0f, 0.0f, 0.0f),
 				1.0f
@@ -190,19 +272,19 @@ bool Text::finalize() {
 	return true;
 }
 
-void Text::addText(const std::string& str, int x, int y) {
+void Text::addText(const std::string& str, int x, int y, const TextOptions& to) {
 	String       text;
-	PangoLayout* layout = pango_layout_new(Font::getPangoContext());
+	PangoLayout* layout = pango_layout_new(Context::instance().getPangoContext());
 
 	if(str.size()) {
 		text.set(str, osgText::String::ENCODING_UTF8);
 
 		std::string utf8 = text.createUTF8EncodedString();
 
-		pango_layout_set_width(layout, 500 * PANGO_SCALE);
-		pango_layout_set_justify(layout, true);
 		pango_layout_set_markup(layout, utf8.c_str(), -1);
 	}
+
+	to.setupPangoLayout(layout);
 
 	drawLayout(layout, x, y);
 
@@ -228,6 +310,7 @@ void Text::addText(const std::string& str, int x, int y) {
 	g_object_unref(layout);
 }
 
+/*
 void Text::writeAllImages(const std::string& path) {
 	for(FontMap::iterator i = _fontMap.begin(); i != _fontMap.end(); i++) {
 		PangoFontDescription* d  = pango_font_describe(i->first);
@@ -246,6 +329,7 @@ void Text::writeAllImages(const std::string& path) {
 		pango_font_description_free(d);
 	}
 }
+*/
 
 void Text::setPosition(const osg::Vec3& pos) {
 	setMatrix(osg::Matrix::translate(pos));

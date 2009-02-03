@@ -61,19 +61,8 @@ enum GlyphEffectsMethod {
 	GLYPH_EFFECTS_METHOD_GLSL
 };
 
-// There is one GlyphCache object PER FONT object.
-class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {
+class OSGPANGO_EXPORT GlyphRenderer: public osg::Referenced {
 public:
-	typedef std::map<unsigned int, CachedGlyph>              GlyphMap;
-	typedef std::vector<osg::observer_ptr<osgCairo::Image> > ImageVector;
-	typedef std::vector<osg::observer_ptr<osg::Texture> >    TextureVector;
-
-	GlyphCache(unsigned int = 0, unsigned int = 0, bool = false);
-
-	const CachedGlyph* getCachedGlyph     (unsigned int);
-	const CachedGlyph* createCachedGlyph  (PangoFont*, PangoGlyphInfo*);
-	void               writeImagesAsFiles (const std::string&) const;
-
 	// This method returns an osg::Vec4 object whose values correspond to the following:
 	// the x origin offset, y origin offset, extra width, and extra height respectively.
 	// It is used when custom "effects" implementations needs to inform the cache object
@@ -93,6 +82,20 @@ public:
 		unsigned int,
 		unsigned int
 	);
+};
+
+// There is one GlyphCache object PER FONT object.
+class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {
+public:
+	typedef std::map<unsigned int, CachedGlyph>              GlyphMap;
+	typedef std::vector<osg::observer_ptr<osgCairo::Image> > ImageVector;
+	typedef std::vector<osg::observer_ptr<osg::Texture> >    TextureVector;
+
+	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0, bool = false);
+
+	const CachedGlyph* getCachedGlyph     (unsigned int);
+	const CachedGlyph* createCachedGlyph  (PangoFont*, PangoGlyphInfo*);
+	void               writeImagesAsFiles (const std::string&) const;
 
 	osgCairo::Image* getImage(unsigned int index, bool effects = false) {
 		return _getImage(index, effects);
@@ -138,6 +141,9 @@ private:
 	osgCairo::Image* _getImage   (unsigned int, bool) const;
 	osg::Texture*    _getTexture (unsigned int, bool) const;
 
+	// The "renderer" object, not bound to any local data.
+	osg::ref_ptr<GlyphRenderer> _renderer;
+
 	// A container of texture image data where the glyphs are cached.
 	ImageVector   _images;
 	ImageVector   _effects;
@@ -176,9 +182,9 @@ private:
 
 typedef std::vector<GlyphGeometry*> GlyphGeometryVector;
 
-class OSGPANGO_EXPORT GlyphCacheOutline: public GlyphCache {
+class OSGPANGO_EXPORT GlyphRendererOutline: public GlyphRenderer {
 public:
-	GlyphCacheOutline(unsigned int, unsigned int, unsigned int = 2);
+	GlyphRendererOutline(unsigned int = 2);
 
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
@@ -200,9 +206,9 @@ private:
 	unsigned int _outline;
 };
 
-class OSGPANGO_EXPORT GlyphCacheShadowOffset: public GlyphCache {
+class OSGPANGO_EXPORT GlyphRendererShadowOffset: public GlyphRenderer {
 public:
-	GlyphCacheShadowOffset(unsigned int, unsigned int, int = 1, int = 1);
+	GlyphRendererShadowOffset(int = 1, int = 1);
 
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
@@ -225,9 +231,10 @@ private:
 	int _yOffset;
 };
 
-class OSGPANGO_EXPORT GlyphCacheShadowGaussian: public GlyphCache {
+/*
+class OSGPANGO_EXPORT GlyphRendererShadowGaussian: public GlyphRenderer {
 public:
-	GlyphCacheShadowGaussian(unsigned int, unsigned int, unsigned int);
+	GlyphRendererShadowGaussian(unsigned int, unsigned int, unsigned int);
 
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
@@ -248,6 +255,7 @@ public:
 private:
 	unsigned int _radius;
 };
+*/
 
 }
 
