@@ -6,7 +6,7 @@
 #include <osg/Texture2D>
 #include <osg/TexMat>
 #include <osg/TexEnvCombine>
-#include <osgPango/Font>
+#include <osgPango/Context>
 
 namespace osgPango {
 
@@ -42,13 +42,51 @@ effectsColor   (_effectsColor),
 alpha          (_alpha) {
 }
 
-GlyphCache::GlyphCache(unsigned int width, unsigned int height, bool effects):
+osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {
+	return osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+bool GlyphRenderer::renderGlyph(
+	osgCairo::Image*        si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
+	if(!si) return false;
+
+	// TODO: With the Win32 backend, the following doesn't work properly.
+	// With Linux, it doesn't matter.
+	// si->showGlyphs(g);
+	
+	si->glyphPath(g);
+	si->fill();
+
+	return true;
+}
+
+bool GlyphRenderer::renderGlyphEffects(
+	osgCairo::Image*        si,
+	const osgCairo::Glyph&  g,
+	unsigned int            w,
+	unsigned int            h
+) {
+	return false;
+}
+
+GlyphCache::GlyphCache(
+	GlyphRenderer* renderer,
+	unsigned int        width,
+	unsigned int        height,
+	bool                effects
+):
+_renderer   (renderer),
 _x          (0.0f),
 _y          (0.0f),
 _h          (0.0f),
 _imgWidth   (width ? width : DEFAULT_GCW),
 _imgHeight  (height ? height : DEFAULT_GCH),
 _hasEffects (effects) {
+	if(!_renderer.valid()) _renderer = new GlyphRenderer();
 }
 
 const CachedGlyph* GlyphCache::getCachedGlyph(unsigned int i) {
@@ -97,7 +135,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		sie->setScaledFont(&sf);
 	}
 
-	osg::Vec4 extents = getExtraGlyphExtents();
+	osg::Vec4 extents = _renderer->getExtraGlyphExtents();
 
 	double addw = extents[2] + 1.0f;
 	double addh = extents[3] + 1.0f;
@@ -150,14 +188,14 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	si->save();
 	
-	renderGlyph(si, g, w, h);
+	_renderer->renderGlyph(si, g, w, h);
 
 	si->restore();
 	
 	if(sie) {
 		sie->save();
 
-		renderGlyphEffects(sie, g, w, h);
+		_renderer->renderGlyphEffects(sie, g, w, h);
 
 		sie->restore();
 	}
@@ -191,37 +229,6 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 void GlyphCache::writeImagesAsFiles(const std::string& prefix) const {
 	_writeImageVectorFiles(prefix, "", _images);
 	_writeImageVectorFiles(prefix, "_effects", _effects);
-}
-
-osg::Vec4 GlyphCache::getExtraGlyphExtents() const {
-	return osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
-}
-
-bool GlyphCache::renderGlyph(
-	osgCairo::Image*        si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
-) {
-	if(!si) return false;
-
-	// TODO: With the Win32 backend, the following doesn't work properly.
-	// With Linux, it doesn't matter.
-	// si->showGlyphs(g);
-	
-	si->glyphPath(g);
-	si->fill();
-
-	return true;
-}
-
-bool GlyphCache::renderGlyphEffects(
-	osgCairo::Image*        si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
-) {
-	return false;
 }
 
 bool GlyphCache::_newImageAndTexture(ImageVector& images, TextureVector& textures) {
@@ -512,38 +519,35 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	return true;
 }
 
-GlyphCacheOutline::GlyphCacheOutline(unsigned int w, unsigned int h, unsigned int size):
-GlyphCache (w, h, true),
-_outline   (size) {
+GlyphRendererOutline::GlyphRendererOutline(unsigned int size):
+_outline(size) {
 }
 
-osg::Vec4 GlyphCacheOutline::getExtraGlyphExtents() const {
+osg::Vec4 GlyphRendererOutline::getExtraGlyphExtents() const {
 	return osg::Vec4(_outline, _outline, _outline * 2, _outline * 2);
 }
 
-bool GlyphCacheOutline::renderGlyph(
+bool GlyphRendererOutline::renderGlyph(
 	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
 ) {
-
 	if(!si) return false;
 
 	si->translate(_outline, _outline);
 
-	GlyphCache::renderGlyph(si, g, w, h);
+	GlyphRenderer::renderGlyph(si, g, w, h);
 
 	return true;
 }
 
-bool GlyphCacheOutline::renderGlyphEffects(
+bool GlyphRendererOutline::renderGlyphEffects(
 	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
 ) {
-
 	if(!si) return false;
 
 	si->setLineWidth((_outline * 2) - 0.5f);
@@ -554,27 +558,21 @@ bool GlyphCacheOutline::renderGlyphEffects(
 	si->fill();
 	si->setOperator(CAIRO_OPERATOR_CLEAR);
 	
-	GlyphCache::renderGlyph(si, g, w, h);
+	GlyphRenderer::renderGlyph(si, g, w, h);
 
 	return true;
 }
 
-GlyphCacheShadowOffset::GlyphCacheShadowOffset(
-	unsigned int w,
-	unsigned int h,
-	int          xo,
-	int          yo
-):
-GlyphCache (w, h, true),
-_xOffset   (xo),
-_yOffset   (yo) {
+GlyphRendererShadowOffset::GlyphRendererShadowOffset(int x, int y):
+_xOffset (x),
+_yOffset (y) {
 }
 
-osg::Vec4 GlyphCacheShadowOffset::getExtraGlyphExtents() const {
+osg::Vec4 GlyphRendererShadowOffset::getExtraGlyphExtents() const {
 	return osg::Vec4(0.0f, 0.0f, std::abs(_xOffset), std::abs(_yOffset));
 }
 
-bool GlyphCacheShadowOffset::renderGlyph(
+bool GlyphRendererShadowOffset::renderGlyph(
 	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
@@ -586,12 +584,12 @@ bool GlyphCacheShadowOffset::renderGlyph(
 
 	if(_yOffset < 0) si->translate(0.0f, std::abs(_yOffset));
 
-	GlyphCache::renderGlyph(si, g, w, h);
+	GlyphRenderer::renderGlyph(si, g, w, h);
 
 	return true;
 }
 
-bool GlyphCacheShadowOffset::renderGlyphEffects(
+bool GlyphRendererShadowOffset::renderGlyphEffects(
 	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
@@ -605,7 +603,7 @@ bool GlyphCacheShadowOffset::renderGlyphEffects(
 
 	if(_yOffset > 0) si->translate(0.0f, _yOffset);
 
-	GlyphCache::renderGlyph(si, g, w, h);
+	GlyphRenderer::renderGlyph(si, g, w, h);
 
 	si->restore();
 	si->setOperator(CAIRO_OPERATOR_CLEAR);
@@ -614,18 +612,19 @@ bool GlyphCacheShadowOffset::renderGlyphEffects(
 
 	if(_yOffset < 0) si->translate(0.0f, std::abs(_yOffset));
 
-	GlyphCache::renderGlyph(si, g, w, h);
+	GlyphRenderer::renderGlyph(si, g, w, h);
 
 	return true;
 }
 
+/*
 GlyphCacheShadowGaussian::GlyphCacheShadowGaussian(
 	unsigned int w,
 	unsigned int h,
 	unsigned int radius
 ):
-GlyphCache (w, h, true),
-_radius    (radius) {
+GlyphRenderer (w, h, true),
+_radius       (radius) {
 }
 
 osg::Vec4 GlyphCacheShadowGaussian::getExtraGlyphExtents() const {
@@ -668,5 +667,6 @@ bool GlyphCacheShadowGaussian::renderGlyphEffects(
 
 	return true;
 }
+*/
 
 }

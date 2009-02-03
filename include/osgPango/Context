@@ -1,0 +1,63 @@
+// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+
+#ifndef OSGPANGO_CONTEXT
+#define OSGPANGO_CONTEXT
+
+#include <pango/pangocairo.h>
+
+#include <osgPango/Glyph>
+
+namespace osgPango {
+
+const std::string OSGPANGO_DEFAULT_FONT = "Sans 6";
+
+typedef std::list<std::string> FontList;
+
+class OSGPANGO_EXPORT Context {
+public:
+	static Context& instance();
+
+	bool init(
+		unsigned int                 = 72,
+		osgCairo::CairoAntialias     = CAIRO_ANTIALIAS_SUBPIXEL,
+		osgCairo::CairoHintStyle     = CAIRO_HINT_STYLE_FULL,
+		osgCairo::CairoSubpixelOrder = CAIRO_SUBPIXEL_ORDER_RGB
+	);
+
+	unsigned int getFontList      (FontList&, bool = true);
+	bool         addGlyphRenderer (const std::string&, GlyphRenderer*);
+	GlyphCache*  getGlyphCache    (PangoFont*, const std::string&);
+
+	~Context() {
+		// TODO: This causes Windows to segfault.
+		// g_object_unref(_map);
+
+		g_object_unref(_pContext);
+	}
+
+	PangoFontMap* getPangoFontMap() {
+		return _pfMap;
+	}
+
+	PangoContext* getPangoContext() {
+		return _pContext;
+	}
+
+private:
+	typedef std::pair<PangoFont*, std::string>                        GlyphCacheFontMapKey;
+	typedef std::map<GlyphCacheFontMapKey, osg::ref_ptr<GlyphCache> > GlyphCacheFontMap;
+	typedef std::map<std::string, osg::ref_ptr<GlyphRenderer> >       GlyphRendererMap;
+
+	Context();
+
+	static Context _context;
+	
+	GlyphRendererMap  _grMap;
+	GlyphCacheFontMap _gcfMap;
+	PangoFontMap*     _pfMap;
+	PangoContext*     _pContext;
+};
+
+}
+
+#endif

@@ -22,16 +22,17 @@ PKG_CHECK_MODULES(PANGO REQUIRED pango)
 PKG_CHECK_MODULES(PANGOCAIRO REQUIRED pangocairo)
 
 SET(SRC_FILES
+	src/Context.cpp
 	src/Glyph.cpp
-	src/Font.cpp
-	src/Label.cpp
 	src/Text.cpp
 )
 
+#	src/Label.cpp
+
 SET(HEADER_FILES
+	${osgPango_SOURCE_DIR}/include/osgPango/Context
 	${osgPango_SOURCE_DIR}/include/osgPango/Export
 	${osgPango_SOURCE_DIR}/include/osgPango/Glyph
-	${osgPango_SOURCE_DIR}/include/osgPango/Font
 	${osgPango_SOURCE_DIR}/include/osgPango/Label
 	${osgPango_SOURCE_DIR}/include/osgPango/String
 	${osgPango_SOURCE_DIR}/include/osgPango/Text
@@ -109,11 +110,11 @@ FOREACH(INCLUDEFILE ${HEADER_FILES})
 	)
 ENDFOREACH(INCLUDEFILE)
 
-ADD_SUBDIRECTORY(examples/osgpangoanimation)
-ADD_SUBDIRECTORY(examples/osgpangocustomrenderer)
+#ADD_SUBDIRECTORY(examples/osgpangoanimation)
+#ADD_SUBDIRECTORY(examples/osgpangocustomrenderer)
 ADD_SUBDIRECTORY(examples/osgpangofonts)
-ADD_SUBDIRECTORY(examples/osgpangoguiviewer)
-ADD_SUBDIRECTORY(examples/osgpangothreaded)
+#ADD_SUBDIRECTORY(examples/osgpangoguiviewer)
+#ADD_SUBDIRECTORY(examples/osgpangothreaded)
 ADD_SUBDIRECTORY(examples/osgpangoviewer)
 
 CONFIGURE_FILE(
