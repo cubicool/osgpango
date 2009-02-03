@@ -75,17 +75,15 @@ bool GlyphRenderer::renderGlyphEffects(
 
 GlyphCache::GlyphCache(
 	GlyphRenderer* renderer,
-	unsigned int        width,
-	unsigned int        height,
-	bool                effects
+	unsigned int   width,
+	unsigned int   height
 ):
 _renderer   (renderer),
 _x          (0.0f),
 _y          (0.0f),
 _h          (0.0f),
-_imgWidth   (width ? width : DEFAULT_GCW),
-_imgHeight  (height ? height : DEFAULT_GCH),
-_hasEffects (effects) {
+_imgWidth   (width),
+_imgHeight  (height) {
 	if(!_renderer.valid()) _renderer = new GlyphRenderer();
 }
 
@@ -119,8 +117,10 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	// We can't do this in constructor because we need to give the object time
 	// to allow the user to set various caching options.
 	if(!_images.size()) _newImageAndTexture(_images, _textures);
-	
-	if(_hasEffects && !_effects.size()) _newImageAndTexture(_effects, _effectsTextures);
+
+	bool hasEffects = _renderer->hasEffects();
+
+	if(hasEffects && !_effects.size()) _newImageAndTexture(_effects, _effectsTextures);
 
 	osgCairo::ScaledFont sf(pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font)));
 
@@ -129,7 +129,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	
 	si->setScaledFont(&sf);
 
-	if(_hasEffects) {
+	if(hasEffects) {
 		sie = _effects.back().get();
 
 		sie->setScaledFont(&sf);
@@ -165,7 +165,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 		si->setScaledFont(&sf);
 
-		if(_hasEffects) {
+		if(hasEffects) {
 			_newImageAndTexture(_effects, _effectsTextures);
 
 			sie = _effects.back().get();
@@ -579,7 +579,7 @@ bool GlyphRendererShadowOffset::renderGlyph(
 	unsigned int            h
 ) {
 	if(!si) return false;
-
+	
 	if(_xOffset < 0) si->translate(std::abs(_xOffset), 0.0f);
 
 	if(_yOffset < 0) si->translate(0.0f, std::abs(_yOffset));

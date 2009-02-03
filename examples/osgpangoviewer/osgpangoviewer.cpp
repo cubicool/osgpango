@@ -10,14 +10,12 @@
 #include <osgPango/Context>
 
 const std::string LOREM_IPSUM(
-	"<span color='white' font='monospace 6'>"
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod\n"
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,\n"
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n"
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu\n"
-	"<b>fugiat</b> nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in\n"
+	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
+	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
 	"culpa qui officia deserunt mollit anim id est laborum."
-	"</span>"
 );
 
 osg::Matrix createInvertedYOrthoProjectionMatrix(float width, float height) {
@@ -63,23 +61,8 @@ void setupArguments(osg::ArgumentParser& args) {
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
-		"--font '<string>'",
-		"A proper Pango font description; 'Sans 20', 'Monospace Bold 10', etc."
-	);
-
-	args.getApplicationUsage()->addCommandLineOption(
-		"--cache <string> <int>",
-		"The GlyphCache object to use (outline, shadowOffset) and size."
-	);
-
-	args.getApplicationUsage()->addCommandLineOption(
-		"--color <float> <float> <float>",
-		"The RGB color of the font."
-	);
-
-	args.getApplicationUsage()->addCommandLineOption(
-		"--effectsColor <float> <float> <float>",
-		"The RGB color of the effect (if present)."
+		"--renderer <string> <int>",
+		"The GlyphRenderer object to use (outline, shadowOffset) and size."
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
@@ -98,18 +81,6 @@ void setupArguments(osg::ArgumentParser& args) {
 	);
 }
 
-int mainTest(int, char**) {
-	osgPango::Context& context = osgPango::Context::instance();
-	
-	context.init();
-	context.addGlyphRenderer("shadowOffset-1", new osgPango::GlyphRendererShadowOffset(1, 1));
-	context.addGlyphRenderer("shadowOffset-2", new osgPango::GlyphRendererShadowOffset(2, 2));
-	context.addGlyphRenderer("outline-1", new osgPango::GlyphRendererOutline(1));
-	context.addGlyphRenderer("outline-2", new osgPango::GlyphRendererOutline(2));
-	
-	return 0;
-}
-
 int main(int argc, char** argv) {
 	osg::ArgumentParser args(&argc, argv);
 
@@ -126,50 +97,37 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	std::string font("Sans 10");
 	std::string text(LOREM_IPSUM);
 
 	// All of our temporary variables.
-	std::string cache, cacheSize, red, green, blue, alpha, alignment, width;
+	std::string renderer, rendererSize, alpha, alignment, width;
 
-	osgPango::Context::instance().init(132);
+	osgPango::Context& context = osgPango::Context::instance();
 
-	/*
-	osgPango::GlyphCache* c = 0;
-
-	while(args.read("--font", font)) {};
-
-	while(args.read("--cache", cache, cacheSize)) {
-		int s = std::atoi(cacheSize.c_str());
-
-		if(cache == "outline") c = new osgPango::GlyphCacheOutline(1024, 128, s);
-		
-		else if(cache == "shadowOffset") c = new osgPango::GlyphCacheShadowOffset(
-			1024,
-			128,
-			s,
-			s
-		);
-	}
-	*/
+	context.init();
 
 	osgPango::Text* t = new osgPango::Text();
 
-	/*
-	while(args.read("--color", red, green, blue)) {
-		float r = std::atof(red.c_str());
-		float g = std::atof(green.c_str());
-		float b = std::atof(blue.c_str());
+	osgPango::TextOptions to;
 
-		t->setColor(osg::Vec3(r, g, b));
-	}
+	while(args.read("--renderer", renderer, rendererSize)) {
+		int s = std::atoi(rendererSize.c_str());
 
-	while(args.read("--effectsColor", red, green, blue)) {
-		float r = std::atof(red.c_str());
-		float g = std::atof(green.c_str());
-		float b = std::atof(blue.c_str());
+		if(renderer == "outline") context.addGlyphRenderer(
+			"outline",
+			new osgPango::GlyphRendererOutline(s)
+		);
 
-		t->setEffectsColor(osg::Vec3(r, g, b));
+		else if(renderer == "shadowOffset") context.addGlyphRenderer(
+			"shadowOffset",
+			new osgPango::GlyphRendererShadowOffset(s, s)
+		);
+
+		else continue;
+
+		osg::notify(osg::NOTICE) << "settng renderer: " << renderer << std::endl;
+
+		t->setGlyphRenderer(renderer);
 	}
 
 	while(args.read("--alpha", alpha)) {
@@ -178,18 +136,14 @@ int main(int argc, char** argv) {
 		t->setAlpha(a);
 	}
 
-	while(args.read("--width", width)) {
-		int w = std::atoi(width.c_str());
-
-		t->setWidth(w);
-	}
+	while(args.read("--width", width)) to.width = std::atoi(width.c_str());
 
 	while(args.read("--alignment", alignment)) {
-		if(alignment == "center") t->setAlignment(osgPango::Text::ALIGN_CENTER);
+		if(alignment == "center") to.alignment = osgPango::TextOptions::ALIGN_CENTER;
 		
-		else if(alignment == "right") t->setAlignment(osgPango::Text::ALIGN_RIGHT);
+		else if(alignment == "right") to.alignment = osgPango::TextOptions::ALIGN_RIGHT;
 		
-		else if(alignment == "justify") t->setAlignment(osgPango::Text::ALIGN_JUSTIFY);
+		else if(alignment == "justify") to.alignment = osgPango::TextOptions::ALIGN_JUSTIFY;
 	}
 
 	if(args.argc() >= 2) {
@@ -198,19 +152,13 @@ int main(int argc, char** argv) {
 		for(int i = 1; i < args.argc(); i++) text += std::string(args[i]) + " ";
 	}
 
-	t->setText(text);
-
-	f->getGlyphCache()->writeImagesAsFiles("osgpangoviewer");
-	*/
-
-	t->addText(text, 300, 300);
+	t->addText(text, 300, 300, to);
 	t->setMatrix(osg::Matrix::translate(0, 0, 0)); //osg::Vec3(t->getOriginTranslated(), 0.0f)));
 
 	if(!t->finalize()) return 1;
 
 	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(1280, 1024);
-	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
 
 	/*
 	osg::MatrixTransform* mt = new osg::MatrixTransform(
@@ -228,7 +176,6 @@ int main(int argc, char** argv) {
 
 	camera->addChild(t);
 
-	group->addChild(node);
 	group->addChild(camera);
 
 	viewer.setSceneData(group);

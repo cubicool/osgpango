@@ -10,8 +10,6 @@
 
 namespace osgPango {
 
-const std::string OSGPANGO_DEFAULT_FONT = "Sans 6";
-
 typedef std::list<std::string> FontList;
 
 struct OSGPANGO_EXPORT Renderer {
@@ -41,9 +39,10 @@ public:
 	unsigned int getFontList           (FontList&, bool = true);
 	GlyphCache*  getGlyphCache         (PangoFont*, const std::string&);
 	void         drawLayout            (Text*, PangoLayout*, int, int);
+	void         setTextureSize        (unsigned int, unsigned int);
 	void         writeCachesToPNGFiles (const std::string&);
 	bool         addGlyphRenderer      (const std::string&, GlyphRenderer*);
-	
+
 	const osg::Vec3& getCurrentColor() const {
 		return _color;
 	}
@@ -73,6 +72,8 @@ private:
 	osg::ref_ptr<Text> _text;
 	OpenThreads::Mutex _mutex;
 	osg::Vec3          _color;
+	unsigned int       _textureWidth;
+	unsigned int       _textureHeight;
 };
 
 }

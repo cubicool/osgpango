@@ -36,9 +36,11 @@ void renderer_class_init(RendererClass* klass) {
 }
 
 Context::~Context() {
-	g_object_unref(_renderer);
-	g_object_unref(_pfMap);
-	g_object_unref(_pContext);
+	if(_renderer) g_object_unref(_renderer);
+
+	if(_pfMap) g_object_unref(_pfMap);
+	
+	if(_pContext) g_object_unref(_pContext);
 }
 
 Context& Context::instance() {
@@ -73,8 +75,10 @@ bool Context::init(
 
 	cairo_font_options_destroy(options);
 
-	// TODO: This???
 	_renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
+
+	// Add our custom attribute types here.
+	pango_attr_type_register("cache");
 
 	return true;
 }
@@ -127,7 +131,7 @@ GlyphCache* Context::getGlyphCache(PangoFont* font, const std::string& renderer)
 	GlyphCache* gc = _gcfMap[key].get();
 
 	if(!gc) {
-		gc = new GlyphCache();
+		gc = new GlyphCache(_grMap[renderer], _textureWidth, _textureHeight);
 
 		_gcfMap[key] = gc;
 	}
@@ -224,8 +228,10 @@ bool Context::addGlyphRenderer(const std::string& key, GlyphRenderer* gr) {
 }
 
 Context::Context():
-_pfMap    (0),
-_pContext (0) {
+_pfMap         (0),
+_pContext      (0),
+_textureWidth  (256),
+_textureHeight (256) {
 }
 
 }

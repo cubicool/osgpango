@@ -7,46 +7,6 @@
 
 namespace osgPango {
 
-TextOptions::TextOptions(const std::string& d, Alignment a, int w, int h, int i, int s):
-alignment    (a),
-width        (w),
-height       (h),
-indent       (i),
-spacing      (s),
-_description (0) {
-	setFontDescription(d);
-}
-
-TextOptions::~TextOptions() {
-	// _unrefFontDescription();
-}
-
-void TextOptions::setFontDescription(const std::string& descr) {
-	_unrefFontDescription();
-
-	_description = pango_font_description_from_string(descr.c_str());
-}
-
-void TextOptions::setFontFamily(const std::string& family) {
-	if(_description) pango_font_description_set_family(_description, family.c_str());
-}
-
-void TextOptions::setFontStyle(PangoStyle style) {
-	if(_description) pango_font_description_set_style(_description, style);
-}
-
-void TextOptions::setFontVariant(PangoVariant variant) {
-	if(_description) pango_font_description_set_variant(_description, variant);
-}
-
-void TextOptions::setFontWeight(PangoWeight weight) {
-	if(_description) pango_font_description_set_weight(_description, weight);
-}
-
-void TextOptions::setFontSize(int size) {
-	if(_description) pango_font_description_set_size(_description, size * PANGO_SCALE);
-}
-
 bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 	if(alignment != ALIGN_JUSTIFY) {
 		PangoAlignment pa = PANGO_ALIGN_LEFT;
@@ -60,8 +20,6 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 
 	else pango_layout_set_justify(layout, true);
 
-	if(_description) pango_layout_set_font_description(layout, _description);
-
 	if(width > 0) pango_layout_set_width(layout, width * PANGO_SCALE);
 
 	if(height > 0) pango_layout_set_height(layout, height * PANGO_SCALE);
@@ -71,12 +29,6 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 	if(spacing > 0) pango_layout_set_spacing(layout, spacing * PANGO_SCALE);
 
 	return true;
-}
-
-void TextOptions::_unrefFontDescription() {
-	if(_description) g_object_unref(_description);
-
-	_description = 0;
 }
 
 Text::Text():
@@ -91,7 +43,7 @@ _alpha    (1.0f) {
 void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// Get the GlyphCache from a key, which may or may not be set via PangoAttr if I
 	// can it to work properly. :)
-	GlyphCache* gc = Context::instance().getGlyphCache(font, ""); //_glyphRenderer);
+	GlyphCache* gc = Context::instance().getGlyphCache(font, _glyphRenderer);
 
 	if(!gc) return;
 
@@ -133,14 +85,16 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 				(gi->geometry.y_offset / PANGO_SCALE) + extents[1]
 			);
 
+			bool hasEffects = gc->getGlyphRenderer()->hasEffects();
+
 			if(cg->img >= ggv.size()) ggv.push_back(
-				new GlyphGeometry(gc->hasEffects())
+				new GlyphGeometry(hasEffects)
 			);
 	
 			ggv[cg->img]->pushCachedGlyphAt(
 				cg,
 				pos + layoutPos,
-				gc->hasEffects(),
+				hasEffects,
 				GLYPH_EFFECTS_METHOD_DEFAULT
 			);
 		}
@@ -166,7 +120,7 @@ bool Text::finalize() {
 		for(unsigned int i = 0; i < ggv.size(); i++) {
 			GlyphCache* gc = Context::instance().getGlyphCache(
 				g->first.first,
-				"" //_getRequestedGlyphCacheRenderer()
+				_glyphRenderer
 			);
 
 			if(!ggv[i]->finalize(GlyphGeometryState(
@@ -222,29 +176,16 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 	g_object_unref(layout);
 }
 
-/*
-void Text::writeAllImages(const std::string& path) {
-	for(FontMap::iterator i = _fontMap.begin(); i != _fontMap.end(); i++) {
-		PangoFontDescription* d  = pango_font_describe(i->first);
-		GlyphCache*           gc = i->second.get();
-
-		std::ostringstream os;
-
-		std::string family(pango_font_description_get_family(d));
-
-		std::replace(family.begin(), family.end(), ' ', '_');
-
-		os << path << "_" << family << "_" << pango_font_description_get_size(d);
-
-		gc->writeImagesAsFiles(os.str());
-
-		pango_font_description_free(d);
-	}
-}
-*/
-
 void Text::setPosition(const osg::Vec3& pos) {
 	setMatrix(osg::Matrix::translate(pos));
+}
+
+void Text::setAlpha(double alpha) {
+	_alpha = alpha;
+}
+
+void Text::setGlyphRenderer(const std::string& gr) {
+	_glyphRenderer = gr;
 }
 
 osg::Vec3 Text::getPosition() const {
