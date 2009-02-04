@@ -168,11 +168,11 @@ int main(int argc, char** argv) {
 	mt->addChild(t);
 	*/
 
-        viewer.addEventHandler(new osgViewer::StatsHandler());
-        viewer.addEventHandler(new osgViewer::WindowSizeHandler());
-        viewer.addEventHandler(new osgGA::StateSetManipulator(
-                viewer.getCamera()->getOrCreateStateSet()
-        ));
+	viewer.addEventHandler(new osgViewer::StatsHandler());
+	viewer.addEventHandler(new osgViewer::WindowSizeHandler());
+	viewer.addEventHandler(new osgGA::StateSetManipulator(
+		viewer.getCamera()->getOrCreateStateSet()
+	));
 
 	camera->addChild(t);
 

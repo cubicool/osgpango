@@ -6,6 +6,9 @@
 
 namespace osgPango {
 
+const unsigned int DEFAULT_CACHE_WIDTH  = 256;
+const unsigned int DEFAULT_CACHE_HEIGHT = 256;
+
 Context Context::_context;
 
 G_DEFINE_TYPE(Renderer, renderer, PANGO_TYPE_RENDERER);
@@ -230,8 +233,8 @@ bool Context::addGlyphRenderer(const std::string& key, GlyphRenderer* gr) {
 Context::Context():
 _pfMap         (0),
 _pContext      (0),
-_textureWidth  (256),
-_textureHeight (256) {
+_textureWidth  (DEFAULT_CACHE_WIDTH),
+_textureHeight (DEFAULT_CACHE_HEIGHT) {
 }
 
 }

@@ -77,7 +77,7 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 		if(!cg) continue;
 
-		GlyphGeometryVector& ggv = _ggMap[GlyphGeometryMapKey(font, color)];
+		GlyphGeometryVector& ggv = _ggMap[GlyphGeometryMapKey(gc, color)];
 	
 		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
 			osg::Vec2 pos(
@@ -87,10 +87,17 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 			bool hasEffects = gc->getGlyphRenderer()->hasEffects();
 
-			if(cg->img >= ggv.size()) ggv.push_back(
-				new GlyphGeometry(hasEffects)
-			);
-	
+			for(unsigned int j = 0; j < cg->img; j++) {
+				if(j >= ggv.size()) ggv.push_back(0);
+			}
+
+			// TODO: This whole block of code is VILE and ATROCIOUS.
+			if(cg->img >= ggv.size()) ggv.push_back(new GlyphGeometry(hasEffects));
+
+			else {
+				if(!ggv[cg->img]) ggv[cg->img] = new GlyphGeometry(hasEffects);
+			}
+
 			ggv[cg->img]->pushCachedGlyphAt(
 				cg,
 				pos + layoutPos,
@@ -118,10 +125,20 @@ bool Text::finalize() {
 		GlyphGeometryVector& ggv = g->second;
 
 		for(unsigned int i = 0; i < ggv.size(); i++) {
-			GlyphCache* gc = Context::instance().getGlyphCache(
-				g->first.first,
-				_glyphRenderer
-			);
+			// They can be set to null, so ignore them if that's the case.
+			if(!ggv[i]) {
+				osg::notify(osg::NOTICE) << "Skipping nul..." << std::endl;
+
+				continue;
+			}
+
+			else osg::notify(osg::NOTICE)
+				<< i << " has "
+				<< ggv[i]->getVertexArray()->getNumElements() / 4 << " elements."
+				<< std::endl
+			;
+
+			GlyphCache* gc = g->first.first;
 
 			if(!ggv[i]->finalize(GlyphGeometryState(
 				gc->getTexture(i),
