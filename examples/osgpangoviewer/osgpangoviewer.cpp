@@ -152,21 +152,14 @@ int main(int argc, char** argv) {
 		for(int i = 1; i < args.argc(); i++) text += std::string(args[i]) + " ";
 	}
 
-	t->addText(text, 300, 300, to);
-	t->setMatrix(osg::Matrix::translate(0, 0, 0)); //osg::Vec3(t->getOriginTranslated(), 0.0f)));
+	t->addText(text, 0, 0, to);
 
 	if(!t->finalize()) return 1;
 
+	t->setMatrix(osg::Matrix::translate(osg::Vec3(t->getOriginBaseline(), 0.0f)));
+
 	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(1280, 1024);
-
-	/*
-	osg::MatrixTransform* mt = new osg::MatrixTransform(
-		osg::Matrix::translate(osg::Vec3(t->getOriginTranslated(), 0.0f))
-	);
-
-	mt->addChild(t);
-	*/
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
 	viewer.addEventHandler(new osgViewer::WindowSizeHandler());

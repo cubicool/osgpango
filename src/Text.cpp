@@ -1,8 +1,9 @@
 // -*-c++-*- osgPango - Copyright (C) 2009 Jeremy Moles
 
-#include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <osg/io_utils>
+#include <osg/Math>
 #include <osgPango/Context>
 
 namespace osgPango {
@@ -110,12 +111,18 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 		_lastX    += extents[0];
 	}
 
-	_lastY    = currentY;
-	_baseline = y / PANGO_SCALE;
+	_lastY = currentY;
+
+	// Use the lowest baseline of all the texts that are added.
+	int baseline = y / PANGO_SCALE;
+
+	osg::notify(osg::NOTICE) << "BASELINE: " << baseline << std::endl;
+
+	if(baseline > _baseline) _baseline = baseline;
 }
 
 bool Text::finalize() {
-	osg::Geode* geode = dynamic_cast<osg::Geode*>(getChild(0));
+	osg::Geode* geode = getGeode();
 
 	if(!geode) return false;
 
@@ -151,6 +158,18 @@ bool Text::finalize() {
 			geode->addDrawable(ggv[i]);
 		}
 	}
+
+	osg::BoundingBox bb = geode->getBoundingBox();
+    
+	_origin.set(bb.xMin(), bb.yMin());
+	_size.set(bb.xMax(), bb.yMax());
+
+	_size -= _origin;
+
+	osg::notify(osg::NOTICE) << "origin           = " << _origin << std::endl;
+	osg::notify(osg::NOTICE) << "size             = " << _size << std::endl;
+	osg::notify(osg::NOTICE) << "originBaseline   = " << getOriginBaseline() << std::endl;
+	osg::notify(osg::NOTICE) << "originTranslated = " << getOriginTranslated() << std::endl;
 
 	return true;
 }
@@ -210,11 +229,11 @@ osg::Vec3 Text::getPosition() const {
 }
 
 osg::Vec2 Text::getOriginBaseline() const {
-	return osg::Vec2(-_origin.x(), _baseline);
+	return osg::Vec2(_origin.x(), _baseline);
 }
 
 osg::Vec2 Text::getOriginTranslated() const {
-	return osg::Vec2(-_origin.x(), _size.y() + _origin.y());
+	return osg::Vec2(_origin.x(), -_origin.y());
 }
 
 }
