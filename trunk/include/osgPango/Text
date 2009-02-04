@@ -46,7 +46,7 @@ public:
 
 class OSGPANGO_EXPORT Text: public osg::MatrixTransform {
 public:
-	typedef std::pair<PangoFont*, osg::Vec3>                   GlyphGeometryMapKey;
+	typedef std::pair<GlyphCache*, osg::Vec3>                  GlyphGeometryMapKey;
 	typedef std::map<GlyphGeometryMapKey, GlyphGeometryVector> GlyphGeometryMap;
 
 	Text();
