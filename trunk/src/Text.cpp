@@ -116,8 +116,6 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// Use the lowest baseline of all the texts that are added.
 	int baseline = y / PANGO_SCALE;
 
-	osg::notify(osg::NOTICE) << "BASELINE: " << baseline << std::endl;
-
 	if(baseline > _baseline) _baseline = baseline;
 }
 
@@ -159,12 +157,14 @@ bool Text::finalize() {
 		}
 	}
 
+	/*
 	osg::BoundingBox bb = geode->getBoundingBox();
     
 	_origin.set(bb.xMin(), bb.yMin());
 	_size.set(bb.xMax(), bb.yMax());
 
 	_size -= _origin;
+	*/
 
 	osg::notify(osg::NOTICE) << "origin           = " << _origin << std::endl;
 	osg::notify(osg::NOTICE) << "size             = " << _size << std::endl;
@@ -188,18 +188,34 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 
 	to.setupPangoLayout(layout);
 
+	_glyphRenderer = to.renderer;
+
 	Context::instance().drawLayout(this, layout, x, y);
 
-	/*
-	// Get text dimensions and whatnot...
+	// Get text dimensions and whatnot; we'll accumulate this data after each rendering
+	// to keep it accurate.
 	PangoRectangle rect;
 
 	pango_layout_get_pixel_extents(layout, &rect, 0);
 
-	GlyphCache* gc = _font->getGlyphCache();
+	const GlyphRenderer* gr = Context::instance().getGlyphRenderer(to.renderer);
 
-	const osg::Vec4& extents = gc->getExtraGlyphExtents();
+	const osg::Vec4& extents = gr->getExtraGlyphExtents();
 
+	osg::Vec2::value_type ox = rect.x + extents[0];
+	osg::Vec2::value_type oy = rect.y - extents[1] - extents[3];
+	osg::Vec2::value_type sw = rect.width;
+	osg::Vec2::value_type sh = rect.height;
+
+	if(ox > _origin[0]) _origin[0] = ox;
+
+	if(oy > _origin[1]) _origin[1] = oy;
+
+	if(sw > _size[0]) _size[0] = sw;
+
+	if(sh > _size[1]) _size[1] = sh;
+
+	/*
 	_origin.set(rect.x + extents[0], rect.y - extents[1] - extents[3]);
 
 	_effectsSize.y() = extents[3];
@@ -218,10 +234,6 @@ void Text::setPosition(const osg::Vec3& pos) {
 
 void Text::setAlpha(double alpha) {
 	_alpha = alpha;
-}
-
-void Text::setGlyphRenderer(const std::string& gr) {
-	_glyphRenderer = gr;
 }
 
 osg::Vec3 Text::getPosition() const {
