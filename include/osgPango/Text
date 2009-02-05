@@ -22,12 +22,14 @@ public:
 	};
 	
 	TextOptions(
-		Alignment a  = ALIGN_LEFT,
-		int       w  = -1,
-		int       h  = -1,
-		int       i  = -1,
-		int       s  = -1
+		std::string r = "",
+		Alignment   a = ALIGN_LEFT,
+		int         w = -1,
+		int         h = -1,
+		int         i = -1,
+		int         s = -1
 	):
+	renderer  (r),
 	alignment (a),
 	width     (w),
 	height    (h),
@@ -37,11 +39,12 @@ public:
 
 	bool setupPangoLayout(PangoLayout*) const;
 
-	Alignment alignment;
-	int       width;
-	int       height;
-	int       indent;
-	int       spacing;
+	std::string renderer;
+	Alignment   alignment;
+	int         width;
+	int         height;
+	int         indent;
+	int         spacing;
 };
 
 class OSGPANGO_EXPORT Text: public osg::MatrixTransform {
@@ -51,13 +54,12 @@ public:
 
 	Text();
 
-	void drawGlyphs       (PangoFont*, PangoGlyphString*, int, int);
-	void addText          (const std::string&, int, int, const TextOptions& = TextOptions());
-	void writeAllImages   (const std::string&);
-	bool finalize         ();
-	void setPosition      (const osg::Vec3&);
-	void setAlpha         (double);
-	void setGlyphRenderer (const std::string&);
+	void drawGlyphs     (PangoFont*, PangoGlyphString*, int, int);
+	void addText        (const std::string&, int, int, const TextOptions& = TextOptions());
+	void writeAllImages (const std::string&);
+	bool finalize       ();
+	void setPosition    (const osg::Vec3&);
+	void setAlpha       (double);
 
 	const osg::Vec2& getSize() {
 		return _size;

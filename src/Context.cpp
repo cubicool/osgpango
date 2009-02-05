@@ -41,7 +41,7 @@ void renderer_class_init(RendererClass* klass) {
 Context::~Context() {
 	if(_renderer) g_object_unref(_renderer);
 
-	if(_pfMap) g_object_unref(_pfMap);
+	// if(_pfMap) g_object_unref(_pfMap);
 	
 	if(_pContext) g_object_unref(_pContext);
 }
@@ -140,6 +140,14 @@ GlyphCache* Context::getGlyphCache(PangoFont* font, const std::string& renderer)
 	}
 
 	return gc;
+}
+
+const GlyphRenderer* Context::getGlyphRenderer(const std::string& key) const {
+	const GlyphRendererMap::const_iterator i = _grMap.find(key);
+
+	if(i == _grMap.end()) return 0;
+
+	return i->second;
 }
 
 void Context::drawGlyphs(

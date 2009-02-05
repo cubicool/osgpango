@@ -36,12 +36,13 @@ public:
 		osgCairo::CairoSubpixelOrder = CAIRO_SUBPIXEL_ORDER_RGB
 	);
 
-	unsigned int getFontList           (FontList&, bool = true);
-	GlyphCache*  getGlyphCache         (PangoFont*, const std::string&);
-	void         drawLayout            (Text*, PangoLayout*, int, int);
-	void         setTextureSize        (unsigned int, unsigned int);
-	void         writeCachesToPNGFiles (const std::string&);
-	bool         addGlyphRenderer      (const std::string&, GlyphRenderer*);
+	unsigned int         getFontList           (FontList&, bool = true);
+	GlyphCache*          getGlyphCache         (PangoFont*, const std::string&);
+	const GlyphRenderer* getGlyphRenderer      (const std::string&) const;
+	void                 drawLayout            (Text*, PangoLayout*, int, int);
+	void                 setTextureSize        (unsigned int, unsigned int);
+	void                 writeCachesToPNGFiles (const std::string&);
+	bool                 addGlyphRenderer      (const std::string&, GlyphRenderer*);
 
 	const osg::Vec3& getCurrentColor() const {
 		return _color;

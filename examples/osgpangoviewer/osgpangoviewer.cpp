@@ -18,6 +18,9 @@ const std::string LOREM_IPSUM(
 	"culpa qui officia deserunt mollit anim id est laborum."
 );
 
+const unsigned int WINDOW_WIDTH  = 800;
+const unsigned int WINDOW_HEIGHT = 600;
+
 osg::Matrix createInvertedYOrthoProjectionMatrix(float width, float height) {
 	osg::Matrix m = osg::Matrix::ortho2D(0.0f, width, 0.0f, height);
 	osg::Matrix s = osg::Matrix::scale(1.0f, -1.0f, 1.0f);
@@ -125,9 +128,7 @@ int main(int argc, char** argv) {
 
 		else continue;
 
-		osg::notify(osg::NOTICE) << "settng renderer: " << renderer << std::endl;
-
-		t->setGlyphRenderer(renderer);
+		to.renderer = renderer;
 	}
 
 	while(args.read("--alpha", alpha)) {
@@ -159,7 +160,7 @@ int main(int argc, char** argv) {
 	t->setMatrix(osg::Matrix::translate(osg::Vec3(t->getOriginBaseline(), 0.0f)));
 
 	osg::Group*  group  = new osg::Group();
-	osg::Camera* camera = createOrthoCamera(1280, 1024);
+	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
 	viewer.addEventHandler(new osgViewer::WindowSizeHandler());
@@ -172,6 +173,7 @@ int main(int argc, char** argv) {
 	group->addChild(camera);
 
 	viewer.setSceneData(group);
+	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.run();
 
