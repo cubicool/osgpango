@@ -54,10 +54,6 @@ bool GlyphRenderer::renderGlyph(
 ) {
 	if(!si) return false;
 
-	// TODO: With the Win32 backend, the following doesn't work properly.
-	// With Linux, it doesn't matter.
-	// si->showGlyphs(g);
-	
 	si->glyphPath(g);
 	si->fill();
 
@@ -550,6 +546,7 @@ bool GlyphRendererOutline::renderGlyphEffects(
 ) {
 	if(!si) return false;
 
+	si->setLineJoin(CAIRO_LINE_JOIN_ROUND);
 	si->setLineWidth((_outline * 2) - 0.5f);
 	si->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
 	si->translate(_outline, _outline);

@@ -110,6 +110,7 @@ private:
 	int              _lastY;
 	int              _baseline;
 	double           _alpha;
+	bool             _init;
 	std::string      _glyphRenderer;
 };
 
