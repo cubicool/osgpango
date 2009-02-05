@@ -142,8 +142,8 @@ GlyphCache* Context::getGlyphCache(PangoFont* font, const std::string& renderer)
 	return gc;
 }
 
-const GlyphRenderer* Context::getGlyphRenderer(const std::string& key) const {
-	const GlyphRendererMap::const_iterator i = _grMap.find(key);
+const GlyphRenderer* Context::getGlyphRenderer(const std::string& renderer) const {
+	const GlyphRendererMap::const_iterator i = _grMap.find(renderer);
 
 	if(i == _grMap.end()) return 0;
 
@@ -232,7 +232,9 @@ void Context::writeCachesToPNGFiles(const std::string& path) {
 	}
 }
 
-bool Context::addGlyphRenderer(const std::string& key, GlyphRenderer* gr) {
+bool Context::addGlyphRenderer(const std::string& renderer, GlyphRenderer* gr) {
+	std::string key(renderer);
+
 	_grMap[key] = gr;
 
 	return true;
@@ -243,6 +245,7 @@ _pfMap         (0),
 _pContext      (0),
 _textureWidth  (DEFAULT_CACHE_WIDTH),
 _textureHeight (DEFAULT_CACHE_HEIGHT) {
+	_grMap[""] = new GlyphRenderer();
 }
 
 }

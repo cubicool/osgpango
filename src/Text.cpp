@@ -37,7 +37,8 @@ osg::MatrixTransform(),
 _lastX    (0),
 _lastY    (0),
 _baseline (0),
-_alpha    (1.0f) {
+_alpha    (1.0f),
+_init     (false) {
 	addChild(new osg::Geode());
 }
 
@@ -116,7 +117,9 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// Use the lowest baseline of all the texts that are added.
 	int baseline = y / PANGO_SCALE;
 
-	if(baseline > _baseline) _baseline = baseline;
+	// osg::notify(osg::NOTICE) << "baseline: " << baseline << std::endl;
+
+	if(!_init || baseline > _baseline) _baseline = baseline;
 }
 
 bool Text::finalize() {
@@ -131,17 +134,7 @@ bool Text::finalize() {
 
 		for(unsigned int i = 0; i < ggv.size(); i++) {
 			// They can be set to null, so ignore them if that's the case.
-			if(!ggv[i]) {
-				osg::notify(osg::NOTICE) << "Skipping nul..." << std::endl;
-
-				continue;
-			}
-
-			else osg::notify(osg::NOTICE)
-				<< i << " has "
-				<< ggv[i]->getVertexArray()->getNumElements() / 4 << " elements."
-				<< std::endl
-			;
+			if(!ggv[i]) continue;
 
 			GlyphCache* gc = g->first.first;
 
@@ -158,19 +151,12 @@ bool Text::finalize() {
 	}
 
 	/*
-	osg::BoundingBox bb = geode->getBoundingBox();
-    
-	_origin.set(bb.xMin(), bb.yMin());
-	_size.set(bb.xMax(), bb.yMax());
-
-	_size -= _origin;
-	*/
-
 	osg::notify(osg::NOTICE) << "origin           = " << _origin << std::endl;
 	osg::notify(osg::NOTICE) << "size             = " << _size << std::endl;
 	osg::notify(osg::NOTICE) << "originBaseline   = " << getOriginBaseline() << std::endl;
 	osg::notify(osg::NOTICE) << "originTranslated = " << getOriginTranslated() << std::endl;
-
+	*/
+	
 	return true;
 }
 
@@ -198,34 +184,41 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 
 	pango_layout_get_pixel_extents(layout, &rect, 0);
 
+	g_object_unref(layout);
+
 	const GlyphRenderer* gr = Context::instance().getGlyphRenderer(to.renderer);
+
+	if(!gr) return;
 
 	const osg::Vec4& extents = gr->getExtraGlyphExtents();
 
-	osg::Vec2::value_type ox = rect.x + extents[0];
-	osg::Vec2::value_type oy = rect.y - extents[1] - extents[3];
+	// osg::notify(osg::NOTICE) << "before: (" << x << " " << y << ") " << rect.x << " " << rect.y << " " << rect.width << " " << rect.height << std::endl;
+	
+	osg::Vec2::value_type ox = -(x + rect.x); //- extents[0];
+	osg::Vec2::value_type oy = y + rect.y - extents[3];
 	osg::Vec2::value_type sw = rect.width;
-	osg::Vec2::value_type sh = rect.height;
+	osg::Vec2::value_type sh = rect.height + extents[3];
 
-	if(ox > _origin[0]) _origin[0] = ox;
+	osg::notify(osg::NOTICE) << "after: " << ox << " " << oy << " " << sw << " " << sh << std::endl;
 
-	if(oy > _origin[1]) _origin[1] = oy;
+	if(!_init) {
+		_origin.set(ox, oy);
+		_size.set(sw, sh);
+	}
+	
+	else {
+		if(ox > _origin[0]) _origin[0] = ox;
 
-	if(sw > _size[0]) _size[0] = sw;
+		if(oy > _origin[1]) _origin[1] = oy;
 
-	if(sh > _size[1]) _size[1] = sh;
+		if(sw > _size[0]) _size[0] = sw;
 
-	/*
-	_origin.set(rect.x + extents[0], rect.y - extents[1] - extents[3]);
+		if(sh > _size[1]) _size[1] = sh;
+	}
 
-	_effectsSize.y() = extents[3];
-
-	_size.set(rect.width, rect.height);
-
-	_size += _effectsSize;
-	*/
-
-	g_object_unref(layout);
+	// We've run ONCE, so we're initialized to some state. Everything else from
+	// here is based on this position, greater or lower.
+	_init = true;
 }
 
 void Text::setPosition(const osg::Vec3& pos) {
@@ -245,7 +238,7 @@ osg::Vec2 Text::getOriginBaseline() const {
 }
 
 osg::Vec2 Text::getOriginTranslated() const {
-	return osg::Vec2(_origin.x(), -_origin.y());
+	return osg::Vec2(_origin.x(), _size.y() + _origin.y());
 }
 
 }

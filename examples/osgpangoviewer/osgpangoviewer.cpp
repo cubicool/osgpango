@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
 
 	if(!t->finalize()) return 1;
 
-	t->setMatrix(osg::Matrix::translate(osg::Vec3(t->getOriginBaseline(), 0.0f)));
+	t->setMatrix(osg::Matrix::translate(osg::Vec3(t->getOriginTranslated(), 0.0f)));
 
 	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
