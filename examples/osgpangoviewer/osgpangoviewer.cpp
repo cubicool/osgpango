@@ -21,14 +21,6 @@ const std::string LOREM_IPSUM(
 const unsigned int WINDOW_WIDTH  = 800;
 const unsigned int WINDOW_HEIGHT = 600;
 
-osg::Matrix createInvertedYOrthoProjectionMatrix(float width, float height) {
-	osg::Matrix m = osg::Matrix::ortho2D(0.0f, width, 0.0f, height);
-	osg::Matrix s = osg::Matrix::scale(1.0f, -1.0f, 1.0f);
-	osg::Matrix t = osg::Matrix::translate(0.0f, -height, 0.0f);
-
-	return t * s * m;
-}
-
 osg::Camera* createOrthoCamera(float width, float height) {
 	osg::Camera* camera = new osg::Camera();
 
@@ -42,14 +34,6 @@ osg::Camera* createOrthoCamera(float width, float height) {
 	camera->setViewMatrix(osg::Matrix::identity());
 	camera->setClearMask(GL_DEPTH_BUFFER_BIT);
 	camera->setRenderOrder(osg::Camera::POST_RENDER);
-
-	return camera;
-}
-
-osg::Camera* createInvertedYOrthoCamera(float width, float height) {
-	osg::Camera* camera = createOrthoCamera(width, height);
-
-	camera->setProjectionMatrix(createInvertedYOrthoProjectionMatrix(width, height));
 
 	return camera;
 }
@@ -109,7 +93,7 @@ int main(int argc, char** argv) {
 
 	context.init();
 
-	osgPango::Text* t = new osgPango::Text();
+	osgPango::TextTransform* t = new osgPango::TextTransform();
 
 	osgPango::TextOptions to;
 
@@ -157,9 +141,8 @@ int main(int argc, char** argv) {
 
 	if(!t->finalize()) return 1;
 
-	t->setMatrix(osg::Matrix::translate(osg::Vec3(t->getOriginTranslated(), 0.0f)));
+	t->setPosition(osg::Vec3(t->getOriginTranslated(), 0.0f));
 
-	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
@@ -170,9 +153,7 @@ int main(int argc, char** argv) {
 
 	camera->addChild(t);
 
-	group->addChild(camera);
-
-	viewer.setSceneData(group);
+	viewer.setSceneData(camera);
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.run();

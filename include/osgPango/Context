@@ -70,7 +70,7 @@ private:
 	PangoFontMap*      _pfMap;
 	PangoContext*      _pContext;
 	Renderer*          _renderer;
-	osg::ref_ptr<Text> _text;
+	Text*              _text;
 	OpenThreads::Mutex _mutex;
 	osg::Vec3          _color;
 	unsigned int       _textureWidth;

@@ -33,13 +33,11 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 }
 
 Text::Text():
-osg::MatrixTransform(),
 _lastX    (0),
 _lastY    (0),
 _baseline (0),
 _alpha    (1.0f),
 _init     (false) {
-	addChild(new osg::Geode());
 }
 
 void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
@@ -58,7 +56,8 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	else _lastX = 0.0f;
 
 	// TODO: Enabling optional honoring of extents...
-	osg::Vec4 extents = osg::Vec4(); //gc->getExtraGlyphExtents();
+	// osg::Vec4 extents = gc->getGlyphRenderer()->getExtraGlyphExtents();
+	osg::Vec4 extents = osg::Vec4();
 
 	const osg::Vec3& color = Context::instance().getCurrentColor();
 		
@@ -122,44 +121,6 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	if(!_init || baseline > _baseline) _baseline = baseline;
 }
 
-bool Text::finalize() {
-	osg::Geode* geode = getGeode();
-
-	if(!geode) return false;
-
-	geode->removeDrawables(0, geode->getNumDrawables());
-
-	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
-		GlyphGeometryVector& ggv = g->second;
-
-		for(unsigned int i = 0; i < ggv.size(); i++) {
-			// They can be set to null, so ignore them if that's the case.
-			if(!ggv[i]) continue;
-
-			GlyphCache* gc = g->first.first;
-
-			if(!ggv[i]->finalize(GlyphGeometryState(
-				gc->getTexture(i),
-				gc->getTexture(i, true),
-				g->first.second,
-				osg::Vec3(0.0f, 0.0f, 0.0f),
-				_alpha
-			))) continue;
-
-			geode->addDrawable(ggv[i]);
-		}
-	}
-
-	/*
-	osg::notify(osg::NOTICE) << "origin           = " << _origin << std::endl;
-	osg::notify(osg::NOTICE) << "size             = " << _size << std::endl;
-	osg::notify(osg::NOTICE) << "originBaseline   = " << getOriginBaseline() << std::endl;
-	osg::notify(osg::NOTICE) << "originTranslated = " << getOriginTranslated() << std::endl;
-	*/
-	
-	return true;
-}
-
 void Text::addText(const std::string& str, int x, int y, const TextOptions& to) {
 	String       text;
 	PangoLayout* layout = pango_layout_new(Context::instance().getPangoContext());
@@ -199,7 +160,7 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 	osg::Vec2::value_type sw = rect.width;
 	osg::Vec2::value_type sh = rect.height + extents[3];
 
-	osg::notify(osg::NOTICE) << "after: " << ox << " " << oy << " " << sw << " " << sh << std::endl;
+	// osg::notify(osg::NOTICE) << "after: " << ox << " " << oy << " " << sw << " " << sh << std::endl;
 
 	if(!_init) {
 		_origin.set(ox, oy);
@@ -221,16 +182,8 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 	_init = true;
 }
 
-void Text::setPosition(const osg::Vec3& pos) {
-	setMatrix(osg::Matrix::translate(pos));
-}
-
 void Text::setAlpha(double alpha) {
 	_alpha = alpha;
-}
-
-osg::Vec3 Text::getPosition() const {
-	return getMatrix().getTrans();
 }
 
 osg::Vec2 Text::getOriginBaseline() const {
@@ -239,6 +192,53 @@ osg::Vec2 Text::getOriginBaseline() const {
 
 osg::Vec2 Text::getOriginTranslated() const {
 	return osg::Vec2(_origin.x(), _size.y() + _origin.y());
+}
+
+TextTransform::TextTransform() {
+	addChild(new osg::Geode());
+}
+
+bool TextTransform::finalize() {
+	osg::Geode* geode = getGeode();
+
+	if(!geode) return false;
+
+	geode->removeDrawables(0, geode->getNumDrawables());
+
+	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
+		GlyphGeometryVector& ggv = g->second;
+
+		for(unsigned int i = 0; i < ggv.size(); i++) {
+			// They can be set to null, so ignore them if that's the case.
+			if(!ggv[i]) continue;
+
+			GlyphCache* gc = g->first.first;
+
+			if(!ggv[i]->finalize(GlyphGeometryState(
+				gc->getTexture(i),
+				gc->getTexture(i, true),
+				g->first.second,
+				osg::Vec3(0.0f, 0.0f, 0.0f),
+				_alpha
+			))) continue;
+
+			geode->addDrawable(ggv[i]);
+		}
+	}
+
+	return true;
+}
+
+osg::Vec3 TextTransform::getPosition() const {
+	return getMatrix().getTrans();
+}
+
+void TextTransform::setPosition(const osg::Vec2& pos) {
+	setMatrix(osg::Matrix::translate(pos[0], pos[1], 0.0f));
+}
+
+void TextTransform::setPosition(const osg::Vec3& pos) {
+	setMatrix(osg::Matrix::translate(pos));
 }
 
 }

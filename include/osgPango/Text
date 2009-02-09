@@ -47,18 +47,21 @@ public:
 	int         spacing;
 };
 
-class OSGPANGO_EXPORT Text: public osg::MatrixTransform {
+class OSGPANGO_EXPORT Text: public osg::Referenced {
 public:
 	typedef std::pair<GlyphCache*, osg::Vec3>                  GlyphGeometryMapKey;
 	typedef std::map<GlyphGeometryMapKey, GlyphGeometryVector> GlyphGeometryMap;
 
 	Text();
 
+	// You cannot instaniante Text directly; you need to derive from it and
+	// override finalize to actually do something with the _ggMap object
+	// internally. A TextTransform object is provided by default.
+	virtual bool finalize() = 0;
+
 	void drawGlyphs     (PangoFont*, PangoGlyphString*, int, int);
 	void addText        (const std::string&, int, int, const TextOptions& = TextOptions());
 	void writeAllImages (const std::string&);
-	bool finalize       ();
-	void setPosition    (const osg::Vec3&);
 	void setAlpha       (double);
 
 	const osg::Vec2& getSize() {
@@ -67,14 +70,6 @@ public:
 
 	const osg::Vec2& getSize() const {
 		return _size;
-	}
-
-	osg::Vec2 getEffectsSize() {
-		return _effectsSize;
-	}
-
-	const osg::Vec2& getEffectsSize() const {
-		return _effectsSize;
 	}
 
 	osg::Vec2 getOrigin() {
@@ -89,22 +84,12 @@ public:
 		return _baseline;
 	}
 
-	osg::Geode* getGeode() {
-		return dynamic_cast<osg::Geode*>(getChild(0));
-	}
-
-	const osg::Geode* getGeode() const {
-		return dynamic_cast<const osg::Geode*>(getChild(0));
-	}
-
-	osg::Vec3 getPosition         () const;
 	osg::Vec2 getOriginBaseline   () const;
 	osg::Vec2 getOriginTranslated () const;
 
-private:
+protected:
 	GlyphGeometryMap _ggMap;
 	osg::Vec2        _size;
-	osg::Vec2        _effectsSize;
 	osg::Vec2        _origin;
 	int              _lastX;
 	int              _lastY;
@@ -112,6 +97,25 @@ private:
 	double           _alpha;
 	bool             _init;
 	std::string      _glyphRenderer;
+};
+
+class OSGPANGO_EXPORT TextTransform: public Text, public osg::MatrixTransform {
+public:
+	TextTransform();
+
+	virtual bool finalize();
+	
+	osg::Vec3 getPosition () const;
+	void      setPosition (const osg::Vec2&);
+	void      setPosition (const osg::Vec3&);
+
+	osg::Geode* getGeode() {
+		return dynamic_cast<osg::Geode*>(getChild(0));
+	}
+
+	const osg::Geode* getGeode() const {
+		return dynamic_cast<const osg::Geode*>(getChild(0));
+	}
 };
 
 }
