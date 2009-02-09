@@ -157,9 +157,7 @@ void Context::drawGlyphs(
 	int               x,
 	int               y
 ) {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(instance()._mutex);
-
-	Text* text  = instance()._text.get();
+	Text* text  = instance()._text;
 
 	if(!text) return;
 
@@ -178,19 +176,21 @@ void Context::drawGlyphs(
 	else color.set(1.0f, 1.0f, 1.0f);
 
 	text->drawGlyphs(font, glyphs, x, y);
-
-	text = 0;
 }
 
 void Context::drawLayout(Text* text, PangoLayout* layout, int x, int y) {
-	_text = text;
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(instance()._mutex);
 
+	_text = text;
+	
 	pango_renderer_draw_layout(
 		PANGO_RENDERER(_renderer),
 		layout,
 		x * PANGO_SCALE,
 		-(y * PANGO_SCALE)
 	);
+
+	_text = 0;
 }
 
 void Context::writeCachesToPNGFiles(const std::string& path) {
