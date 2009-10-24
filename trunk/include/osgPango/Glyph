@@ -88,9 +88,9 @@ public:
 // There is one GlyphCache object PER FONT object.
 class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {
 public:
-	typedef std::map<unsigned int, CachedGlyph>              GlyphMap;
-	typedef std::vector<osg::observer_ptr<osgCairo::Image> > ImageVector;
-	typedef std::vector<osg::observer_ptr<osg::Texture> >    TextureVector;
+	typedef std::map<unsigned int, CachedGlyph>         GlyphMap;
+	typedef std::vector<osg::ref_ptr<osgCairo::Image> > ImageVector;
+	typedef std::vector<osg::ref_ptr<osg::Texture> >    TextureVector;
 
 	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0);
 

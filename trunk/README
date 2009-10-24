@@ -1,16 +1,43 @@
-INTRODUCTION: Pango
--------------------------------------------------------------------------------
+Here is a technical summary of WHAT ACTUALLY HAPPENS when you use osgPango.
 
-TODO: pango stuff...
+1. The user creates and configures the global osgPango Context singleton. Such
+   a call looks something like the following:
 
+	osgPango::Context::instance().init(...)
 
-INTRODUCTION: osgPango
--------------------------------------------------------------------------------
+   There are various quality options you can use at this point, and I recommend
+   experimenting with them. This Context can only be initialized once.
 
-TODO: osgPango stuff...
+2. The user creates an instance of something derived from osgPango::Text, since
+   osgPango::Text is a virtual interface class and cannot be added to a scene
+   directly. For convenience I've written a simple osgPango::TextTransform object,
+   though you will probably end up creating your own class eventually. To do this,
+   extend osgPango::Text and override the "finalize" method, which is where you
+   should traverse the _ggMap variable and actually do something with the Geometry
+   you find. It's really that simple.
 
+3. After creating a Text object, the user begins to call the addText method. This
+   method adds a string of Pango Markup formatted text at the specified offsets 
+   and using the various tidbits of the TextOptions struct which is, optionally,
+   passed in as the 4th and final argument.
 
-USAGE
--------------------------------------------------------------------------------
+   It should be noted that what the user is REALLY doing here is simply asking
+   the osgPango::Text object to create osg::Geometry objects internally and store
+   them in it's protected _ggMap member. This Geometry (large groups of quads) is
+   positioned and textured appropriately using the Pango layout engine, which
+   communicates with osgPango via Context::drawGlyphs. As indicated in the
+   source, this is the bridging function between Pango itself and our wrapper
+   library. Context::drawGlyphs is called as often as the low-level Pango engine
+   deems necessary. Thus, the routine must be modular, although for this reason
+   osgPango should not be called simultaneously from different threads.
 
-TODO: usage stuff...
+4. The _ggMap (Glyph Geometry Map) member is a std::map object that creates an
+   std::pair key using the GlyphCache object and the current font color.
+   In simpler terms, all text using the same GlyphCache object and using the
+   same color is grouped together into the same osg::Geometry (technically,
+   I use a derived version of osg::Geometry, but it doesn't) vector object.
+   This vector of osg::Geometry objects is where the real data is, and the
+   index at which any group of quads is stored corresponds to the texture ID
+   in the parenting GlyphCache object.
+
+5.

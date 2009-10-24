@@ -40,6 +40,9 @@ _alpha    (1.0f),
 _init     (false) {
 }
 
+void Text::clear() {
+}
+
 void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// Get the GlyphCache from a key, which may or may not be set via PangoAttr if I
 	// can it to work properly. :)
@@ -60,7 +63,7 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	osg::Vec4 extents = osg::Vec4();
 
 	const osg::Vec3& color = Context::instance().getCurrentColor();
-		
+	
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
 
@@ -79,7 +82,7 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 		if(!cg) continue;
 
 		GlyphGeometryVector& ggv = _ggMap[GlyphGeometryMapKey(gc, color)];
-	
+
 		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
 			osg::Vec2 pos(
 				(gi->geometry.x_offset / PANGO_SCALE) + extents[0],
@@ -88,11 +91,14 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 			bool hasEffects = gc->getGlyphRenderer()->hasEffects();
 
+			// TODO: This whole block of code is VILE and ATROCIOUS.
+			// What it does is creates blank entries in the GlyphGeometryVector
+			// in case the image index is higher than the actual number of active
+			// indexes.
 			for(unsigned int j = 0; j < cg->img; j++) {
 				if(j >= ggv.size()) ggv.push_back(0);
 			}
 
-			// TODO: This whole block of code is VILE and ATROCIOUS.
 			if(cg->img >= ggv.size()) ggv.push_back(new GlyphGeometry(hasEffects));
 
 			else {
@@ -224,7 +230,11 @@ bool TextTransform::finalize() {
 
 			geode->addDrawable(ggv[i]);
 		}
+
+		ggv.clear();
 	}
+
+	_ggMap.clear();
 
 	return true;
 }

@@ -59,6 +59,7 @@ public:
 	// internally. A TextTransform object is provided by default.
 	virtual bool finalize() = 0;
 
+	void clear          ();
 	void drawGlyphs     (PangoFont*, PangoGlyphString*, int, int);
 	void addText        (const std::string&, int, int, const TextOptions& = TextOptions());
 	void writeAllImages (const std::string&);
