@@ -112,7 +112,7 @@ ENDFOREACH(INCLUDEFILE)
 
 ADD_SUBDIRECTORY(examples/osgpangoupdatecb)
 ADD_SUBDIRECTORY(examples/osgpangoanimation)
-#ADD_SUBDIRECTORY(examples/osgpangocustomrenderer)
+ADD_SUBDIRECTORY(examples/osgpangocustomrenderer)
 ADD_SUBDIRECTORY(examples/osgpangofonts)
 #ADD_SUBDIRECTORY(examples/osgpangoguiviewer)
 #ADD_SUBDIRECTORY(examples/osgpangothreaded)
