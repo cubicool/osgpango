@@ -7,7 +7,7 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgAnimation/EaseMotion>
-#include <osgPango/Text>
+#include <osgPango/Context>
 
 #include <stdlib.h>
 
@@ -18,10 +18,10 @@ const unsigned int WINDOW_HEIGHT = 480;
 // 
 // 	Cedric Pinson <mornifle@plopbyte.net>
 //
-// ...who is also the author of AnimTK. Many thanks, Ced. :)
+// ...who is also the author of osgAnimation. Many thanks, Ced. :)
 struct GlyphSampler: public osg::Drawable::UpdateCallback {
-	// typedef osgAnimation::OutCubicMotion MyMotion;
-	typedef osgAnimation::OutBounceMotion MyMotion;
+	// typedef osgAnimation::OutBounceMotion MyMotion;
+	typedef osgAnimation::OutCubicMotion MyMotion;
 
 	float _previous;
 
@@ -33,7 +33,7 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 	}
 
 	void update(osg::NodeVisitor* nv , osg::Drawable* drawable) {
-		static float mod = 20.0f;
+		static float mod = 8.0f;
 
 		if(nv->getVisitorType() != osg::NodeVisitor::UPDATE_VISITOR) return;
 
@@ -120,17 +120,23 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 }
 
 int main(int argc, char** argv) {
-	osgPango::Font::init();
+	osgPango::Context& context = osgPango::Context::instance();
 
-	osgPango::GlyphCache* cache = new osgPango::GlyphCacheOutline(512, 512, 5);
+	context.init();
+	context.addGlyphRenderer("outline", new osgPango::GlyphRendererOutline(2));
 
-	osgPango::Font* f = new osgPango::Font("CuprumFFU 100", cache);
-	osgPango::Text* t = new osgPango::Text(f);
+	osgPango::TextTransform* t = new osgPango::TextTransform();
 
-	t->setColor(osg::Vec3(0.5f, 0.7f, 0.8f));
-	t->setEffectsColor(osg::Vec3(1.0f, 1.0f, 1.0f));
-	t->setAlignment(osgPango::Text::ALIGN_CENTER);
-	t->setText("osgPango\nand\nAnimTK");
+	t->addText(
+		"<span font='Georgia Bold 50'>osgPango\nand\nosgAnimation</span>",
+		0,
+		0,
+		osgPango::TextOptions("outline")
+	);
+
+	t->finalize();
+	
+	// TODO: OMG, this is horrible. :)
 	t->getGeode()->getDrawable(0)->setUpdateCallback(new GlyphSampler());
 
 	osgViewer::Viewer viewer;
@@ -140,16 +146,16 @@ int main(int argc, char** argv) {
 	const osg::Vec2& size = t->getSize();
 
 	t->setMatrix(osg::Matrix::translate(
-        osg::round((WINDOW_WIDTH - size.x()) / 2.0f),
-        size.y() + osg::round((WINDOW_HEIGHT - size.y()) / 2.0f),
+		osg::round((WINDOW_WIDTH - size.x()) / 2.0f),
+		size.y() + osg::round((WINDOW_HEIGHT - size.y()) / 2.0f),
 		0.0f
 	));
 
-        viewer.addEventHandler(new osgViewer::StatsHandler());
-        viewer.addEventHandler(new osgViewer::WindowSizeHandler());
-        viewer.addEventHandler(new osgGA::StateSetManipulator(
-                viewer.getCamera()->getOrCreateStateSet()
-        ));
+	viewer.addEventHandler(new osgViewer::StatsHandler());
+	viewer.addEventHandler(new osgViewer::WindowSizeHandler());
+	viewer.addEventHandler(new osgGA::StateSetManipulator(
+		viewer.getCamera()->getOrCreateStateSet()
+	));
 
 	camera->addChild(t);
 
@@ -158,9 +164,6 @@ int main(int argc, char** argv) {
 	viewer.getCamera()->setClearColor(osg::Vec4(0.2f, 0.2f, 0.2f, 1.0f));
 
 	viewer.run();
-
-	osgPango::Font::cleanup();
-	osgPango::Text::cleanup();
 
 	return 0;
 }
