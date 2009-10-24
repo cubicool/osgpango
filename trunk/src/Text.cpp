@@ -224,6 +224,10 @@ bool TextTransform::finalize() {
 				gc->getTexture(i),
 				gc->getTexture(i, true),
 				g->first.second,
+				// TODO: I need to create a way to set the "effectsColor."
+				// In order to achieve this, I will need to make a key using
+				// both colors instead of just the main color; this effectsColor
+				// will probably be the "background" color defined by Pango.
 				osg::Vec3(0.0f, 0.0f, 0.0f),
 				_alpha
 			))) continue;
