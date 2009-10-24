@@ -158,7 +158,8 @@ int main(int argc, char** argv) {
 
 	viewer.run();
 
-	osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
+	// TODO: Uncomment to see all the intermediate textures created internally.
+	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
 	
 	return 0;
 }
