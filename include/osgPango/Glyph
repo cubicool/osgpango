@@ -88,9 +88,9 @@ public:
 // There is one GlyphCache object PER FONT object.
 class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {
 public:
-	typedef std::map<unsigned int, CachedGlyph>         GlyphMap;
-	typedef std::vector<osg::ref_ptr<osgCairo::Image> > ImageVector;
-	typedef std::vector<osg::ref_ptr<osg::Texture> >    TextureVector;
+	typedef std::map<unsigned int, CachedGlyph>           GlyphMap;
+	typedef std::vector<osg::ref_ptr<osgCairo::Image> >   ImageVector;
+	typedef std::vector<osg::observer_ptr<osg::Texture> > TextureVector;
 
 	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0);
 
@@ -184,6 +184,9 @@ private:
 	unsigned int _numQuads;
 };
 
+// We don't use an osg::ref_ptr here becase the Geometry will actually only be temporary.
+// The newly allocated osg::Geometry will passed to an osg::Geode during finalize, and
+// the Geode will properly dictate when the resources are freed.
 typedef std::vector<GlyphGeometry*> GlyphGeometryVector;
 
 class OSGPANGO_EXPORT GlyphRendererOutline: public GlyphRenderer {

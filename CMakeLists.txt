@@ -110,6 +110,7 @@ FOREACH(INCLUDEFILE ${HEADER_FILES})
 	)
 ENDFOREACH(INCLUDEFILE)
 
+ADD_SUBDIRECTORY(examples/osgpangoupdatecb)
 #ADD_SUBDIRECTORY(examples/osgpangoanimation)
 #ADD_SUBDIRECTORY(examples/osgpangocustomrenderer)
 ADD_SUBDIRECTORY(examples/osgpangofonts)
