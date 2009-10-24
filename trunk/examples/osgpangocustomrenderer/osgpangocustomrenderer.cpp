@@ -1,10 +1,11 @@
+#include <sstream>
 #include <osg/Texture2D>
 #include <osg/MatrixTransform>
 #include <osgGA/StateSetManipulator>
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/Text>
+#include <osgPango/Context>
 
 const std::string LOREM_IPSUM(
 	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
@@ -15,7 +16,7 @@ const std::string LOREM_IPSUM(
 	"culpa qui officia deserunt mollit anim id est laborum."
 );
 
-class GlyphCacheGradient: public osgPango::GlyphCache {
+class GlyphRendererGradient: public osgPango::GlyphRenderer {
 	virtual bool renderGlyph(
 		osgCairo::Image*        si,
 		const osgCairo::Glyph&  g,
@@ -104,46 +105,39 @@ osg::Camera* createInvertedYOrthoCamera(float width, float height) {
 }
 
 int main(int argc, char** argv) {
-	osgPango::Font::init();
+	osgPango::Context& context = osgPango::Context::instance();
 
-	const std::string font("Courier New Bold 30");
+	context.init();
+	context.addGlyphRenderer("gradient", new GlyphRendererGradient());
 
-	osgPango::GlyphCache* cache = new GlyphCacheGradient();
+	osgPango::TextTransform* t = new osgPango::TextTransform();
 
-	osgPango::Font* f = new osgPango::Font(font, cache);
-	osgPango::Text* t = new osgPango::Text(f);
-
-	t->setColor(osg::Vec3(0.0f, 0.0f, 0.2f));
-	t->setWidth(900);
-	t->setText(LOREM_IPSUM);
-
-	osgPango::GlyphCache* gc = f->getGlyphCache();
+	std::ostringstream os;
 	
-	gc->writeImagesAsFiles("osgpangocustomrenderer");
+	os << "<span font='Verdana Bold 40'>" << LOREM_IPSUM << "</span>";
+
+	t->addText(os.str().c_str(), 0, 0, osgPango::TextOptions(
+		"gradient",
+		osgPango::TextOptions::ALIGN_CENTER,
+		750
+	));
+
+	t->finalize();
+	t->setPosition(t->getOriginTranslated());
 
 	osgViewer::Viewer viewer;
 
 	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(1280, 1024);
 	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
-	osg::Geode*  cairo  = new osg::Geode();
 	
-	osg::MatrixTransform* mt = new osg::MatrixTransform(
-		osg::Matrix::translate(100.0f, 1000.0f, 0.0f)
-	);
-
-	cairo->addDrawable(createGeometry(gc->getImage(0)));
-
-	mt->addChild(t);
-
         viewer.addEventHandler(new osgViewer::StatsHandler());
         viewer.addEventHandler(new osgViewer::WindowSizeHandler());
         viewer.addEventHandler(new osgGA::StateSetManipulator(
                 viewer.getCamera()->getOrCreateStateSet()
         ));
 
-	camera->addChild(cairo);
-	camera->addChild(mt);
+	camera->addChild(t);
 
 	group->addChild(node);
 	group->addChild(camera);
@@ -153,9 +147,6 @@ int main(int argc, char** argv) {
 	viewer.setUpViewInWindow(50, 50, 1280, 1024);
 
 	viewer.run();
-
-	osgPango::Font::cleanup();
-	osgPango::Text::cleanup();
 
 	return 0;
 }
