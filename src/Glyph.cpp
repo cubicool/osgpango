@@ -264,6 +264,9 @@ void GlyphCache::_writeImageVectorFiles(
 	unsigned int num = 0;
 
 	for(ImageVector::const_iterator i = images.begin(); i != images.end(); i++) {
+		// This should never, ever happen. :(
+		if(!i->get()) continue;
+
 		std::ostringstream ss;
 
 		ss << prefix << num << postfix << ".png";
@@ -459,15 +462,15 @@ bool GlyphGeometry::finalize(const GlyphGeometryState& gs) {
 	setGlyphGeometryState(this, gs);
 	addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, _numQuads * 4));
 	
+	/*
 	setDataVariance(osg::Object::STATIC);
 	setUseDisplayList(false);
 	setUseVertexBufferObjects(true);
+	*/
 
-	/*
 	setDataVariance(osg::Object::DYNAMIC);
 	setUseDisplayList(false);
 	setUseVertexBufferObjects(false);
-	*/
 
 	return true;
 }

@@ -222,7 +222,7 @@ void Context::writeCachesToPNGFiles(const std::string& path) {
 		os << path << "_" << family << "_" << style << "_" << size;
 		*/
 
-		os << path << count;
+		os << path << "_" << count << "_";
 
 		count++;
 
