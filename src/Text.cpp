@@ -200,17 +200,7 @@ osg::Vec2 Text::getOriginTranslated() const {
 	return osg::Vec2(_origin.x(), _size.y() + _origin.y());
 }
 
-TextTransform::TextTransform() {
-	addChild(new osg::Geode());
-}
-
-bool TextTransform::finalize() {
-	osg::Geode* geode = getGeode();
-
-	if(!geode) return false;
-
-	geode->removeDrawables(0, geode->getNumDrawables());
-
+void Text::_finalizeGeometry(GeometryList& drawables) {
 	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
 		GlyphGeometryVector& ggv = g->second;
 
@@ -232,13 +222,32 @@ bool TextTransform::finalize() {
 				_alpha
 			))) continue;
 
-			geode->addDrawable(ggv[i]);
+			// geode->addDrawable(ggv[i]);
+			drawables.push_back(ggv[i]);
 		}
 
 		ggv.clear();
 	}
 
 	_ggMap.clear();
+}
+
+TextTransform::TextTransform() {
+	addChild(new osg::Geode());
+}
+
+bool TextTransform::finalize() {
+	osg::Geode* geode = getGeode();
+
+	if(!geode) return false;
+
+	geode->removeDrawables(0, geode->getNumDrawables());
+
+	GeometryList gl;
+
+	_finalizeGeometry(gl);
+
+	for(GeometryList::iterator i = gl.begin(); i != gl.end(); i++) geode->addDrawable(*i);
 
 	return true;
 }
