@@ -6,6 +6,7 @@
 #include <pango/pangocairo.h>
 
 #include <osg/Geode>
+#include <osg/AutoTransform>
 #include <osg/MatrixTransform>
 #include <osgPango/String>
 #include <osgPango/Glyph>
@@ -102,23 +103,56 @@ protected:
 	std::string      _glyphRenderer;
 };
 
-class OSGPANGO_EXPORT TextTransform: public Text, public osg::MatrixTransform {
+// NOTE! Do not worry too much about how this complicated class works. It's main use is to
+// glue classes like osg::MatrixTransform and osg::AutoTransform into the osgPango::Text
+// interface and make it so that I can easily reuse code...
+template<typename T>
+class OSGPANGO_EXPORT TextGeodeInterface: public Text, public T {
 public:
-	TextTransform();
+	TextGeodeInterface() {
+		T::addChild(new osg::Geode());
+	}
 
+	osg::Geode* getGeode() {
+		return dynamic_cast<osg::Geode*>(T::getChild(0));
+	}
+
+	const osg::Geode* getGeode() const {
+		return dynamic_cast<const osg::Geode*>(T::getChild(0));
+	}
+
+protected:
+	bool _finalizeGeode() {
+		osg::Geode* geode = getGeode();
+
+		if(!geode) return false;
+
+		geode->removeDrawables(0, geode->getNumDrawables());
+
+		GeometryList gl;
+
+		_finalizeGeometry(gl);
+
+		for(GeometryList::iterator i = gl.begin(); i != gl.end(); i++) {
+			geode->addDrawable(*i);
+		}
+
+		return true;
+	}
+};
+
+class OSGPANGO_EXPORT TextTransform: public TextGeodeInterface<osg::MatrixTransform> {
+public:
 	virtual bool finalize();
 	
 	osg::Vec3 getPosition () const;
 	void      setPosition (const osg::Vec2&);
 	void      setPosition (const osg::Vec3&);
+};
 
-	osg::Geode* getGeode() {
-		return dynamic_cast<osg::Geode*>(getChild(0));
-	}
-
-	const osg::Geode* getGeode() const {
-		return dynamic_cast<const osg::Geode*>(getChild(0));
-	}
+class OSGPANGO_EXPORT TextAutoTransform: public TextGeodeInterface<osg::AutoTransform> {
+public:
+	virtual bool finalize();
 };
 
 }
