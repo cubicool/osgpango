@@ -222,7 +222,6 @@ void Text::_finalizeGeometry(GeometryList& drawables) {
 				_alpha
 			))) continue;
 
-			// geode->addDrawable(ggv[i]);
 			drawables.push_back(ggv[i]);
 		}
 
@@ -232,24 +231,8 @@ void Text::_finalizeGeometry(GeometryList& drawables) {
 	_ggMap.clear();
 }
 
-TextTransform::TextTransform() {
-	addChild(new osg::Geode());
-}
-
 bool TextTransform::finalize() {
-	osg::Geode* geode = getGeode();
-
-	if(!geode) return false;
-
-	geode->removeDrawables(0, geode->getNumDrawables());
-
-	GeometryList gl;
-
-	_finalizeGeometry(gl);
-
-	for(GeometryList::iterator i = gl.begin(); i != gl.end(); i++) geode->addDrawable(*i);
-
-	return true;
+	return _finalizeGeode();
 }
 
 osg::Vec3 TextTransform::getPosition() const {
@@ -262,6 +245,10 @@ void TextTransform::setPosition(const osg::Vec2& pos) {
 
 void TextTransform::setPosition(const osg::Vec3& pos) {
 	setMatrix(osg::Matrix::translate(pos));
+}
+
+bool TextAutoTransform::finalize() {
+	return _finalizeGeode();
 }
 
 }
