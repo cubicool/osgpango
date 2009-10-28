@@ -52,6 +52,7 @@ struct OSGPANGO_EXPORT GlyphGeometryState {
 
 typedef std::pair<unsigned int, osg::Vec2> GlyphPositionPair;
 typedef std::list<GlyphPositionPair>       GlyphPositionList;
+typedef std::list<osg::Geometry*>          GeometryList;
 
 enum GlyphEffectsMethod {
 	GLYPH_EFFECTS_METHOD_DEFAULT,

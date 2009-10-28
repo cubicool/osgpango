@@ -89,6 +89,8 @@ public:
 	osg::Vec2 getOriginTranslated () const;
 
 protected:
+	void _finalizeGeometry(GeometryList&);
+
 	GlyphGeometryMap _ggMap;
 	osg::Vec2        _size;
 	osg::Vec2        _origin;
