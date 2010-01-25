@@ -1,4 +1,4 @@
-// -*-c++-*- osgPango - Copyright (C) 2008 Jeremy Moles
+// -*-c++-*- osgPango - Copyright (C) 2010 Jeremy Moles
 
 #ifndef OSGPANGO_CONTEXT
 #define OSGPANGO_CONTEXT
@@ -10,39 +10,135 @@
 
 namespace osgPango {
 
+//! A list of string names of available fonts recognized by Pango; used
+//! in Context::getFontList().
 typedef std::list<std::string> FontList;
 
+//! An internal-use-only struct for interfacing with Pango. Ignore this.
 struct OSGPANGO_EXPORT Renderer {
 	PangoRenderer parent_instance;
 };
 
+//! Another internal-use-only struct for interfacing with Pango. Ignore this.
 struct OSGPANGO_EXPORT RendererClass {
 	PangoRendererClass class_instance;
 };
 
+//! This class is a singleton which provides a gateway both into our Pango rendering
+//! backend and allows us to configure various global settings such as subpixel hinting
+//! and rendering DPI. Before osgPango can be used, the singleton object must be
+//! initialized once by calling Context::instance().init(), which is generally
+//! enough for most people without using any advanced arguments.
 class OSGPANGO_EXPORT Context {
 public:
 	~Context();
 
+	//! Returns and/or creates our static singleton reference.
 	static Context& instance();
 
-	// This is the "entry" into our system from Pango's rendering backend.
-	static void drawGlyphs(PangoRenderer*, PangoFont*, PangoGlyphString*, int, int);
-
-	bool init(
-		unsigned int                 = 72,
-		osgCairo::CairoAntialias     = CAIRO_ANTIALIAS_SUBPIXEL,
-		osgCairo::CairoHintStyle     = CAIRO_HINT_STYLE_FULL,
-		osgCairo::CairoSubpixelOrder = CAIRO_SUBPIXEL_ORDER_RGB
+	//! This is the "entry" into our system from Pango's rendering backend.
+	//! Technically, it is a callback routine required by the Pango API for custom
+	//! rendering, thus it is static and not safe to call from multiple threads.
+	//! I have it on good word (from Behdad himself) that eventually Pango will
+	//! support multithreading. In the meantime, if anyone can think of a way to use
+	//! an instance's member function as a traditional callback routine for C,
+	//! please let me know. :) Otherwise, you never have to interact with this function
+	//! yourself, so this may go largely unnoticed.
+	static void drawGlyphs(
+		PangoRenderer*    renderer,
+		PangoFont*        font,
+		PangoGlyphString* glyphString,
+		int               x,
+		int               y
 	);
 
-	unsigned int         getFontList           (FontList&, bool = true);
-	GlyphCache*          getGlyphCache         (PangoFont*, const std::string&);
-	const GlyphRenderer* getGlyphRenderer      (const std::string&) const;
-	void                 drawLayout            (Text*, PangoLayout*, int, int);
-	void                 setTextureSize        (unsigned int, unsigned int);
-	void                 writeCachesToPNGFiles (const std::string&);
-	bool                 addGlyphRenderer      (const std::string&, GlyphRenderer*);
+	//! Our main Context initialization routine; should only need to be called once
+	//! per program's lifetime. It lets us set some of the more advanced rendering
+	//! options of osgPango, so take special note of the arguments below and
+	//! what they mean. Please keep in mind that not ALL of the options are honored
+	//! on every Pango backend; though the most common backend, FreeType, appears
+	//! to support them all (whereas a few don't always work using ClearType).
+	bool init(
+		//! The rendering DPI to be used when Pango calculates font sizes
+		//! internally. This does not--as you might want to think at first--
+		//! directly affect font QUALITY, but instead only the way in which
+		//! a "point" size is calculated. For example, using the default DPI
+		//! of 72 means that a 12pt font actually ends up being a 12px font,
+		//! and indeed this is why I chose 72 as the osgPango default DPI.
+		//! If, however, you change your DPI to a more common value such
+		//! as 96 (which is what most OS's tend to use by default) then
+		//! a 12pt font ends up being a 16px font (96.0 / 72.0 * 12). At
+		//! any rate, using the Pango Markup Language you can always force
+		//! the rendering backend to use pixel units when calculating size
+		//! (instead of the default points) by postfixing each size value
+		//! with the text "px", such as <span font="sans 12px"/>.
+		unsigned int dpi = 72,
+
+		//! This osgCairo::CairoAntialias enum defines what kind of
+		//! antialiasing style should be used by the rendering backend. Please see
+		//! <a href="http://www.cairographics.org/manual/cairo-context.html#cairo-antialias-t">
+		//! this Cairo API reference link</a> for more information on what each
+		//! possible value means. The osgPango Context default is CAIRO_ANTIALIAS_SUBPIXEL.
+		osgCairo::CairoAntialias aa = CAIRO_ANTIALIAS_SUBPIXEL,
+
+		//! This osgCairo::CairoHintStyle enum defines what kind of
+		//! hinting style should be used by the rendering backend. Please see
+		//! <a href="http://www.cairographics.org/manual/cairo-font-options.html#cairo-hint-style-t">
+		//! this Cairo API reference link</a> for more information on what each
+		//! possible value means. The osgPango Context default is CAIRO_HINT_STYLE_FULL.
+		osgCairo::CairoHintStyle hs = CAIRO_HINT_STYLE_FULL,
+
+		//! This osgCairo::CairoSubpixelOrder enum defines what kind of
+		//! subpixel ordering style should be used by the rendering backend
+		//! If CAIRO_ANTIALIAS_SUBPIXEL is set. Please see
+		//! <a href="http://www.cairographics.org/manual/cairo-font-options.html#cairo-subpixel-order-t">
+		//! this Cairo API reference link</a> for more information on what each
+		//! possible value means. The osgPango Context default is CAIRO_SUBPIXEL_ORDER_RGB.
+		osgCairo::CairoSubpixelOrder spo = CAIRO_SUBPIXEL_ORDER_RGB
+	);
+
+	//! Populates a FontList object and, optionally, whether or not you want
+	//! to includes the various faces available to this font such as
+	//! Bold, Italic, etc. By default, face reporting is turned on. Returns
+	//! the number of available fonts.
+	unsigned int getFontList(FontList& fontList, bool faces = true);
+	
+	//! Returns a pointer to a GlyphCache object using the given PangoFont font pointer
+	//! and a string name of a GlyphRenderer (which you would have used when you
+	//! created the custom GlyphRenderer). This method is mostly for internal use, as
+	//! PangoFont objects are not easily accessible by the osgPango API, and are usually
+	//! only used in very low-level rendering code.
+	GlyphCache* getGlyphCache(PangoFont* font, const std::string& renderer = "");
+	
+	//! This method will allow you to retrieve a read-only pointer to any custom 
+	//! GlyphRenderer object you may have installed into the Context at a previous
+	//! time. For more about what this  means exactly, take a look at the documentation
+	//! for GlyphRenderer.
+	const GlyphRenderer* getGlyphRenderer(const std::string& renderer) const;
+	
+	//! This is another method that is mostly used internally, due to the fact that
+	//! it requires a PangoLayout pointer which is not an object users generally
+	//! need to concern themselves with. Furthermore, osgPango's rendering backend
+	//! cannot currently be called from separate threads, and this routine
+	//! is one of those reasons why.
+	void drawLayout(Text* text, PangoLayout* layout, int x, int y);
+	
+	//! Write all the current caches of fonts and their effects to files prefixed with
+	//! the string path parameter. This is great for debugging when you want to see
+	//! how your textures are being created and arranged internally by the engine.
+	void writeCachesToPNGFiles(const std::string& path);
+	
+	//! Add a newly created GlyphRenderer object to the internal cache of known 
+	//! renderers within the Context. For more information about what
+	//! a GlyphRenderer is (basically, a custom effects "plugin" for your font),
+	//! please take a look at it's documentation.
+	bool addGlyphRenderer(const std::string& name, GlyphRenderer* renderer);
+
+	//! This will allow you to change (dynamically as you see fit) the size of the
+	//! glyph caching textures used internally. The compiled-in defaults (which
+	//! you can change in Context.cpp) are 256x256. However, you may have some
+	//! bizarre case where you need more. :)
+	void setTextureSize(unsigned int width, unsigned int height);
 
 	const osg::Vec3& getCurrentColor() const {
 		return _color;

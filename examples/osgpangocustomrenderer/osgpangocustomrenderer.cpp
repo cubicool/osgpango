@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
 
 	t->addText(os.str().c_str(), 0, 0, osgPango::TextOptions(
 		"gradient",
-		osgPango::TextOptions::ALIGN_CENTER,
+		osgPango::TextOptions::TEXT_ALIGN_CENTER,
 		750
 	));
 

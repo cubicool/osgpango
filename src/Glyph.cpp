@@ -153,7 +153,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		_y += _h + addh;
 	}
 	
-	// Mkae sure we have enough vertical space, too.
+	// Make sure we have enough vertical space, too.
 	if(_y + h + addh >= _imgHeight) {
 		_newImageAndTexture(_images, _textures);
 
@@ -430,7 +430,6 @@ bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 	te2->setCombine_RGB(osg::TexEnvCombine::REPLACE);
 	te2->setSource0_RGB(osg::TexEnvCombine::PREVIOUS);
 	te2->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
-
 	te2->setCombine_Alpha(osg::TexEnvCombine::MODULATE);
 	te2->setSource0_Alpha(osg::TexEnvCombine::CONSTANT);
 	te2->setSource1_Alpha(osg::TexEnvCombine::PREVIOUS);
@@ -527,10 +526,10 @@ osg::Vec4 GlyphRendererOutline::getExtraGlyphExtents() const {
 }
 
 bool GlyphRendererOutline::renderGlyph(
-	osgCairo::Image*        si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
+	osgCairo::Image*       si,
+	const osgCairo::Glyph& g,
+	unsigned int           w,
+	unsigned int           h
 ) {
 	if(!si) return false;
 
@@ -542,10 +541,10 @@ bool GlyphRendererOutline::renderGlyph(
 }
 
 bool GlyphRendererOutline::renderGlyphEffects(
-	osgCairo::Image*        si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
+	osgCairo::Image*       si,
+	const osgCairo::Glyph& g,
+	unsigned int           w,
+	unsigned int           h
 ) {
 	if(!si) return false;
 
@@ -573,10 +572,10 @@ osg::Vec4 GlyphRendererShadowOffset::getExtraGlyphExtents() const {
 }
 
 bool GlyphRendererShadowOffset::renderGlyph(
-	osgCairo::Image*        si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
+	osgCairo::Image*       si,
+	const osgCairo::Glyph& g,
+	unsigned int           w,
+	unsigned int           h
 ) {
 	if(!si) return false;
 	
@@ -590,10 +589,10 @@ bool GlyphRendererShadowOffset::renderGlyph(
 }
 
 bool GlyphRendererShadowOffset::renderGlyphEffects(
-	osgCairo::Image*        si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
+	osgCairo::Image*       si,
+	const osgCairo::Glyph& g,
+	unsigned int           w,
+	unsigned int           h
 ) {
 	if(!si) return false;
 
@@ -632,10 +631,10 @@ osg::Vec4 GlyphCacheShadowGaussian::getExtraGlyphExtents() const {
 }
 
 bool GlyphCacheShadowGaussian::renderGlyph(
-	osgCairo::Image*        si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
+	osgCairo::Image*       si,
+	const osgCairo::Glyph& g,
+	unsigned int           w,
+	unsigned int           h
 ) {
 	if(!si) return false;
 
