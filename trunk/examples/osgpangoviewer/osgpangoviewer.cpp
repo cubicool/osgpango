@@ -10,12 +10,20 @@
 #include <osgPango/Context>
 
 const std::string LOREM_IPSUM(
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum."
+	"<span color='red' font='Verdana 15'>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod</span> "
+	"<span color='orange' font='Verdana 17'>tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,</span> "
+	"<span color='yellow' font='Verdana 19'>quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</span> "
+	"<span color='green' font='Verdana 21'>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu</span> "
+	"<span color='blue' font='Verdana 23'>fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in</span> "
+	"<span color='purple' font='Verdana 25'>culpa qui officia deserunt mollit anim id est laborum.</span>"
+	"\n\n"
+	"<span font='Monospace 15'>"
+	"Experiment with this application by using the following arguments:\n\n"
+	"\t<b>--renderer [string] [float]:</b> One of shadowOffset or outline, with a size value.\n"
+	"\t<b>             --alpha [float]:</b> The alpha value, from 0.0 to 1.0 (fully opaque).\n"
+	"\t<b>               --width [int]:</b> Allowable text area width.\n"
+	"\t<b>                 --alignment:</b> One of left, right, center, or justify.\n"
+	"</span>"
 );
 
 const unsigned int WINDOW_WIDTH  = 800;
@@ -40,7 +48,7 @@ osg::Camera* createOrthoCamera(float width, float height) {
 
 void setupArguments(osg::ArgumentParser& args) {
 	args.getApplicationUsage()->setDescription(
-		args.getApplicationName() + " is a quick font viewer application for OSG."
+		args.getApplicationName() + " is a quick font viewer application for osgPango."
 	);
 
 	args.getApplicationUsage()->setCommandLineUsage(
@@ -124,11 +132,11 @@ int main(int argc, char** argv) {
 	while(args.read("--width", width)) to.width = std::atoi(width.c_str());
 
 	while(args.read("--alignment", alignment)) {
-		if(alignment == "center") to.alignment = osgPango::TextOptions::ALIGN_CENTER;
+		if(alignment == "center") to.alignment = osgPango::TextOptions::TEXT_ALIGN_CENTER;
 		
-		else if(alignment == "right") to.alignment = osgPango::TextOptions::ALIGN_RIGHT;
+		else if(alignment == "right") to.alignment = osgPango::TextOptions::TEXT_ALIGN_RIGHT;
 		
-		else if(alignment == "justify") to.alignment = osgPango::TextOptions::ALIGN_JUSTIFY;
+		else if(alignment == "justify") to.alignment = osgPango::TextOptions::TEXT_ALIGN_JUSTIFY;
 	}
 
 	if(args.argc() >= 2) {
@@ -136,6 +144,9 @@ int main(int argc, char** argv) {
 
 		for(int i = 1; i < args.argc(); i++) text += std::string(args[i]) + " ";
 	}
+
+	// The user didn't set a width, so use our screen size.
+	if(to.width <= 0) to.width = WINDOW_WIDTH;
 
 	t->addText(text, 0, 0, to);
 

@@ -1,4 +1,4 @@
-// -*-c++-*- osgPango - Copyright (C) 2009 Jeremy Moles
+// -*-c++-*- osgPango - Copyright (C) 2010 Jeremy Moles
 
 #ifndef OSGPANGO_TEXT
 #define OSGPANGO_TEXT
@@ -13,22 +13,44 @@
 
 namespace osgPango {
 
+//! This class serves as a lightweight wrapper/container around the various options
+//! we can pass to the Pango backend layout manager; things like what effect to use,
+//! how much width should be available, etc. Remember, however, that this class only
+//! modifies the low-level, Pango-specific aspects of text. Things like changing the
+//! font size, face, and color are done dynamically using a special HTML-like
+//! markup language embedded within the string itself! :)
 class OSGPANGO_EXPORT TextOptions: public osg::Referenced {
 public:
-	enum Alignment {
-		ALIGN_LEFT,
-		ALIGN_CENTER,
-		ALIGN_RIGHT,
-		ALIGN_JUSTIFY
+	//! These are the various alignment enums for the actual TEXT itself;
+	//! they do NOT affect the POSITION of the text physically in the
+	//! scene as you may think! That is the job of the derived class,
+	//! such as TextTransform.
+	enum TextAlignment {
+		//! Align all text in the normal, left-to-right style.
+		TEXT_ALIGN_LEFT,
+		
+		//! Align all text by putting each row in the center of
+		//! it's permissable width.
+		TEXT_ALIGN_CENTER,
+		
+		//! Align all text by forcing each row to push as far as
+		//! is permissable with it's allocated width.
+		TEXT_ALIGN_RIGHT,
+		
+		//! Align each row of text such that the first and last words
+		//! of every row fall on the left and right sides of the
+		//! allocated width; this is achieved by Pango by adding
+		//! additional extraneous space to each true space where required.
+		TEXT_ALIGN_JUSTIFY
 	};
 	
 	TextOptions(
-		std::string r = "",
-		Alignment   a = ALIGN_LEFT,
-		int         w = -1,
-		int         h = -1,
-		int         i = -1,
-		int         s = -1
+		std::string   r = "",
+		TextAlignment a = TEXT_ALIGN_LEFT,
+		int           w = -1,
+		int           h = -1,
+		int           i = -1,
+		int           s = -1
 	):
 	renderer  (r),
 	alignment (a),
@@ -38,14 +60,14 @@ public:
 	spacing   (s) {
 	}
 
-	bool setupPangoLayout(PangoLayout*) const;
+	bool setupPangoLayout(PangoLayout* layout) const;
 
-	std::string renderer;
-	Alignment   alignment;
-	int         width;
-	int         height;
-	int         indent;
-	int         spacing;
+	std::string   renderer;
+	TextAlignment alignment;
+	int           width;
+	int           height;
+	int           indent;
+	int           spacing;
 };
 
 class OSGPANGO_EXPORT Text: public osg::Referenced {

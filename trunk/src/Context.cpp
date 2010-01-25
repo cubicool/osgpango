@@ -166,6 +166,7 @@ void Context::drawGlyphs(
 
 	// Begin querying Pango context variables.
 	PangoColor* fg = pango_renderer_get_color(renderer, PANGO_RENDER_PART_FOREGROUND);
+	PangoColor* bg = pango_renderer_get_color(renderer, PANGO_RENDER_PART_BACKGROUND);
 
 	if(fg) color.set(
 		fg->red / 65535.0f,
@@ -232,10 +233,10 @@ void Context::writeCachesToPNGFiles(const std::string& path) {
 	}
 }
 
-bool Context::addGlyphRenderer(const std::string& renderer, GlyphRenderer* gr) {
-	std::string key(renderer);
+bool Context::addGlyphRenderer(const std::string& name, GlyphRenderer* renderer) {
+	std::string key(name);
 
-	_grMap[key] = gr;
+	_grMap[key] = renderer;
 
 	return true;
 }

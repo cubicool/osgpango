@@ -9,12 +9,12 @@
 namespace osgPango {
 
 bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
-	if(alignment != ALIGN_JUSTIFY) {
+	if(alignment != TEXT_ALIGN_JUSTIFY) {
 		PangoAlignment pa = PANGO_ALIGN_LEFT;
 
-		if(alignment == ALIGN_CENTER) pa = PANGO_ALIGN_CENTER;
+		if(alignment == TEXT_ALIGN_CENTER) pa = PANGO_ALIGN_CENTER;
 
-		else if(alignment == ALIGN_RIGHT) pa = PANGO_ALIGN_RIGHT;
+		else if(alignment == TEXT_ALIGN_RIGHT) pa = PANGO_ALIGN_RIGHT;
 	
 		pango_layout_set_alignment(layout, pa);
 	}

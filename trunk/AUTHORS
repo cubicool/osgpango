@@ -1,4 +1,4 @@
-osgPango is primarily by:
+osgPango is primarily (95%) by:
 
 	Jeremy Moles (cubicool) <jeremy@emperorlinx.com>
 
@@ -6,5 +6,4 @@ However, significant bugfixes and additional code have been provided by:
 
 	Cedric Pinson (mornifle) <mornifle@plopbyte.net>
 
-...who is also the author of the fantastic Animtk/osgATK toolkit (with
-which I also try and assist as often as I can... :))
+...who is also the author of the fantastic osgAnimation toolkit!
