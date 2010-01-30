@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 	));
 
 	t->finalize();
-	t->setPosition(t->getOriginTranslated());
+	// t->setPosition(t->getOriginTranslated());
 
 	osgViewer::Viewer viewer;
 

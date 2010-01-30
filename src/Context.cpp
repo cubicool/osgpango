@@ -162,19 +162,27 @@ void Context::drawGlyphs(
 	if(!text) return;
 
 	// Setup any kind of new "state" here.
-	osg::Vec3& color = instance()._color;
+	ColorPair& color = instance()._color;
 
 	// Begin querying Pango context variables.
 	PangoColor* fg = pango_renderer_get_color(renderer, PANGO_RENDER_PART_FOREGROUND);
 	PangoColor* bg = pango_renderer_get_color(renderer, PANGO_RENDER_PART_BACKGROUND);
 
-	if(fg) color.set(
+	if(fg) color.first.set(
 		fg->red / 65535.0f,
 		fg->green / 65535.0f,
 		fg->blue / 65535.0f
 	);
 
-	else color.set(1.0f, 1.0f, 1.0f);
+	else color.first.set(1.0f, 1.0f, 1.0f);
+
+	if(bg) color.second.set(
+		bg->red / 65535.0f,
+		bg->green / 65535.0f,
+		bg->blue / 65535.0f
+	);
+
+	else color.second.set(0.0f, 0.0f, 0.0f);
 
 	text->drawGlyphs(font, glyphs, x, y);
 }
@@ -244,6 +252,9 @@ bool Context::addGlyphRenderer(const std::string& name, GlyphRenderer* renderer)
 Context::Context():
 _pfMap         (0),
 _pContext      (0),
+_renderer      (0),
+_text          (0),
+_color         (ColorPair(osg::Vec3(1.0f, 1.0f, 1.0f), osg::Vec3(0.0f, 0.0f, 0.0f))),
 _textureWidth  (DEFAULT_CACHE_WIDTH),
 _textureHeight (DEFAULT_CACHE_HEIGHT) {
 	_grMap[""] = new GlyphRenderer();

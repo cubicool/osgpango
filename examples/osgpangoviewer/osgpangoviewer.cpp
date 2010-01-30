@@ -20,9 +20,9 @@ const std::string LOREM_IPSUM(
 	"<span font='Monospace 15'>"
 	"Experiment with this application by using the following arguments:\n\n"
 	"\t<b>--renderer [string] [float]:</b> One of shadowOffset or outline, with a size value.\n"
-	"\t<b>             --alpha [float]:</b> The alpha value, from 0.0 to 1.0 (fully opaque).\n"
-	"\t<b>               --width [int]:</b> Allowable text area width.\n"
-	"\t<b>                 --alignment:</b> One of left, right, center, or justify.\n"
+	"\t<b>            --alpha [float]:</b> The alpha value, from 0.0 to 1.0 (fully opaque).\n"
+	"\t<b>              --width [int]:</b> Allowable text area width.\n"
+	"\t<b>                --alignment:</b> One of left, right, center, or justify."
 	"</span>"
 );
 
@@ -101,32 +101,32 @@ int main(int argc, char** argv) {
 
 	context.init();
 
-	osgPango::TextTransform* t = new osgPango::TextTransform();
+		osgPango::TextTransform* t = new osgPango::TextTransform();
 
-	osgPango::TextOptions to;
+		osgPango::TextOptions to;
 
-	while(args.read("--renderer", renderer, rendererSize)) {
-		int s = std::atoi(rendererSize.c_str());
+		while(args.read("--renderer", renderer, rendererSize)) {
+			int s = std::atoi(rendererSize.c_str());
 
-		if(renderer == "outline") context.addGlyphRenderer(
-			"outline",
-			new osgPango::GlyphRendererOutline(s)
-		);
+			if(renderer == "outline") context.addGlyphRenderer(
+				"outline",
+				new osgPango::GlyphRendererOutline(s)
+			);
 
-		else if(renderer == "shadowOffset") context.addGlyphRenderer(
-			"shadowOffset",
-			new osgPango::GlyphRendererShadowOffset(s, s)
-		);
+			else if(renderer == "shadowOffset") context.addGlyphRenderer(
+				"shadowOffset",
+				new osgPango::GlyphRendererShadowOffset(s, s)
+			);
 
-		else continue;
+			else continue;
 
-		to.renderer = renderer;
-	}
+			to.renderer = renderer;
+		}
 
-	while(args.read("--alpha", alpha)) {
-		float a = std::atof(alpha.c_str());
+		while(args.read("--alpha", alpha)) {
+			float a = std::atof(alpha.c_str());
 
-		t->setAlpha(a);
+			t->setAlpha(a);
 	}
 
 	while(args.read("--width", width)) to.width = std::atoi(width.c_str());
@@ -151,8 +151,6 @@ int main(int argc, char** argv) {
 	t->addText(text, 0, 0, to);
 
 	if(!t->finalize()) return 1;
-
-	t->setPosition(osg::Vec3(t->getOriginTranslated(), 0.0f));
 
 	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
