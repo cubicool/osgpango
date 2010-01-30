@@ -128,7 +128,9 @@ int main(int argc, char** argv) {
 	osgPango::TextTransform* t = new osgPango::TextTransform();
 
 	t->addText(
-		"<span font='Georgia Bold 50'>osgPango\nand\nosgAnimation</span>",
+		"<span font='Georgia Bold 50' color='black' bgcolor='white'>"
+		"osgPango\nand\nosgAnimation"
+		"</span>",
 		0,
 		0,
 		osgPango::TextOptions("outline")
@@ -145,11 +147,8 @@ int main(int argc, char** argv) {
 	
 	const osg::Vec2& size = t->getSize();
 
-	t->setMatrix(osg::Matrix::translate(
-		osg::round((WINDOW_WIDTH - size.x()) / 2.0f),
-		size.y() + osg::round((WINDOW_HEIGHT - size.y()) / 2.0f),
-		0.0f
-	));
+	t->setPosition(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f));
+	t->setAlignment(osgPango::TextTransform::POS_ALIGN_CENTER);
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
 	viewer.addEventHandler(new osgViewer::WindowSizeHandler());

@@ -33,14 +33,25 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 }
 
 Text::Text():
-_lastX    (0),
-_lastY    (0),
-_baseline (0),
-_alpha    (1.0f),
-_init     (false) {
+_alpha(1.0f) {
+	clear();
 }
 
 void Text::clear() {
+	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
+		GlyphGeometryVector& ggv = g->second;
+
+		ggv.clear();
+	}
+
+	_ggMap.clear();
+
+	_size     = osg::Vec2();
+	_origin   = osg::Vec2();
+	_lastX    = 0;
+	_lastY    = 0;
+	_baseline = 0;
+	_init     = false;
 }
 
 void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
@@ -62,7 +73,7 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// osg::Vec4 extents = gc->getGlyphRenderer()->getExtraGlyphExtents();
 	osg::Vec4 extents = osg::Vec4();
 
-	const osg::Vec3& color = Context::instance().getCurrentColor();
+	const ColorPair& color = Context::instance().getColorPair();
 	
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
@@ -208,43 +219,90 @@ void Text::_finalizeGeometry(GeometryList& drawables) {
 			// They can be set to null, so ignore them if that's the case.
 			if(!ggv[i]) continue;
 
-			GlyphCache* gc = g->first.first;
+			GlyphCache* gc    = g->first.first;
+			ColorPair   color = g->first.second;
 
 			if(!ggv[i]->finalize(GlyphGeometryState(
 				gc->getTexture(i),
 				gc->getTexture(i, true),
-				g->first.second,
-				// TODO: I need to create a way to set the "effectsColor."
-				// In order to achieve this, I will need to make a key using
-				// both colors instead of just the main color; this effectsColor
-				// will probably be the "background" color defined by Pango.
-				osg::Vec3(0.0f, 0.0f, 0.0f),
+				color.first,
+				color.second,
 				_alpha
 			))) continue;
 
 			drawables.push_back(ggv[i]);
 		}
-
-		ggv.clear();
 	}
+}
 
-	_ggMap.clear();
+TextTransform::TextTransform():
+_alignment (POS_ALIGN_BOTTOM_LEFT),
+_position  (osg::Vec3(0.0f, 0.0f, 0.0f)) {
 }
 
 bool TextTransform::finalize() {
-	return _finalizeGeode();
+	if(!_finalizeGeode()) return false;
+
+	_calculatePosition();
+
+	return true;
 }
 
-osg::Vec3 TextTransform::getPosition() const {
-	return getMatrix().getTrans();
+void TextTransform::setPosition(const osg::Vec3& position) {
+	_position = position;
+
+	_calculatePosition();
 }
 
-void TextTransform::setPosition(const osg::Vec2& pos) {
-	setMatrix(osg::Matrix::translate(pos[0], pos[1], 0.0f));
+void TextTransform::setAlignment(PositionAlignment alignment) {
+	_alignment = alignment;
+
+	_calculatePosition();
 }
 
-void TextTransform::setPosition(const osg::Vec3& pos) {
-	setMatrix(osg::Matrix::translate(pos));
+void TextTransform::_calculatePosition() {
+	osg::Vec3 origin(getOriginTranslated(), 0.0f);
+	osg::Vec3 size(_size, 0.0f);
+
+	if(_alignment == POS_ALIGN_BOTTOM) 
+		origin.x() -= osg::round(size.x() / 2.0f)
+	;
+	
+	else if(_alignment == POS_ALIGN_BOTTOM_RIGHT)
+		origin.x() -= osg::round(size.x())
+	;
+	
+	else if(_alignment == POS_ALIGN_RIGHT) origin -= osg::Vec3(
+		osg::round(size.x()),
+		osg::round(size.y() / 2.0f),
+		0.0f
+	);
+	
+	else if(_alignment == POS_ALIGN_TOP_RIGHT)
+		origin -= size
+	;
+	
+	else if(_alignment == POS_ALIGN_TOP) origin -= osg::Vec3(
+		osg::round(size.x() / 2.0f),
+		size.y(),
+		0.0f
+	);
+	
+	else if(_alignment == POS_ALIGN_TOP_LEFT)
+		origin.y() -= size.y()
+	;
+	
+	else if(_alignment == POS_ALIGN_LEFT)
+		origin.y() -= osg::round(size.y() / 2.0f)
+	;
+	
+	else if(_alignment == POS_ALIGN_CENTER) origin += osg::Vec3(
+		osg::round(-size.x() / 2.0f),
+		osg::round(-size.y() / 2.0f),
+		0.0f
+	);
+
+	setMatrix(osg::Matrix::translate(origin + _position));
 }
 
 bool TextAutoTransform::finalize() {

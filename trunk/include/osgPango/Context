@@ -138,16 +138,27 @@ public:
 	//! glyph caching textures used internally. The compiled-in defaults (which
 	//! you can change in Context.cpp) are 256x256. However, you may have some
 	//! bizarre case where you need more. :)
-	void setTextureSize(unsigned int width, unsigned int height);
+	void setTextureSize(unsigned int width, unsigned int height) {
+		_textureWidth  = width;
+		_textureHeight = height;
+	}
 
-	const osg::Vec3& getCurrentColor() const {
+	//! Returns the currently set color and effects color ColorPair object set on
+	//! the Context. If this makes you feel dirty, you probably know too much about
+	//! how osgPango and Pango work together. :)
+	const ColorPair& getColorPair() const {
 		return _color;
 	}
 
+	//! Returns a pointer to the PangoFontMap member. There isn't much you can do
+	//! with this pointer, although it is used internally during various rendering
+	//! phases.
 	PangoFontMap* getPangoFontMap() {
 		return _pfMap;
 	}
 
+	//! Returns a pointer to the PangoContext member. Again, like getPangoFontMap(),
+	//! there isn't much to see here.
 	PangoContext* getPangoContext() {
 		return _pContext;
 	}
@@ -168,7 +179,7 @@ private:
 	Renderer*          _renderer;
 	Text*              _text;
 	OpenThreads::Mutex _mutex;
-	osg::Vec3          _color;
+	ColorPair          _color;
 	unsigned int       _textureWidth;
 	unsigned int       _textureHeight;
 };
