@@ -129,12 +129,24 @@ unsigned int Context::getFontList(FontList& fl, bool faces) {
 }
 
 GlyphCache* Context::getGlyphCache(PangoFont* font, const std::string& renderer) {
+	static unsigned int cacheId = 0;
+
 	GlyphCacheFontMapKey key(font, renderer);
 
 	GlyphCache* gc = _gcfMap[key].get();
 
 	if(!gc) {
 		gc = new GlyphCache(_grMap[renderer], _textureWidth, _textureHeight);
+
+		std::ostringstream ss;
+		
+		ss << "GlyphCache_" << cacheId;
+
+		if(!renderer.empty()) ss << "_" << renderer;
+
+		gc->setName(ss.str());
+
+		cacheId++;
 
 		_gcfMap[key] = gc;
 	}

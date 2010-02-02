@@ -117,6 +117,7 @@ ADD_SUBDIRECTORY(examples/osgpangofonts)
 #ADD_SUBDIRECTORY(examples/osgpangoguiviewer)
 #ADD_SUBDIRECTORY(examples/osgpangothreaded)
 ADD_SUBDIRECTORY(examples/osgpangoviewer)
+ADD_SUBDIRECTORY(examples/osgpangotest)
 
 CONFIGURE_FILE(
 	"${CMAKE_CURRENT_SOURCE_DIR}/etc/uninstall.cmake"

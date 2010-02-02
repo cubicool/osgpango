@@ -77,8 +77,8 @@ public:
 
 class OSGPANGO_EXPORT Text: public osg::Referenced {
 public:
-	typedef std::pair<GlyphCache*, ColorPair>                  GlyphGeometryMapKey;
-	typedef std::map<GlyphGeometryMapKey, GlyphGeometryVector> GlyphGeometryMap;
+	typedef std::pair<GlyphCache*, ColorPair>                 GlyphGeometryMapKey;
+	typedef std::map<GlyphGeometryMapKey, GlyphGeometryIndex> GlyphGeometryMap;
 
 	Text();
 
@@ -87,7 +87,8 @@ public:
 	// internally. A TextTransform object is provided by default.
 	virtual bool finalize() = 0;
 
-	void clear          ();
+	virtual void clear();
+
 	void drawGlyphs     (PangoFont*, PangoGlyphString*, int, int);
 	void addText        (const std::string&, int, int, const TextOptions& = TextOptions());
 	void writeAllImages (const std::string&);
@@ -127,7 +128,6 @@ protected:
 	int              _baseline;
 	double           _alpha;
 	bool             _init;
-	bool             _finalized;
 	std::string      _glyphRenderer;
 };
 
@@ -150,13 +150,21 @@ public:
 		return dynamic_cast<const osg::Geode*>(T::getChild(0));
 	}
 
+	virtual void clear() {
+		osg::Geode* geode = getGeode();
+
+		if(geode) geode->removeDrawables(0, geode->getNumDrawables());
+
+		Text::clear();
+	}
+
 protected:
 	bool _finalizeGeode() {
 		osg::Geode* geode = getGeode();
 
 		if(!geode) return false;
 
-		geode->removeDrawables(0, geode->getNumDrawables());
+		// geode->removeDrawables(0, geode->getNumDrawables());
 
 		GeometryList gl;
 

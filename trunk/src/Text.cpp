@@ -39,12 +39,12 @@ _alpha(1.0f) {
 
 void Text::clear() {
 	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
-		GlyphGeometryVector& ggv = g->second;
+		GlyphGeometryIndex& ggi = g->second;
 
-		ggv.clear();
+		ggi.clear();
 	}
 
-	_ggMap.clear();
+	 // _ggMap.clear();
 
 	_size     = osg::Vec2();
 	_origin   = osg::Vec2();
@@ -54,7 +54,25 @@ void Text::clear() {
 	_init     = false;
 }
 
+GlyphGeometry* createGlyphGeometry(bool hasEffects) {
+	static unsigned int ggId = 0;
+
+	std::ostringstream ss;
+
+	ss << "GlyphGeometry_" << ggId;
+
+	ggId++;
+
+	GlyphGeometry* gg = new GlyphGeometry(hasEffects);
+
+	gg->setName(ss.str());
+
+	return gg;
+}
+
 void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
+	MSG << "---------- BEGIN drawGlyphs ----------" << std::endl;
+	
 	// Get the GlyphCache from a key, which may or may not be set via PangoAttr if I
 	// can it to work properly. :)
 	GlyphCache* gc = Context::instance().getGlyphCache(font, _glyphRenderer);
@@ -88,11 +106,20 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 		const CachedGlyph* cg = gc->getCachedGlyph(gi->glyph);
 
-		if(!cg) cg = gc->createCachedGlyph(font, gi);
+		if(!cg) {
+
+			MSG << "Creating new glyph: " << gi->glyph << std::endl;
+			
+			cg = gc->createCachedGlyph(font, gi);
+		}
+
+		else MSG << "Using old glyph: " << gi->glyph << std::endl;
 
 		if(!cg) continue;
 
-		GlyphGeometryVector& ggv = _ggMap[GlyphGeometryMapKey(gc, color)];
+		GlyphGeometryIndex& ggi = _ggMap[GlyphGeometryMapKey(gc, color)];
+
+		// MSG << "Using GlyphGeometryIndex at: " << &ggi << std::endl;
 
 		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
 			osg::Vec2 pos(
@@ -102,28 +129,29 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 			bool hasEffects = gc->getGlyphRenderer()->hasEffects();
 
-			// TODO: This whole block of code is VILE and ATROCIOUS.
-			// What it does is creates blank entries in the GlyphGeometryVector
-			// in case the image index is higher than the actual number of active
-			// indexes.
-			for(unsigned int j = 0; j < cg->img; j++) {
-				if(j >= ggv.size()) ggv.push_back(0);
-			}
+			if(!ggi[cg->img]) ggi[cg->img] = createGlyphGeometry(hasEffects);
 
-			if(cg->img >= ggv.size()) ggv.push_back(new GlyphGeometry(hasEffects));
+			// MSG << "Using GlyphGeometry " << ggv[cg->img]->getName() << std::endl;
 
-			else {
-				if(!ggv[cg->img]) ggv[cg->img] = new GlyphGeometry(hasEffects);
-			}
+			MSG
+				<< "cg: "
+				<< cg->img << ", "
+				<< cg->origin << ", "
+				<< cg->size << ", "
+				<< cg->bl << ", "
+				<< cg->br << ", "
+				<< cg->ur << ", "
+				<< cg->ul << std::endl
+			;
 
-			ggv[cg->img]->pushCachedGlyphAt(
+			ggi[cg->img]->pushCachedGlyphAt(
 				cg,
 				pos + layoutPos,
 				hasEffects,
 				GLYPH_EFFECTS_METHOD_DEFAULT
 			);
 		}
-		
+
 		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE) + extents[0], 0.0f);
 		_lastX    += extents[0];
 	}
@@ -136,6 +164,8 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// osg::notify(osg::NOTICE) << "baseline: " << baseline << std::endl;
 
 	if(!_init || baseline > _baseline) _baseline = baseline;
+
+	MSG << "---------- END drawGlyphs ----------" << std::endl << std::endl;
 }
 
 void Text::addText(const std::string& str, int x, int y, const TextOptions& to) {
@@ -213,24 +243,21 @@ osg::Vec2 Text::getOriginTranslated() const {
 
 void Text::_finalizeGeometry(GeometryList& drawables) {
 	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
-		GlyphGeometryVector& ggv = g->second;
+		GlyphGeometryIndex& ggi = g->second;
 
-		for(unsigned int i = 0; i < ggv.size(); i++) {
-			// They can be set to null, so ignore them if that's the case.
-			if(!ggv[i]) continue;
-
+		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
 			GlyphCache* gc    = g->first.first;
 			ColorPair   color = g->first.second;
 
-			if(!ggv[i]->finalize(GlyphGeometryState(
-				gc->getTexture(i),
-				gc->getTexture(i, true),
+			if(!i->second->finalize(GlyphGeometryState(
+				gc->getTexture(i->first),
+				gc->getTexture(i->first, true),
 				color.first,
 				color.second,
 				_alpha
 			))) continue;
 
-			drawables.push_back(ggv[i]);
+			drawables.push_back(i->second);
 		}
 	}
 }
@@ -251,13 +278,13 @@ bool TextTransform::finalize() {
 void TextTransform::setPosition(const osg::Vec3& position) {
 	_position = position;
 
-	_calculatePosition();
+	// _calculatePosition();
 }
 
 void TextTransform::setAlignment(PositionAlignment alignment) {
 	_alignment = alignment;
 
-	_calculatePosition();
+	// _calculatePosition();
 }
 
 void TextTransform::_calculatePosition() {

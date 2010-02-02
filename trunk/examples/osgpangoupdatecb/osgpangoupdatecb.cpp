@@ -61,16 +61,16 @@ public:
 			osgPango::TextTransform::POS_ALIGN_LEFT,
 			"POS_ALIGN_LEFT"
 		));
+
+		_list.push_back(PositionAlignmentPair(
+			osgPango::TextTransform::POS_ALIGN_CENTER,
+			"POS_ALIGN_CENTER"
+		));
 		*/
 
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_TOP_LEFT,
-			"abcefghijklmnopqrstuvwxyz"
-		));
-
-		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_LEFT,
-			"zyxwvutsrqponmlkjihgfecba"
+			osgPango::TextTransform::POS_ALIGN_BOTTOM_LEFT,
+			"ZOS_ALIGN_CENTER"
 		));
 
 		_list.push_back(PositionAlignmentPair(
@@ -97,7 +97,7 @@ public:
 			
 			PositionAlignmentPair& pal = _getNextPositionAlignment();
 
-			os << "<span font='Georgia 15'>" << pal.second << "</span>";
+			os << "<span font='Georgia 25'>" << pal.second << "</span>";
 
 			oldTransform->clear();
 			oldTransform->addText(os.str().c_str(), 0, 0);
@@ -130,7 +130,7 @@ int main(int ac, char **av) {
 	viewer.addEventHandler(new osgViewer::WindowSizeHandler);
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-	osg::ref_ptr<osg::Camera> camera = new osg::Camera();
+	osg::Camera* camera = new osg::Camera();
 	
 	camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 	camera->setViewMatrix(osg::Matrix::identity());
@@ -151,7 +151,7 @@ int main(int ac, char **av) {
 
 	textTransform->setPosition(pos);
 	textTransform->setAlignment(osgPango::TextTransform::POS_ALIGN_CENTER);
-	textTransform->addText("<span font='Georgia 15'>POS_ALIGN_CENTER</span>", 0, 0);
+	textTransform->addText("<span font='Georgia 25'>POS_ALIGN_CENTER</span>", 0, 0);
 	textTransform->finalize();
 
 	geode->addDrawable(new osg::ShapeDrawable(new osg::Sphere(pos, 5.0f)));

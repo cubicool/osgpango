@@ -89,15 +89,19 @@ public:
 // There is one GlyphCache object PER FONT object.
 class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {
 public:
-	typedef std::map<unsigned int, CachedGlyph>           GlyphMap;
-	typedef std::vector<osg::ref_ptr<osgCairo::Image> >   ImageVector;
-	typedef std::vector<osg::observer_ptr<osg::Texture> > TextureVector;
+	typedef std::map<unsigned int, CachedGlyph>         GlyphMap;
+	typedef std::vector<osg::ref_ptr<osgCairo::Image> > ImageVector;
+	typedef std::vector<osg::ref_ptr<osg::Texture> >    TextureVector;
 
 	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0);
 
 	const CachedGlyph* getCachedGlyph     (unsigned int);
 	const CachedGlyph* createCachedGlyph  (PangoFont*, PangoGlyphInfo*);
 	void               writeImagesAsFiles (const std::string&) const;
+
+	void setName(const std::string& name) {
+		_name = name;
+	}
 
 	osgCairo::Image* getImage(unsigned int index, bool effects = false) {
 		return _getImage(index, effects);
@@ -135,6 +139,10 @@ public:
 		return _renderer.get();
 	}
 
+	const std::string& getName() const {
+		return _name;
+	}
+
 private:
 	bool _newImageAndTexture(ImageVector&, TextureVector&);
 
@@ -146,6 +154,8 @@ private:
 
 	osgCairo::Image* _getImage   (unsigned int, bool) const;
 	osg::Texture*    _getTexture (unsigned int, bool) const;
+
+	std::string _name;
 
 	// The "renderer" object, not bound to any local data.
 	osg::ref_ptr<GlyphRenderer> _renderer;
@@ -188,7 +198,7 @@ private:
 // We don't use an osg::ref_ptr here becase the Geometry will actually only be temporary.
 // The newly allocated osg::Geometry will passed to an osg::Geode during finalize, and
 // the Geode will properly dictate when the resources are freed.
-typedef std::vector<GlyphGeometry*> GlyphGeometryVector;
+typedef std::map<unsigned int, GlyphGeometry*> GlyphGeometryIndex;
 
 class OSGPANGO_EXPORT GlyphRendererOutline: public GlyphRenderer {
 public:
