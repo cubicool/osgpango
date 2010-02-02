@@ -344,7 +344,7 @@ _numQuads(0) {
 template<typename T>
 bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 	if(!gs.texture) return false;
-
+	
 	osg::TexEnvCombine* te0   = new osg::TexEnvCombine();
 	osg::StateSet*      state = obj->getOrCreateStateSet();
 
@@ -458,7 +458,8 @@ bool setGlyphGeometryState(osg::Node* node, const GlyphGeometryState& gs) {
 }
 
 bool GlyphGeometry::finalize(const GlyphGeometryState& gs) {
-	setGlyphGeometryState(this, gs);
+	if(!setGlyphGeometryState(this, gs)) return false;
+
 	addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, _numQuads * 4));
 	
 	/*
