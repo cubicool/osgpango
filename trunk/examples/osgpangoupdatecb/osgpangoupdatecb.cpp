@@ -4,10 +4,13 @@
 #include <osg/ShapeDrawable>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgGA/StateSetManipulator>
+#include <osgDB/WriteFile>
 #include <osgPango/Context>
 
 const unsigned int WINDOW_WIDTH  = 800;
 const unsigned int WINDOW_HEIGHT = 600;
+
+#define FONT "<span font='Slider 35' color='black' bgcolor='white'>"
 
 class UpdateCallback: public osg::NodeCallback {
 public:
@@ -21,7 +24,16 @@ public:
 	_time(new osg::Timer) {
 		_elapsed = _time->time_s();
 
-		/*
+		_list.push_back(PositionAlignmentPair(
+			osgPango::TextTransform::POS_ALIGN_BOTTOM_LEFT, 
+			"POS_ALIGN_BOTTOM_LEFT"
+		));
+
+		_list.push_back(PositionAlignmentPair(
+			osgPango::TextTransform::POS_ALIGN_BOTTOM,
+			"POS_ALIGN_BOTTOM"
+		));
+
 		_list.push_back(PositionAlignmentPair(
 			osgPango::TextTransform::POS_ALIGN_BOTTOM_RIGHT,
 			"POS_ALIGN_BOTTOM_RIGHT"
@@ -35,16 +47,6 @@ public:
 		_list.push_back(PositionAlignmentPair(
 			osgPango::TextTransform::POS_ALIGN_TOP_RIGHT,
 			"POS_ALIGN_TOP_RIGHT"
-		));
-
-		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_BOTTOM_LEFT, 
-			"POS_ALIGN_BOTTOM_LEFT"
-		));
-
-		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_BOTTOM,
-			"POS_ALIGN_BOTTOM"
 		));
 		
 		_list.push_back(PositionAlignmentPair(
@@ -60,17 +62,6 @@ public:
 		_list.push_back(PositionAlignmentPair(
 			osgPango::TextTransform::POS_ALIGN_LEFT,
 			"POS_ALIGN_LEFT"
-		));
-
-		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_CENTER,
-			"POS_ALIGN_CENTER"
-		));
-		*/
-
-		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_BOTTOM_LEFT,
-			"ZOS_ALIGN_CENTER"
 		));
 
 		_list.push_back(PositionAlignmentPair(
@@ -97,10 +88,15 @@ public:
 			
 			PositionAlignmentPair& pal = _getNextPositionAlignment();
 
-			os << "<span font='Georgia 25'>" << pal.second << "</span>";
+			os << FONT << pal.second << "</span>";
 
 			oldTransform->clear();
-			oldTransform->addText(os.str().c_str(), 0, 0);
+			oldTransform->addText(
+				os.str().c_str(),
+				0,
+				0,
+				osgPango::TextOptions("outline")
+			);
 			oldTransform->setAlignment(pal.first);
 			oldTransform->finalize();
 		}
@@ -143,6 +139,10 @@ int main(int ac, char **av) {
 	viewer.setSceneData(camera);
 
 	osgPango::Context::instance().init();
+	osgPango::Context::instance().addGlyphRenderer(
+		"outline",
+		new osgPango::GlyphRendererOutline(2)
+	);
 
 	osgPango::TextTransform* textTransform = new osgPango::TextTransform();
 	osg::Geode*              geode         = new osg::Geode();
@@ -151,10 +151,15 @@ int main(int ac, char **av) {
 
 	textTransform->setPosition(pos);
 	textTransform->setAlignment(osgPango::TextTransform::POS_ALIGN_CENTER);
-	textTransform->addText("<span font='Georgia 25'>POS_ALIGN_CENTER</span>", 0, 0);
+	textTransform->addText(
+		FONT "POS_ALIGN_CENTER</span>",
+		0,
+		0,
+		osgPango::TextOptions("outline")
+	);
 	textTransform->finalize();
 
-	geode->addDrawable(new osg::ShapeDrawable(new osg::Sphere(pos, 5.0f)));
+	geode->addDrawable(new osg::ShapeDrawable(new osg::Sphere(pos, 4.0f)));
 
 	camera->addChild(textTransform);
 	camera->addChild(geode);
@@ -164,7 +169,8 @@ int main(int ac, char **av) {
 
 	// TODO: You'd uncomment the following line to see the intermediate textures
 	// used internally; can be really helpful sometimes.
-	osgPango::Context::instance().writeCachesToPNGFiles("osgpangoupdatecb");
+	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangoupdatecb");
+	// osgDB::writeNodeFile(*camera, "osgpangoupdatecb.osg");
 
 	return 0;
 }

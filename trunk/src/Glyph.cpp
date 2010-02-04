@@ -53,7 +53,7 @@ bool GlyphRenderer::renderGlyph(
 	unsigned int            h
 ) {
 	if(!si) return false;
-
+	
 	si->glyphPath(g);
 	si->fill();
 
@@ -187,7 +187,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	_renderer->renderGlyph(si, g, w, h);
 
 	si->restore();
-	
+
 	if(sie) {
 		sie->save();
 
@@ -417,6 +417,7 @@ bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 		state->setTextureAttributeAndModes(1, te1, osg::StateAttribute::ON);
 	}
 
+	/*
 	state->setTextureAttributeAndModes(
 		gs.effectsTexture ? 2 : 1,
 		gs.texture,
@@ -441,6 +442,7 @@ bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 		te2,
 		osg::StateAttribute::ON
 	);
+	*/
 
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);
 	state->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);

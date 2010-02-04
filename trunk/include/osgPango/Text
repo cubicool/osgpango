@@ -128,6 +128,7 @@ protected:
 	int              _baseline;
 	double           _alpha;
 	bool             _init;
+	bool             _newGlyphs;
 	std::string      _glyphRenderer;
 };
 
@@ -139,7 +140,12 @@ template<typename T>
 class OSGPANGO_EXPORT TextGeodeInterface: public Text, public T {
 public:
 	TextGeodeInterface() {
-		T::addChild(new osg::Geode());
+		osg::Geode* geode = new osg::Geode();
+
+		geode->setDataVariance(osg::Object::DYNAMIC);
+
+		T::addChild(geode);
+		T::setDataVariance(osg::Object::DYNAMIC);
 	}
 
 	osg::Geode* getGeode() {
@@ -225,14 +231,17 @@ public:
 	}
 	
 	//! Sets the position of the MatrixTransform BEFORE any alignment adjustment
-	//! should take place.
-	void setPosition(const osg::Vec3& position);
+	//! should take place. The default final argument is to reposition all the
+	//! data internally; if you know you don't need this yet (finalize ALWAYS
+	//! recalculates the positions), set it to false.
+	void setPosition(const osg::Vec3& position, bool recalculate=true);
 	
 	//! Sets the PositionAlignment enum to use for modifying the position of
 	//! the Text, modifying it's absolute placement. The default PositionAlignment
 	//! of POS_ALIGN_BOTTOM_LEFT however is a no-op, since it corresponds to how
-	//! Pango arranges the layout by default.
-	void setAlignment(PositionAlignment alignment);
+	//! Pango arranges the layout by default. The recalculate argument is the
+	//! same as for setPosition().
+	void setAlignment(PositionAlignment alignment, bool recalculate=true);
 
 protected:
 	//! Called internally by setPosition() and setAlignment() to dynamically
