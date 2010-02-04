@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <osg/io_utils>
 #include <osg/Math>
+#include <osg/Image>
 #include <osgPango/Context>
 
 namespace osgPango {
@@ -46,12 +47,13 @@ void Text::clear() {
 
 	 // _ggMap.clear();
 
-	_size     = osg::Vec2();
-	_origin   = osg::Vec2();
-	_lastX    = 0;
-	_lastY    = 0;
-	_baseline = 0;
-	_init     = false;
+	_size      = osg::Vec2();
+	_origin    = osg::Vec2();
+	_lastX     = 0;
+	_lastY     = 0;
+	_baseline  = 0;
+	_init      = false;
+	_newGlyphs = false;
 }
 
 GlyphGeometry* createGlyphGeometry(bool hasEffects) {
@@ -71,8 +73,6 @@ GlyphGeometry* createGlyphGeometry(bool hasEffects) {
 }
 
 void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
-	MSG << "---------- BEGIN drawGlyphs ----------" << std::endl;
-	
 	// Get the GlyphCache from a key, which may or may not be set via PangoAttr if I
 	// can it to work properly. :)
 	GlyphCache* gc = Context::instance().getGlyphCache(font, _glyphRenderer);
@@ -107,19 +107,14 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 		const CachedGlyph* cg = gc->getCachedGlyph(gi->glyph);
 
 		if(!cg) {
-
-			MSG << "Creating new glyph: " << gi->glyph << std::endl;
-			
 			cg = gc->createCachedGlyph(font, gi);
-		}
 
-		else MSG << "Using old glyph: " << gi->glyph << std::endl;
+			_newGlyphs = true;
+		}
 
 		if(!cg) continue;
 
 		GlyphGeometryIndex& ggi = _ggMap[GlyphGeometryMapKey(gc, color)];
-
-		// MSG << "Using GlyphGeometryIndex at: " << &ggi << std::endl;
 
 		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
 			osg::Vec2 pos(
@@ -130,19 +125,6 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 			bool hasEffects = gc->getGlyphRenderer()->hasEffects();
 
 			if(!ggi[cg->img]) ggi[cg->img] = createGlyphGeometry(hasEffects);
-
-			// MSG << "Using GlyphGeometry " << ggv[cg->img]->getName() << std::endl;
-
-			MSG
-				<< "cg: "
-				<< cg->img << ", "
-				<< cg->origin << ", "
-				<< cg->size << ", "
-				<< cg->bl << ", "
-				<< cg->br << ", "
-				<< cg->ur << ", "
-				<< cg->ul << std::endl
-			;
 
 			ggi[cg->img]->pushCachedGlyphAt(
 				cg,
@@ -164,8 +146,6 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// osg::notify(osg::NOTICE) << "baseline: " << baseline << std::endl;
 
 	if(!_init || baseline > _baseline) _baseline = baseline;
-
-	MSG << "---------- END drawGlyphs ----------" << std::endl << std::endl;
 }
 
 void Text::addText(const std::string& str, int x, int y, const TextOptions& to) {
@@ -246,8 +226,16 @@ void Text::_finalizeGeometry(GeometryList& drawables) {
 		GlyphGeometryIndex& ggi = g->second;
 
 		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
-			GlyphCache* gc    = g->first.first;
-			ColorPair   color = g->first.second;
+			GlyphCache* gc      = g->first.first;
+			ColorPair   color   = g->first.second;
+			osg::Image* texture = gc->getImage(i->first);
+			osg::Image* effects = gc->getImage(i->first, true);
+
+			if(_newGlyphs) {
+				if(texture) texture->dirty();
+				
+				if(effects) effects->dirty();
+			}
 
 			if(!i->second->finalize(GlyphGeometryState(
 				gc->getTexture(i->first),
@@ -275,51 +263,51 @@ bool TextTransform::finalize() {
 	return true;
 }
 
-void TextTransform::setPosition(const osg::Vec3& position) {
+void TextTransform::setPosition(const osg::Vec3& position, bool recalculate) {
 	_position = position;
 
-	// _calculatePosition();
+	if(recalculate) _calculatePosition();
 }
 
-void TextTransform::setAlignment(PositionAlignment alignment) {
+void TextTransform::setAlignment(PositionAlignment alignment, bool recalculate) {
 	_alignment = alignment;
 
-	// _calculatePosition();
+	if(recalculate) _calculatePosition();
 }
 
 void TextTransform::_calculatePosition() {
 	osg::Vec3 origin(getOriginTranslated(), 0.0f);
 	osg::Vec3 size(_size, 0.0f);
 
-	if(_alignment == POS_ALIGN_BOTTOM) 
+	if(_alignment == POS_ALIGN_TOP) 
 		origin.x() -= osg::round(size.x() / 2.0f)
 	;
 	
-	else if(_alignment == POS_ALIGN_BOTTOM_RIGHT)
+	else if(_alignment == POS_ALIGN_TOP_LEFT)
 		origin.x() -= osg::round(size.x())
 	;
 	
-	else if(_alignment == POS_ALIGN_RIGHT) origin -= osg::Vec3(
+	else if(_alignment == POS_ALIGN_LEFT) origin -= osg::Vec3(
 		osg::round(size.x()),
 		osg::round(size.y() / 2.0f),
 		0.0f
 	);
 	
-	else if(_alignment == POS_ALIGN_TOP_RIGHT)
+	else if(_alignment == POS_ALIGN_BOTTOM_LEFT)
 		origin -= size
 	;
 	
-	else if(_alignment == POS_ALIGN_TOP) origin -= osg::Vec3(
+	else if(_alignment == POS_ALIGN_BOTTOM) origin -= osg::Vec3(
 		osg::round(size.x() / 2.0f),
 		size.y(),
 		0.0f
 	);
 	
-	else if(_alignment == POS_ALIGN_TOP_LEFT)
+	else if(_alignment == POS_ALIGN_BOTTOM_RIGHT)
 		origin.y() -= size.y()
 	;
 	
-	else if(_alignment == POS_ALIGN_LEFT)
+	else if(_alignment == POS_ALIGN_RIGHT)
 		origin.y() -= osg::round(size.y() / 2.0f)
 	;
 	
