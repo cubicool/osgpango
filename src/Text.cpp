@@ -251,7 +251,7 @@ void Text::_finalizeGeometry(GeometryList& drawables) {
 }
 
 TextTransform::TextTransform():
-_alignment (POS_ALIGN_BOTTOM_LEFT),
+_alignment (POS_ALIGN_TOP_RIGHT),
 _position  (osg::Vec3(0.0f, 0.0f, 0.0f)) {
 }
 
