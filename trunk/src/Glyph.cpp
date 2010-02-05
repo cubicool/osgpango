@@ -417,13 +417,13 @@ bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 		state->setTextureAttributeAndModes(1, te1, osg::StateAttribute::ON);
 	}
 
-	/*
 	state->setTextureAttributeAndModes(
 		gs.effectsTexture ? 2 : 1,
 		gs.texture,
 		osg::StateAttribute::ON
 	);
 
+	// The ALPHA stuff.
 	osg::TexEnvCombine* te2 = new osg::TexEnvCombine();
 	
 	te2->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, gs.alpha));
@@ -442,7 +442,6 @@ bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 		te2,
 		osg::StateAttribute::ON
 	);
-	*/
 
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);
 	state->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
