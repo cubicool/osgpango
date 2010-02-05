@@ -75,13 +75,17 @@
 //! \include docs/demo.cpp
 
 #if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__) || defined( __BCPLUSPLUS__)  || defined( __MWERKS__)
-    #  if defined( osgPango_EXPORTS )
+    # if defined( osgPango_EXPORTS )
     #    define OSGPANGO_EXPORT   __declspec(dllexport)
-    #  else
+    # else
     #    define OSGPANGO_EXPORT   __declspec(dllimport)
-    #  endif
+    # endif
+    #
+    # define OSGPANGO_ENCODING osgText::String::ENCODING_UTF16
 #else
-    #  define OSGPANGO_EXPORT
+    # define OSGPANGO_EXPORT
+    #
+    # define OSGPANGO_ENCODING osgText::String::ENCODING_UTF8
 #endif  
 
 #endif  // OSGCAIRO_EXPORT

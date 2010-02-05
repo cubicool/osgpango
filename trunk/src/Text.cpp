@@ -153,7 +153,7 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 	PangoLayout* layout = pango_layout_new(Context::instance().getPangoContext());
 
 	if(str.size()) {
-		text.set(str, osgText::String::ENCODING_UTF8);
+		text.set(str, OSGPANGO_ENCODING);
 
 		std::string utf8 = text.createUTF8EncodedString();
 
