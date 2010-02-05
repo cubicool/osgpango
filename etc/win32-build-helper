@@ -4,7 +4,7 @@
 # have to pull up the GUI.
 
 MODE='Release|Win32'
-TEXT="<span font='Segoe UI 35'>ABCDE</span>"
+TEXT="<span font='Segoe UI 35'>ABCDE°</span>"
 
 case $1 in
 	ex*)
