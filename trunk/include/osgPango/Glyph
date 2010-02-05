@@ -187,6 +187,7 @@ public:
 
 	bool finalize          (const GlyphGeometryState&);
 	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&, bool, GlyphEffectsMethod);
+	bool setAlpha          (double);
 
 private:
 	static osg::ref_ptr<osg::Vec3Array> _norms;
