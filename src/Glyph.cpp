@@ -519,6 +519,25 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	return true;
 }
 
+bool GlyphGeometry::setAlpha(double alpha) {
+	osg::StateSet* state = getOrCreateStateSet();
+
+	if(!state) return false;
+
+	osg::TexEnvCombine* tec = dynamic_cast<osg::TexEnvCombine*>(
+		state->getTextureAttribute(
+			getNumTexCoordArrays() == 2 ? 2 : 1,
+			osg::StateAttribute::TEXENV
+		)
+	);
+
+	if(!tec) return false;
+
+	tec->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, alpha));
+
+	return true;
+}
+
 GlyphRendererOutline::GlyphRendererOutline(unsigned int size):
 _outline(size) {
 }

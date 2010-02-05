@@ -129,6 +129,7 @@ protected:
 	double           _alpha;
 	bool             _init;
 	bool             _newGlyphs;
+	bool             _finalized;
 	std::string      _glyphRenderer;
 };
 

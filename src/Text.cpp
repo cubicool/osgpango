@@ -54,6 +54,7 @@ void Text::clear() {
 	_baseline  = 0;
 	_init      = false;
 	_newGlyphs = false;
+	_finalized = false;
 }
 
 GlyphGeometry* createGlyphGeometry(bool hasEffects) {
@@ -210,7 +211,23 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 }
 
 void Text::setAlpha(double alpha) {
-	_alpha = alpha;
+	if(!_finalized) {
+		_alpha = alpha;
+
+		return;
+	}
+
+	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
+		GlyphGeometryIndex& ggi = g->second;
+
+		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
+			if(!i->second->setAlpha(alpha)) osg::notify(osg::WARN)
+				<< "Failed to set new alpha value for GlyphGeometryIndex "
+				<< i->first
+				<< std::endl
+			;
+		}
+	}
 }
 
 osg::Vec2 Text::getOriginBaseline() const {
@@ -248,6 +265,8 @@ void Text::_finalizeGeometry(GeometryList& drawables) {
 			drawables.push_back(i->second);
 		}
 	}
+
+	_finalized = true;
 }
 
 TextTransform::TextTransform():
