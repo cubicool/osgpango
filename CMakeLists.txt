@@ -39,6 +39,8 @@ SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/Util
 )
 
+SOURCE_GROUP("Header Files" FILES ${HEADER_FILES})
+
 FIND_PACKAGE(OpenSceneGraph)
 
 # Modify these so that osgCairo headers and libs are found.
