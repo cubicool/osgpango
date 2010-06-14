@@ -97,7 +97,7 @@ public:
 				0,
 				osgPango::TextOptions("outline")
 			);
-			oldTransform->setAlignment(pal.first);
+			oldTransform->setAlignment(pal.first, false);
 			oldTransform->finalize();
 		}
 
