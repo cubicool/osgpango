@@ -679,6 +679,7 @@ bool GlyphRendererShadowGaussian::renderGlyphEffects(
 	osgCairo::CairoScaledFont* sf = si->getScaledFont();
 
 	i.setScaledFont(sf);
+	i.setLineJoin(CAIRO_LINE_JOIN_ROUND);
 	i.setLineWidth(_radius - 0.5f);
 	i.setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
 	i.translate(_radius * 2, _radius * 2);
@@ -686,19 +687,21 @@ bool GlyphRendererShadowGaussian::renderGlyphEffects(
 	i.strokePreserve();
 	i.fill();
 
-	osgCairo::gaussianBlur(i.getSurface(), _radius * 4);
+	osgCairo::gaussianBlur(
+		i.getData(),
+		i.getFormat(),
+		i.getWidth(),
+		i.getHeight(),
+		_radius
+	);
 	
 	i.setOperator(CAIRO_OPERATOR_CLEAR);
 	
 	GlyphRenderer::renderGlyph(&i, g, w, h);
 
-	i.writeToPNG("i.png");
+	// i.writeToPNG("i.png");
 
-	// TODO: COPY TEMPORARY TO MASTER!
 	si->setSourceSurface(&i, 0, 0);
-	si->setOperator(CAIRO_OPERATOR_SOURCE);
-	si->rectangle(0, 0, w, h);
-	si->clipPreserve();
 	si->paint();
 
 	return true;
