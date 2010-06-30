@@ -72,14 +72,14 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(
-		osgCairo::Image*,
+		osgCairo::Surface*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
 	);
 	
 	virtual bool renderGlyphEffects(
-		osgCairo::Image*,
+		osgCairo::Surface*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
@@ -212,14 +212,14 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(
-		osgCairo::Image*,
+		osgCairo::Surface*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
 	);
 
 	virtual bool renderGlyphEffects(
-		osgCairo::Image*,
+		osgCairo::Surface*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
@@ -240,14 +240,14 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(
-		osgCairo::Image*,
+		osgCairo::Surface*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
 	);
 
 	virtual bool renderGlyphEffects(
-		osgCairo::Image*,
+		osgCairo::Surface*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
@@ -269,14 +269,14 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	virtual bool renderGlyph(
-		osgCairo::Image*,
+		osgCairo::Surface*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int
 	);
 
 	virtual bool renderGlyphEffects(
-		osgCairo::Image*,
+		osgCairo::Surface*,
 		const osgCairo::Glyph&,
 		unsigned int,
 		unsigned int

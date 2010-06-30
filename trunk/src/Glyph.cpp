@@ -6,6 +6,7 @@
 #include <osg/Texture2D>
 #include <osg/TexMat>
 #include <osg/TexEnvCombine>
+#include <osgCairo/Util>
 #include <osgPango/Context>
 
 namespace osgPango {
@@ -47,7 +48,7 @@ osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {
 }
 
 bool GlyphRenderer::renderGlyph(
-	osgCairo::Image*        si,
+	osgCairo::Surface*      si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
@@ -61,7 +62,7 @@ bool GlyphRenderer::renderGlyph(
 }
 
 bool GlyphRenderer::renderGlyphEffects(
-	osgCairo::Image*        si,
+	osgCairo::Surface*      si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
 	unsigned int            h
@@ -547,7 +548,7 @@ osg::Vec4 GlyphRendererOutline::getExtraGlyphExtents() const {
 }
 
 bool GlyphRendererOutline::renderGlyph(
-	osgCairo::Image*       si,
+	osgCairo::Surface*     si,
 	const osgCairo::Glyph& g,
 	unsigned int           w,
 	unsigned int           h
@@ -562,7 +563,7 @@ bool GlyphRendererOutline::renderGlyph(
 }
 
 bool GlyphRendererOutline::renderGlyphEffects(
-	osgCairo::Image*       si,
+	osgCairo::Surface*     si,
 	const osgCairo::Glyph& g,
 	unsigned int           w,
 	unsigned int           h
@@ -593,7 +594,7 @@ osg::Vec4 GlyphRendererShadowOffset::getExtraGlyphExtents() const {
 }
 
 bool GlyphRendererShadowOffset::renderGlyph(
-	osgCairo::Image*       si,
+	osgCairo::Surface*     si,
 	const osgCairo::Glyph& g,
 	unsigned int           w,
 	unsigned int           h
@@ -610,7 +611,7 @@ bool GlyphRendererShadowOffset::renderGlyph(
 }
 
 bool GlyphRendererShadowOffset::renderGlyphEffects(
-	osgCairo::Image*       si,
+	osgCairo::Surface*     si,
 	const osgCairo::Glyph& g,
 	unsigned int           w,
 	unsigned int           h
@@ -646,14 +647,14 @@ osg::Vec4 GlyphRendererShadowGaussian::getExtraGlyphExtents() const {
 }
 
 bool GlyphRendererShadowGaussian::renderGlyph(
-	osgCairo::Image*       si,
+	osgCairo::Surface*     si,
 	const osgCairo::Glyph& g,
 	unsigned int           w,
 	unsigned int           h
 ) {
 	if(!si) return false;
 
-	si->translate(_radius, _radius);
+	si->translate(_radius * 2, _radius * 2);
 
 	GlyphRenderer::renderGlyph(si, g, w, h);
 
@@ -661,52 +662,44 @@ bool GlyphRendererShadowGaussian::renderGlyph(
 }
 
 bool GlyphRendererShadowGaussian::renderGlyphEffects(
-	osgCairo::Image*        si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
+	osgCairo::Surface*     si,
+	const osgCairo::Glyph& g,
+	unsigned int           w,
+	unsigned int           h
 ) {
 	if(!si) return false;
 
-	// Create a temporary small surface and then copy that to the bigger one.
-	osgCairo::Image* i = new osgCairo::Image(si->getFormat());
-
-	if(!i) return false;
-
 	double add = _radius * 4.0f;
-
-	if(!i->allocateSurface(w + add, h + add) || !i->createContext()) {
-		delete i;
-
-		return false;
-	}
- 
-	// osgCairo::CairoScaledFont* sf = si->getScaledFont();
-
-	i->save();
-	i->identityMatrix();
-	// i->setScaledFont(sf);
-	i->setLineWidth(_radius - 0.5f);
-	// i->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
-	// i->translate(_radius * 2.0f, _radius * 2.0f);
-	i->moveTo(0.0f, 0.0f);
-	i->lineTo(w, h);
-	// i->glyphPath(g);
-	i->stroke();
-	// i->gaussianBlur(10);
-	// i->setOperator(CAIRO_OPERATOR_CLEAR);
 	
-	// GlyphRenderer::renderGlyph(i, g, w, h);
+	// Create a temporary small surface and then copy that to the bigger one.
+	osgCairo::ImageSurface i(CAIRO_FORMAT_ARGB32, w + add, h + add);
 
-	i->restore();
-	i->writeToPNG("i.png");
+	if(!i.createContext()) return false;
+ 
+	osgCairo::CairoScaledFont* sf = si->getScaledFont();
+
+	i.setScaledFont(sf);
+	i.setLineWidth(_radius - 0.5f);
+	i.setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
+	i.translate(_radius * 2, _radius * 2);
+	i.glyphPath(g);
+	i.strokePreserve();
+	i.fill();
+
+	osgCairo::gaussianBlur(i.getSurface(), _radius * 4);
+	
+	i.setOperator(CAIRO_OPERATOR_CLEAR);
+	
+	GlyphRenderer::renderGlyph(&i, g, w, h);
+
+	i.writeToPNG("i.png");
 
 	// TODO: COPY TEMPORARY TO MASTER!
-	//si->setSourceSurface(i, 0, 0);
-	//si->setOperator(CAIRO_OPERATOR_SOURCE);
-	//si->paint();
-
-	delete i;
+	si->setSourceSurface(&i, 0, 0);
+	si->setOperator(CAIRO_OPERATOR_SOURCE);
+	si->rectangle(0, 0, w, h);
+	si->clipPreserve();
+	si->paint();
 
 	return true;
 }
