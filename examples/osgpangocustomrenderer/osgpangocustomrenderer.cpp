@@ -18,18 +18,18 @@ const std::string LOREM_IPSUM(
 
 class GlyphRendererGradient: public osgPango::GlyphRenderer {
 	virtual bool renderGlyph(
-		osgCairo::Image*        si,
+		osgCairo::Surface*      si,
 		const osgCairo::Glyph&  g,
 		unsigned int            w,
 		unsigned int            h
 	) {
 		si->setLineWidth(1.5f);
 		si->glyphPath(g);
-		
+	
 		osgCairo::LinearPattern lp(w / 2.0f, 0.0f, w / 2.0f, h);
 
-		lp.addColorStopRGBA(0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-		lp.addColorStopRGBA(0.8f, 0.0f, 0.0f, 0.0f, 0.0f);
+		lp.addColorStopRGBA(0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+		lp.addColorStopRGBA(0.8f, 0.0f, 1.0f, 0.0f, 0.0f);
 
 		si->setSource(&lp);
 		si->fill();
@@ -147,6 +147,8 @@ int main(int argc, char** argv) {
 	viewer.setUpViewInWindow(50, 50, 1280, 1024);
 
 	viewer.run();
+
+	osgPango::Context::instance().writeCachesToPNGFiles("osgpangocustomrenderer");
 
 	return 0;
 }

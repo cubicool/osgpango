@@ -54,10 +54,14 @@ typedef std::pair<unsigned int, osg::Vec2> GlyphPositionPair;
 typedef std::list<GlyphPositionPair>       GlyphPositionList;
 typedef std::list<osg::Geometry*>          GeometryList;
 
+/*
+// I would like to figure out how to best allow the user to choose between
+// the fixed function and shader usage. Until then, these are just a fleeting idea...
 enum GlyphEffectsMethod {
 	GLYPH_EFFECTS_METHOD_DEFAULT,
 	GLYPH_EFFECTS_METHOD_GLSL
 };
+*/
 
 class OSGPANGO_EXPORT GlyphRenderer: public osg::Referenced {
 public:
@@ -186,7 +190,7 @@ public:
 	GlyphGeometry(bool = false);
 
 	bool finalize          (const GlyphGeometryState&);
-	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&, bool, GlyphEffectsMethod);
+	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&, bool);
 	bool setAlpha          (double);
 
 private:

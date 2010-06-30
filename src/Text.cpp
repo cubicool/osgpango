@@ -128,8 +128,7 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 			ggi[cg->img]->pushCachedGlyphAt(
 				cg,
 				pos + layoutPos,
-				hasEffects,
-				GLYPH_EFFECTS_METHOD_DEFAULT
+				hasEffects
 			);
 		}
 

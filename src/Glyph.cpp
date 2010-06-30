@@ -480,8 +480,7 @@ bool GlyphGeometry::finalize(const GlyphGeometryState& gs) {
 bool GlyphGeometry::pushCachedGlyphAt(
 	const CachedGlyph* cg,
 	const osg::Vec2&   pos,
-	bool               effects,
-	GlyphEffectsMethod gem
+	bool               effects
 ) {
 	static float z = 0.0f;
 
