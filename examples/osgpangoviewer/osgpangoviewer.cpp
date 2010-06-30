@@ -19,7 +19,7 @@ const std::string LOREM_IPSUM(
 	"\n\n"
 	"<span font='Monospace 15'>"
 	"Experiment with this application by using the following arguments:\n\n"
-	"\t<b>--renderer [string] [float]:</b> One of shadowOffset or outline, with a size value.\n"
+	"\t<b>--renderer [string] [float]:</b> One of shadowOffset, shadowBlur, or outline, with a size value.\n"
 	"\t<b>            --alpha [float]:</b> The alpha value, from 0.0 to 1.0 (fully opaque).\n"
 	"\t<b>              --width [int]:</b> Allowable text area width.\n"
 	"\t<b>                --alignment:</b> One of left, right, center, or justify."
@@ -57,7 +57,7 @@ void setupArguments(osg::ArgumentParser& args) {
 
 	args.getApplicationUsage()->addCommandLineOption(
 		"--renderer <string> <int>",
-		"The GlyphRenderer object to use (outline, shadowOffset) and size."
+		"The GlyphRenderer object to use (outline, shadowOffset, shadowBlur) and size."
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
@@ -118,6 +118,11 @@ int main(int argc, char** argv) {
 				new osgPango::GlyphRendererShadowOffset(s, s)
 			);
 
+			else if(renderer == "shadowBlur") context.addGlyphRenderer(
+				"shadowBlur",
+				new osgPango::GlyphRendererShadowGaussian(s)
+			);
+
 			else continue;
 
 			to.renderer = renderer;
@@ -168,7 +173,7 @@ int main(int argc, char** argv) {
 	viewer.run();
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
-	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
+	osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
 	
 	return 0;
 }

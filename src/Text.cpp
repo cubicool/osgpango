@@ -45,8 +45,6 @@ void Text::clear() {
 		ggi.clear();
 	}
 
-	 // _ggMap.clear();
-
 	_size      = osg::Vec2();
 	_origin    = osg::Vec2();
 	_lastX     = 0;
@@ -144,8 +142,6 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// Use the lowest baseline of all the texts that are added.
 	int baseline = y / PANGO_SCALE;
 
-	// osg::notify(osg::NOTICE) << "baseline: " << baseline << std::endl;
-
 	if(!_init || baseline > _baseline) _baseline = baseline;
 }
 
@@ -181,14 +177,10 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 
 	const osg::Vec4& extents = gr->getExtraGlyphExtents();
 
-	// osg::notify(osg::NOTICE) << "before: (" << x << " " << y << ") " << rect.x << " " << rect.y << " " << rect.width << " " << rect.height << std::endl;
-	
 	osg::Vec2::value_type ox = -(x + rect.x); //- extents[0];
 	osg::Vec2::value_type oy = y + rect.y - extents[3];
 	osg::Vec2::value_type sw = rect.width;
 	osg::Vec2::value_type sh = rect.height + extents[3];
-
-	// osg::notify(osg::NOTICE) << "after: " << ox << " " << oy << " " << sw << " " << sh << std::endl;
 
 	if(!_init) {
 		_origin.set(ox, oy);
