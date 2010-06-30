@@ -118,17 +118,17 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	if(hasEffects && !_effects.size()) _newImageAndTexture(_effects, _effectsTextures);
 
-	osgCairo::ScaledFont sf(pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font)));
+	osgCairo::CairoScaledFont* sf = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
 
 	osgCairo::Image* si  = _images.back().get();
 	osgCairo::Image* sie = 0;
 	
-	si->setScaledFont(&sf);
+	si->setScaledFont(sf);
 
 	if(hasEffects) {
 		sie = _effects.back().get();
 
-		sie->setScaledFont(&sf);
+		sie->setScaledFont(sf);
 	}
 
 	osg::Vec4 extents = _renderer->getExtraGlyphExtents();
@@ -159,14 +159,14 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 		si = _images.back().get();
 
-		si->setScaledFont(&sf);
+		si->setScaledFont(sf);
 
 		if(hasEffects) {
 			_newImageAndTexture(_effects, _effectsTextures);
 
 			sie = _effects.back().get();
 
-			sie->setScaledFont(&sf);
+			sie->setScaledFont(sf);
 		}
 	}
 
@@ -218,7 +218,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	if(sie) sie->translate(w + addw, 0.0f);
 
 	_x += w + addw;
-
+	
 	return const_cast<const CachedGlyph*>(&_glyphs[glyph]);
 }
 
@@ -637,21 +637,15 @@ bool GlyphRendererShadowOffset::renderGlyphEffects(
 	return true;
 }
 
-/*
-GlyphCacheShadowGaussian::GlyphCacheShadowGaussian(
-	unsigned int w,
-	unsigned int h,
-	unsigned int radius
-):
-GlyphRenderer (w, h, true),
-_radius       (radius) {
+GlyphRendererShadowGaussian::GlyphRendererShadowGaussian(unsigned int radius):
+_radius(radius) {
 }
 
-osg::Vec4 GlyphCacheShadowGaussian::getExtraGlyphExtents() const {
-	return osg::Vec4(_radius, _radius, _radius * 2, _radius * 2);
+osg::Vec4 GlyphRendererShadowGaussian::getExtraGlyphExtents() const {
+	return osg::Vec4(_radius * 2, _radius * 2, _radius * 4, _radius * 4);
 }
 
-bool GlyphCacheShadowGaussian::renderGlyph(
+bool GlyphRendererShadowGaussian::renderGlyph(
 	osgCairo::Image*       si,
 	const osgCairo::Glyph& g,
 	unsigned int           w,
@@ -661,12 +655,12 @@ bool GlyphCacheShadowGaussian::renderGlyph(
 
 	si->translate(_radius, _radius);
 
-	GlyphCache::renderGlyph(si, g, w, h);
+	GlyphRenderer::renderGlyph(si, g, w, h);
 
 	return true;
 }
 
-bool GlyphCacheShadowGaussian::renderGlyphEffects(
+bool GlyphRendererShadowGaussian::renderGlyphEffects(
 	osgCairo::Image*        si,
 	const osgCairo::Glyph&  g,
 	unsigned int            w,
@@ -674,19 +668,47 @@ bool GlyphCacheShadowGaussian::renderGlyphEffects(
 ) {
 	if(!si) return false;
 
-	si->setLineWidth(_radius - 0.5f);
-	si->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
-	si->translate(_radius, _radius);
-	si->glyphPath(g);
-	si->strokePreserve();
-	si->fill();
-	//si->gaussianBlur(10);
-	si->setOperator(CAIRO_OPERATOR_CLEAR);
+	// Create a temporary small surface and then copy that to the bigger one.
+	osgCairo::Image* i = new osgCairo::Image(si->getFormat());
+
+	if(!i) return false;
+
+	double add = _radius * 4.0f;
+
+	if(!i->allocateSurface(w + add, h + add) || !i->createContext()) {
+		delete i;
+
+		return false;
+	}
+ 
+	// osgCairo::CairoScaledFont* sf = si->getScaledFont();
+
+	i->save();
+	i->identityMatrix();
+	// i->setScaledFont(sf);
+	i->setLineWidth(_radius - 0.5f);
+	// i->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
+	// i->translate(_radius * 2.0f, _radius * 2.0f);
+	i->moveTo(0.0f, 0.0f);
+	i->lineTo(w, h);
+	// i->glyphPath(g);
+	i->stroke();
+	// i->gaussianBlur(10);
+	// i->setOperator(CAIRO_OPERATOR_CLEAR);
 	
-	GlyphCache::renderGlyph(si, g, w, h);
+	// GlyphRenderer::renderGlyph(i, g, w, h);
+
+	i->restore();
+	i->writeToPNG("i.png");
+
+	// TODO: COPY TEMPORARY TO MASTER!
+	//si->setSourceSurface(i, 0, 0);
+	//si->setOperator(CAIRO_OPERATOR_SOURCE);
+	//si->paint();
+
+	delete i;
 
 	return true;
 }
-*/
 
 }

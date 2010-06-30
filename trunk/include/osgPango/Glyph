@@ -258,10 +258,13 @@ private:
 	int _yOffset;
 };
 
-/*
 class OSGPANGO_EXPORT GlyphRendererShadowGaussian: public GlyphRenderer {
 public:
-	GlyphRendererShadowGaussian(unsigned int, unsigned int, unsigned int);
+	GlyphRendererShadowGaussian(unsigned int = 1);
+
+	virtual bool hasEffects() const {
+		return true;
+	}	
 
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
@@ -282,7 +285,6 @@ public:
 private:
 	unsigned int _radius;
 };
-*/
 
 }
 
