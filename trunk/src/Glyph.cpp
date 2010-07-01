@@ -6,10 +6,27 @@
 #include <osg/Texture2D>
 #include <osg/TexMat>
 #include <osg/TexEnvCombine>
+#include <osgDB/Registry>
+#include <osgDB/ReadFile>
 #include <osgCairo/Util>
 #include <osgPango/Context>
 
 namespace osgPango {
+
+const char* VERTEX_SHADER =
+"varying vec4 color;"
+"void main() {"
+"	color = gl_Color;"
+"	gl_Position = ftransform();"
+"}"
+;
+
+const char* FRAGMENT_SHADER =
+"varying vec4 color;"
+"void main() {"
+"	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);"
+"}"
+;
 
 CachedGlyph::CachedGlyph(
 	unsigned int     _img,
@@ -345,7 +362,16 @@ _numQuads(0) {
 template<typename T>
 bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 	if(!gs.texture) return false;
+
+	osg::Program* program = new osg::Program();
+
+	program->setName("basic");
+	program->addShader(new osg::Shader(osg::Shader::VERTEX, VERTEX_SHADER));
+	program->addShader(new osg::Shader(osg::Shader::FRAGMENT, FRAGMENT_SHADER));
+
+	obj->getOrCreateStateSet()->setAttributeAndModes(program);
 	
+	/*
 	osg::TexEnvCombine* te0   = new osg::TexEnvCombine();
 	osg::StateSet*      state = obj->getOrCreateStateSet();
 
@@ -447,6 +473,7 @@ bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);
 	state->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+	*/
 
 	return true;
 }
