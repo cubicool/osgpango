@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
 
 	viewer.run();
 
-	osgPango::Context::instance().writeCachesToPNGFiles("osgpangocustomrenderer");
+	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangocustomrenderer");
 
 	return 0;
 }

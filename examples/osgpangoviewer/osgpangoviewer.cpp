@@ -101,37 +101,37 @@ int main(int argc, char** argv) {
 
 	context.init();
 
-		osgPango::TextTransform* t = new osgPango::TextTransform();
+	osgPango::TextTransform* t = new osgPango::TextTransform();
 
-		osgPango::TextOptions to;
+	osgPango::TextOptions to;
 
-		while(args.read("--renderer", renderer, rendererSize)) {
-			int s = std::atoi(rendererSize.c_str());
+	while(args.read("--renderer", renderer, rendererSize)) {
+		int s = std::atoi(rendererSize.c_str());
 
-			if(renderer == "outline") context.addGlyphRenderer(
-				"outline",
-				new osgPango::GlyphRendererOutline(s)
-			);
+		if(renderer == "outline") context.addGlyphRenderer(
+			"outline",
+			new osgPango::GlyphRendererOutline(s)
+		);
 
-			else if(renderer == "shadowOffset") context.addGlyphRenderer(
-				"shadowOffset",
-				new osgPango::GlyphRendererShadowOffset(s, s)
-			);
+		else if(renderer == "shadowOffset") context.addGlyphRenderer(
+			"shadowOffset",
+			new osgPango::GlyphRendererShadowOffset(s, s)
+		);
 
-			else if(renderer == "shadowBlur") context.addGlyphRenderer(
-				"shadowBlur",
-				new osgPango::GlyphRendererShadowGaussian(s)
-			);
+		else if(renderer == "shadowBlur") context.addGlyphRenderer(
+			"shadowBlur",
+			new osgPango::GlyphRendererShadowGaussian(s)
+		);
 
-			else continue;
+		else continue;
 
-			to.renderer = renderer;
-		}
+		to.renderer = renderer;
+	}
 
-		while(args.read("--alpha", alpha)) {
-			float a = std::atof(alpha.c_str());
+	while(args.read("--alpha", alpha)) {
+		float a = std::atof(alpha.c_str());
 
-			t->setAlpha(a);
+		t->setAlpha(a);
 	}
 
 	while(args.read("--width", width)) to.width = std::atoi(width.c_str());
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
 	viewer.run();
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
-	osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
+	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
 	
 	return 0;
 }

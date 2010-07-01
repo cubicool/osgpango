@@ -34,13 +34,10 @@ SET(SRC_FILES
 	src/Text.cpp
 )
 
-#	src/Label.cpp
-
 SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/Context
 	${osgPango_SOURCE_DIR}/include/osgPango/Export
 	${osgPango_SOURCE_DIR}/include/osgPango/Glyph
-	${osgPango_SOURCE_DIR}/include/osgPango/Label
 	${osgPango_SOURCE_DIR}/include/osgPango/String
 	${osgPango_SOURCE_DIR}/include/osgPango/Text
 	${osgPango_SOURCE_DIR}/include/osgPango/Util
@@ -91,8 +88,6 @@ TARGET_LINK_LIBRARIES(osgPango
 	optimized osgText
 	debug     osgViewer${CMAKE_DEBUG_POSTFIX}
 	optimized osgViewer
-	debug     osgWidget${CMAKE_DEBUG_POSTFIX}
-	optimized osgWidget
 	debug     osgCairo${CMAKE_DEBUG_POSTFIX}
 	optimized osgCairo
         debug     cairo
