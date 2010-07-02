@@ -1,0 +1,23 @@
+- Add GLSL and FALLBACK rendering!
+	1. GlyphGeometry takes two new args: the number of textures
+	   (maximum of 8) and an enum telling what kind of rendering
+	   method to use.
+	2. TextGeodeInterface also takes the same enum, and passes
+	   this value to the constructor of GlyphGeometry. If GLSL
+	   is requested, add the Program object to the Geode.
+	3. As GlyphGeometry is finalized(), if we're using GLSL then
+	   add the Uniforms representing the user-specified colors.
+	   For the time being, only texture uints 0 and 1 will be
+	   modifiable (via fgcolor= and bgcolor= in the Pango Markup).
+	   If the GlyphGeometry is using FALLBACK mode, add the
+	   TexEnvCombine() object to each individual instance.
+	4. Profit?
+
+- Allow up to 8 (GLSL will be easy, traditional OpenGL notsomuch) 
+  combinable textures for each GlyphRenderer.
+
+- Experiment with adding full ARGB32 support for each GlyphRenderer
+  texture.
+
+- Add a Pango Markup "pre-parser" that will give us additional 
+  inputs for user-defined color values.
