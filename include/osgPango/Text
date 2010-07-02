@@ -102,6 +102,13 @@ public:
 		return _size;
 	}
 
+	//! The origin of a Text object is actually it's upper-left corner; this happens
+	//! due to the way osgPango interfaces with Pango and how Pango renders text from
+	//! top-to-bottom and lef-to-right (remember that OpenGL people are the
+	//! "oddities" in that we expect origins to be, and align with, the bottom left of
+	//! a canvas or rendering surface). In most cases this value won't be of much use
+	//! in an OpenGL environment, but since I cannot predict all of the possible uses
+	//! of text in an application, here it remains. 
 	osg::Vec2 getOrigin() {
 		return _origin;
 	}
@@ -110,11 +117,27 @@ public:
 		return _origin;
 	}
 
+	//! The baseline of a Text object is the bottom-most "line" that text is rendered
+	//! on using Pango internally. Similar to getOrigin(), the value returned by
+	//! getBaseline() is based on the value derived while interfacing with Pango, and
+	//! won't be of much use without a bit of transformation (though this is handled
+	//! for you in other Text getter methods).
 	unsigned int getBaseline() const {
 		return _baseline;
 	}
 
-	osg::Vec2 getOriginBaseline   () const;
+	//! This method differs from getOrigin() in that instead of returning the origin
+	//! in Pango space, it returns a 2D vector that you can translate the entire Text
+	//! object by in order to align it in OpenGL space to the baseline value.
+	osg::Vec2 getOriginBaseline() const;
+
+	//! This method, similar to getOriginBaseline(), returns a translation value
+	//! allowing you to align the Text with the furthest, bottom-left coordinate.
+	//! This is the most natural alignment point for static text, but is not
+	//! reliable for text that will change frequently (like a user input widget).
+	//! In those cases, a user should use getOriginBaseline(), so that the
+	//! glyphs with parts that render "under" the baseline do not modify the
+	//! placement of the Text object too drastically.
 	osg::Vec2 getOriginTranslated () const;
 
 protected:

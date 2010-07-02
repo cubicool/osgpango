@@ -13,21 +13,6 @@
 
 namespace osgPango {
 
-const char* VERTEX_SHADER =
-"varying vec4 color;"
-"void main() {"
-"	color = gl_Color;"
-"	gl_Position = ftransform();"
-"}"
-;
-
-const char* FRAGMENT_SHADER =
-"varying vec4 color;"
-"void main() {"
-"	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);"
-"}"
-;
-
 CachedGlyph::CachedGlyph(
 	unsigned int     _img,
 	const osg::Vec2& _origin,
@@ -363,19 +348,21 @@ template<typename T>
 bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 	if(!gs.texture) return false;
 
-	osg::Program* program = new osg::Program();
+	osg::Uniform* pangoColor = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "pangoColor", 8);
 
-	program->setName("basic");
-	program->addShader(new osg::Shader(osg::Shader::VERTEX, VERTEX_SHADER));
-	program->addShader(new osg::Shader(osg::Shader::FRAGMENT, FRAGMENT_SHADER));
-
-	obj->getOrCreateStateSet()->setAttributeAndModes(program);
+	pangoColor->setElement(0, gs.color);
+	pangoColor->setElement(1, gs.effectsColor);
 	
+	osg::StateSet* state = obj->getOrCreateStateSet();
+
+	state->setTextureAttributeAndModes(0, gs.texture, osg::StateAttribute::ON);
+	state->setTextureAttributeAndModes(1, gs.effectsTexture, osg::StateAttribute::ON);
+	state->addUniform(pangoColor);
+
 	/*
 	osg::TexEnvCombine* te0   = new osg::TexEnvCombine();
 	osg::StateSet*      state = obj->getOrCreateStateSet();
 
-	// TODO: Put this somewhere else higher in the tree...
 	state->setTextureAttributeAndModes(
 		gs.effectsTexture ? 1 : 0,
 		gs.texture,
@@ -469,11 +456,11 @@ bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
 		te2,
 		osg::StateAttribute::ON
 	);
+	*/
 
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);
 	state->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-	*/
 
 	return true;
 }
@@ -490,7 +477,7 @@ bool GlyphGeometry::finalize(const GlyphGeometryState& gs) {
 	if(!setGlyphGeometryState(this, gs)) return false;
 
 	addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, _numQuads * 4));
-	
+
 	/*
 	setDataVariance(osg::Object::STATIC);
 	setUseDisplayList(false);
@@ -547,6 +534,7 @@ bool GlyphGeometry::pushCachedGlyphAt(
 }
 
 bool GlyphGeometry::setAlpha(double alpha) {
+	/*
 	osg::StateSet* state = getOrCreateStateSet();
 
 	if(!state) return false;
@@ -561,6 +549,7 @@ bool GlyphGeometry::setAlpha(double alpha) {
 	if(!tec) return false;
 
 	tec->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, alpha));
+	*/
 
 	return true;
 }

@@ -1,4 +1,4 @@
-// -*-c++-*- osgPango - Copyright (C) 2009 Jeremy Moles
+// -*-c++-*- osgPango - Copyright (C) 2010 Jeremy Moles
 
 #include <sstream>
 #include <algorithm>
@@ -8,6 +8,31 @@
 #include <osgPango/Context>
 
 namespace osgPango {
+
+const char* VERTEX_SHADER =
+"#version 120\n"
+"const mat4x2 pangoTexMatrix = mat4x2("
+"	1,  0,"
+"	0, -1,"
+"	0,  0,"
+"	0,  1"
+");"
+"varying vec2 pangoTexCoord;"
+"void main() {"
+"	pangoTexCoord = vec2(pangoTexMatrix * gl_MultiTexCoord0);"
+"	gl_Position = ftransform();"
+"}"
+;
+
+const char* FRAGMENT_SHADER =
+"varying vec2 pangoTexCoord;"
+"uniform vec3 pangoColor[8];"
+"uniform sampler2D pangoTex;"
+"void main() {"
+"	float alpha = texture2D(pangoTex, pangoTexCoord.st).a;"
+"	gl_FragColor = vec4(pangoColor[0], alpha);"
+"}"
+;
 
 bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 	if(alignment != TEXT_ALIGN_JUSTIFY) {
@@ -269,6 +294,20 @@ bool TextTransform::finalize() {
 	if(!_finalizeGeode()) return false;
 
 	_calculatePosition();
+
+	// TODO: Move this elsewhere and make it optional...
+	osg::Program* program = new osg::Program();
+	osg::Shader*  vert    = new osg::Shader(osg::Shader::VERTEX, VERTEX_SHADER);
+	osg::Shader*  frag    = new osg::Shader(osg::Shader::FRAGMENT, FRAGMENT_SHADER);
+
+	vert->setName("pangoRendererVert");
+	frag->setName("pangoRendererFrag");
+	program->setName("pangoRenderer");
+
+	program->addShader(vert);
+	program->addShader(frag);
+
+	getGeode()->getOrCreateStateSet()->setAttributeAndModes(program);
 
 	return true;
 }
