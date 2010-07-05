@@ -497,6 +497,9 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	bool               effects
 ) {
 	static float z = 0.0f;
+	static const osg::Matrix m(
+		osg::Matrix::translate(0.0f, -1.0, 0.0f) *
+		osg::Matrix::scale(1.0f, -1.0f, 1.0f));
 
 	osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(getVertexArray());
 	osg::Vec2Array* texs  = dynamic_cast<osg::Vec2Array*>(getTexCoordArray(0));
@@ -511,21 +514,25 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	verts->push_back(osg::Vec3(origin + osg::Vec2(0.0f, cg->size.y()), z));
 
 	// z -= 0.001f;
+	osg::Vec4 bl = osg::Vec4(cg->bl.x(), cg->bl.y(), 0.0, 1.0) * m;
+	osg::Vec4 br = osg::Vec4(cg->br.x(), cg->br.y(), 0.0, 1.0) * m;
+	osg::Vec4 ur = osg::Vec4(cg->ur.x(), cg->ur.y(), 0.0, 1.0) * m;
+	osg::Vec4 ul = osg::Vec4(cg->ul.x(), cg->ul.y(), 0.0, 1.0) * m;
 
-	texs->push_back(cg->bl);
-	texs->push_back(cg->br);
-	texs->push_back(cg->ur);
-	texs->push_back(cg->ul);
+	texs->push_back(osg::Vec2(bl.x(), bl.y()));
+	texs->push_back(osg::Vec2(br.x(), br.y()));
+	texs->push_back(osg::Vec2(ur.x(), ur.y()));
+	texs->push_back(osg::Vec2(ul.x(), ul.y()));
 
 	if(effects) {
 		osg::Vec2Array* otexs = dynamic_cast<osg::Vec2Array*>(getTexCoordArray(1));
 
 		if(!otexs) return false;
 
-		otexs->push_back(cg->bl);
-		otexs->push_back(cg->br);
-		otexs->push_back(cg->ur);
-		otexs->push_back(cg->ul);
+		otexs->push_back(osg::Vec2(bl.x(), bl.y()));
+		otexs->push_back(osg::Vec2(br.x(), br.y()));
+		otexs->push_back(osg::Vec2(ur.x(), ur.y()));
+		otexs->push_back(osg::Vec2(ul.x(), ul.y()));
 	}
 
 	_numQuads++;

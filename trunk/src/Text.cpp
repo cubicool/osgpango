@@ -11,21 +11,15 @@ namespace osgPango {
 
 const char* VERTEX_SHADER =
 "#version 120\n"
-"const mat4x2 pangoTexMatrix = mat4x2("
-"	1,  0,"
-"	0, -1,"
-"	0,  0,"
-"	0,  1"
-");"
-"varying vec2 pangoTexCoord;"
+"varying vec4 pangoTexCoord;"
 "void main() {"
-"	pangoTexCoord = vec2(pangoTexMatrix * gl_MultiTexCoord0);"
+"	pangoTexCoord = gl_MultiTexCoord0;"
 "	gl_Position = ftransform();"
 "}"
 ;
 
 const char* FRAGMENT_SHADER =
-"varying vec2 pangoTexCoord;"
+"varying vec4 pangoTexCoord;"
 "uniform vec3 pangoColor[8];"
 "uniform sampler2D pangoTex;"
 "void main() {"
