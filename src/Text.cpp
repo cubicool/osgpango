@@ -9,25 +9,6 @@
 
 namespace osgPango {
 
-const char* VERTEX_SHADER =
-"#version 120\n"
-"varying vec4 pangoTexCoord;"
-"void main() {"
-"	pangoTexCoord = gl_MultiTexCoord0;"
-"	gl_Position = ftransform();"
-"}"
-;
-
-const char* FRAGMENT_SHADER =
-"varying vec4 pangoTexCoord;"
-"uniform vec3 pangoColor[8];"
-"uniform sampler2D pangoTex;"
-"void main() {"
-"	float alpha = texture2D(pangoTex, pangoTexCoord.st).a;"
-"	gl_FragColor = vec4(pangoColor[0], alpha);"
-"}"
-;
-
 bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 	if(alignment != TEXT_ALIGN_JUSTIFY) {
 		PangoAlignment pa = PANGO_ALIGN_LEFT;
@@ -52,8 +33,7 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 	return true;
 }
 
-Text::Text():
-_alpha(1.0f) {
+Text::Text() {
 	clear();
 }
 
@@ -220,25 +200,26 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 	_init = true;
 }
 
-void Text::setAlpha(double alpha) {
-	if(!_finalized) {
-		_alpha = alpha;
-
-		return;
-	}
-
-	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
-		GlyphGeometryIndex& ggi = g->second;
-
-		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
-			if(!i->second->setAlpha(alpha)) osg::notify(osg::WARN)
-				<< "Failed to set new alpha value for GlyphGeometryIndex "
-				<< i->first
-				<< std::endl
-			;
-		}
-	}
-}
+//void Text::setAlpha(double alpha) {
+//	if(!_finalized) {
+//		_alpha = alpha;
+//
+//		return;
+//	}
+//
+//	// TODO: make it different way, do this by custom state set policy
+//	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
+//		GlyphGeometryIndex& ggi = g->second;
+//
+//		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
+//			if(!i->second->setAlpha(alpha)) osg::notify(osg::WARN)
+//				<< "Failed to set new alpha value for GlyphGeometryIndex "
+//				<< i->first
+//				<< std::endl
+//			;
+//		}
+//	}
+//}
 
 osg::Vec2 Text::getOriginBaseline() const {
 	return osg::Vec2(_origin.x(), _baseline);
@@ -264,15 +245,18 @@ void Text::_finalizeGeometry(GeometryList& drawables) {
 				if(effects) effects->dirty();
 			}
 
-			if(!i->second->finalize(GlyphGeometryState(
-				gc->getTexture(i->first),
-				gc->getTexture(i->first, true),
-				color.first,
-				color.second,
-				_alpha
-			))) continue;
+			if(!i->second->finalize())
+				continue;
 
-			drawables.push_back(i->second);
+			drawables.push_back(std::make_pair(
+				i->second, 
+				GlyphGeometryState(
+					gc->getTexture(i->first),
+					gc->getTexture(i->first, true),
+					color.first,
+					color.second)
+				)
+			);
 		}
 	}
 
@@ -288,20 +272,6 @@ bool TextTransform::finalize() {
 	if(!_finalizeGeode()) return false;
 
 	_calculatePosition();
-
-	// TODO: Move this elsewhere and make it optional...
-	osg::Program* program = new osg::Program();
-	osg::Shader*  vert    = new osg::Shader(osg::Shader::VERTEX, VERTEX_SHADER);
-	osg::Shader*  frag    = new osg::Shader(osg::Shader::FRAGMENT, FRAGMENT_SHADER);
-
-	vert->setName("pangoRendererVert");
-	frag->setName("pangoRendererFrag");
-	program->setName("pangoRenderer");
-
-	program->addShader(vert);
-	program->addShader(frag);
-
-	getGeode()->getOrCreateStateSet()->setAttributeAndModes(program);
 
 	return true;
 }

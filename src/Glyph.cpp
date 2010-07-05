@@ -35,14 +35,12 @@ GlyphGeometryState::GlyphGeometryState(
 	osg::Texture*    _texture,
 	osg::Texture*    _effectsTexture,
 	const osg::Vec3& _color,
-	const osg::Vec3& _effectsColor,
-	double           _alpha
+	const osg::Vec3& _effectsColor
 ):
 texture        (_texture),
 effectsTexture (_effectsTexture),
 color          (_color),
-effectsColor   (_effectsColor),
-alpha          (_alpha) {
+effectsColor   (_effectsColor) {
 }
 
 osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {
@@ -344,138 +342,135 @@ _numQuads(0) {
 	setColorBinding(osg::Geometry::BIND_OVERALL);
 }
 
-template<typename T>
-bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
-	if(!gs.texture) return false;
+//template<typename T>
+//bool _setGlyphGeometryState(T* obj, const GlyphGeometryState& gs) {
+//	if(!gs.texture) return false;
+//
+//	osg::Uniform* pangoColor = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "pangoColor", 8);
+//
+//	pangoColor->setElement(0, gs.color);
+//	pangoColor->setElement(1, gs.effectsColor);
+//	
+//	osg::StateSet* state = obj->getOrCreateStateSet();
+//
+//	state->setTextureAttributeAndModes(0, gs.texture, osg::StateAttribute::ON);
+//	state->setTextureAttributeAndModes(1, gs.effectsTexture, osg::StateAttribute::ON);
+//	state->addUniform(pangoColor);
+//
+//	osg::TexEnvCombine* te0   = new osg::TexEnvCombine();
+//	osg::StateSet*      state = obj->getOrCreateStateSet();
+//
+//	state->setTextureAttributeAndModes(
+//		gs.effectsTexture ? 1 : 0,
+//		gs.texture,
+//		osg::StateAttribute::ON
+//	);
+//
+//	osg::Matrix s = osg::Matrix::scale(1.0f, -1.0f, 1.0f);
+//	osg::Matrix t = osg::Matrix::translate(0.0f, -1.0, 0.0f);
+//
+//	state->setTextureAttributeAndModes(
+//		gs.effectsTexture ? 1 : 0,
+//		new osg::TexMat(t * s),
+//		osg::StateAttribute::ON
+//	);
+//
+//	// This is the color of the border...
+//	te0->setConstantColor(osg::Vec4(gs.effectsTexture ? gs.effectsColor : gs.color, 1.0f));
+//
+//	// RGB setup for te0.
+//	te0->setCombine_RGB(osg::TexEnvCombine::MODULATE);
+//	te0->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
+//	te0->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
+//	te0->setOperand1_RGB(osg::TexEnvCombine::SRC_ALPHA);
+//
+//	// Alpha setup for te0.
+//	te0->setCombine_Alpha(osg::TexEnvCombine::REPLACE);
+//	te0->setSource0_Alpha(osg::TexEnvCombine::TEXTURE0);
+//	te0->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
+//
+//	state->setTextureAttributeAndModes(0, te0, osg::StateAttribute::ON);
+//
+//	if(gs.effectsTexture) {
+//		osg::TexEnvCombine* te1 = new osg::TexEnvCombine();
+//
+//		// This is the color of the text...
+//		te1->setConstantColor(osg::Vec4(gs.color, 1.0f));
+//
+//		// RGB setup for te1.
+//		te1->setCombine_RGB(osg::TexEnvCombine::INTERPOLATE);
+//		te1->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
+//		te1->setSource1_RGB(osg::TexEnvCombine::PREVIOUS);
+//		te1->setSource2_RGB(osg::TexEnvCombine::TEXTURE1);
+//		te1->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
+//		te1->setOperand1_RGB(osg::TexEnvCombine::SRC_COLOR);
+//		te1->setOperand2_RGB(osg::TexEnvCombine::SRC_ALPHA);
+//
+//		// Alpha setup for te1.
+//		te1->setCombine_Alpha(osg::TexEnvCombine::ADD);
+//		te1->setSource0_Alpha(osg::TexEnvCombine::TEXTURE1);
+//		te1->setSource1_Alpha(osg::TexEnvCombine::PREVIOUS);
+//		te1->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
+//		te1->setOperand1_Alpha(osg::TexEnvCombine::SRC_ALPHA);
+//
+//		state->setTextureAttributeAndModes(
+//			0,
+//			gs.effectsTexture,
+//			osg::StateAttribute::ON
+//		);
+//
+//		state->setTextureAttributeAndModes(
+//			0,
+//			new osg::TexMat(t * s),
+//			osg::StateAttribute::ON
+//		);
+//
+//		state->setTextureAttributeAndModes(1, te1, osg::StateAttribute::ON);
+//	}
+//
+//	state->setTextureAttributeAndModes(
+//		gs.effectsTexture ? 2 : 1,
+//		gs.texture,
+//		osg::StateAttribute::ON
+//	);
+//
+//	// The ALPHA stuff.
+//	osg::TexEnvCombine* te2 = new osg::TexEnvCombine();
+//	
+//	te2->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, gs.alpha));
+//
+//	te2->setCombine_RGB(osg::TexEnvCombine::REPLACE);
+//	te2->setSource0_RGB(osg::TexEnvCombine::PREVIOUS);
+//	te2->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
+//	te2->setCombine_Alpha(osg::TexEnvCombine::MODULATE);
+//	te2->setSource0_Alpha(osg::TexEnvCombine::CONSTANT);
+//	te2->setSource1_Alpha(osg::TexEnvCombine::PREVIOUS);
+//	te2->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
+//	te2->setOperand1_Alpha(osg::TexEnvCombine::SRC_ALPHA);
+//
+//	state->setTextureAttributeAndModes(
+//		gs.effectsTexture ? 2 : 1,
+//		te2,
+//		osg::StateAttribute::ON
+//	);
+//	*/
+//
+//	state->setMode(GL_BLEND, osg::StateAttribute::ON);
+//	state->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+//	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+//
+//  return true;
+//}
 
-	osg::Uniform* pangoColor = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "pangoColor", 8);
+//bool setGlyphGeometryState(osg::Drawable* drawable, const GlyphGeometryState& gs) {
+//	return _setGlyphGeometryState(drawable, gs);
+//}
+//
+//bool setGlyphGeometryState(osg::Node* node, const GlyphGeometryState& gs) {
+//	return _setGlyphGeometryState(node, gs);
+//}
 
-	pangoColor->setElement(0, gs.color);
-	pangoColor->setElement(1, gs.effectsColor);
-	
-	osg::StateSet* state = obj->getOrCreateStateSet();
-
-	state->setTextureAttributeAndModes(0, gs.texture, osg::StateAttribute::ON);
-	state->setTextureAttributeAndModes(1, gs.effectsTexture, osg::StateAttribute::ON);
-	state->addUniform(pangoColor);
-
-	/*
-	osg::TexEnvCombine* te0   = new osg::TexEnvCombine();
-	osg::StateSet*      state = obj->getOrCreateStateSet();
-
-	state->setTextureAttributeAndModes(
-		gs.effectsTexture ? 1 : 0,
-		gs.texture,
-		osg::StateAttribute::ON
-	);
-
-	osg::Matrix s = osg::Matrix::scale(1.0f, -1.0f, 1.0f);
-	osg::Matrix t = osg::Matrix::translate(0.0f, -1.0, 0.0f);
-
-	state->setTextureAttributeAndModes(
-		gs.effectsTexture ? 1 : 0,
-		new osg::TexMat(t * s),
-		osg::StateAttribute::ON
-	);
-
-	// This is the color of the border...
-	te0->setConstantColor(osg::Vec4(gs.effectsTexture ? gs.effectsColor : gs.color, 1.0f));
-
-	// RGB setup for te0.
-	te0->setCombine_RGB(osg::TexEnvCombine::MODULATE);
-	te0->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
-	te0->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
-	te0->setOperand1_RGB(osg::TexEnvCombine::SRC_ALPHA);
-
-	// Alpha setup for te0.
-	te0->setCombine_Alpha(osg::TexEnvCombine::REPLACE);
-	te0->setSource0_Alpha(osg::TexEnvCombine::TEXTURE0);
-	te0->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
-
-	state->setTextureAttributeAndModes(0, te0, osg::StateAttribute::ON);
-
-	if(gs.effectsTexture) {
-		osg::TexEnvCombine* te1 = new osg::TexEnvCombine();
-
-		// This is the color of the text...
-		te1->setConstantColor(osg::Vec4(gs.color, 1.0f));
-
-		// RGB setup for te1.
-		te1->setCombine_RGB(osg::TexEnvCombine::INTERPOLATE);
-		te1->setSource0_RGB(osg::TexEnvCombine::CONSTANT);
-		te1->setSource1_RGB(osg::TexEnvCombine::PREVIOUS);
-		te1->setSource2_RGB(osg::TexEnvCombine::TEXTURE1);
-		te1->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
-		te1->setOperand1_RGB(osg::TexEnvCombine::SRC_COLOR);
-		te1->setOperand2_RGB(osg::TexEnvCombine::SRC_ALPHA);
-
-		// Alpha setup for te1.
-		te1->setCombine_Alpha(osg::TexEnvCombine::ADD);
-		te1->setSource0_Alpha(osg::TexEnvCombine::TEXTURE1);
-		te1->setSource1_Alpha(osg::TexEnvCombine::PREVIOUS);
-		te1->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
-		te1->setOperand1_Alpha(osg::TexEnvCombine::SRC_ALPHA);
-
-		state->setTextureAttributeAndModes(
-			0,
-			gs.effectsTexture,
-			osg::StateAttribute::ON
-		);
-
-		state->setTextureAttributeAndModes(
-			0,
-			new osg::TexMat(t * s),
-			osg::StateAttribute::ON
-		);
-
-		state->setTextureAttributeAndModes(1, te1, osg::StateAttribute::ON);
-	}
-
-	state->setTextureAttributeAndModes(
-		gs.effectsTexture ? 2 : 1,
-		gs.texture,
-		osg::StateAttribute::ON
-	);
-
-	// The ALPHA stuff.
-	osg::TexEnvCombine* te2 = new osg::TexEnvCombine();
-	
-	te2->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, gs.alpha));
-
-	te2->setCombine_RGB(osg::TexEnvCombine::REPLACE);
-	te2->setSource0_RGB(osg::TexEnvCombine::PREVIOUS);
-	te2->setOperand0_RGB(osg::TexEnvCombine::SRC_COLOR);
-	te2->setCombine_Alpha(osg::TexEnvCombine::MODULATE);
-	te2->setSource0_Alpha(osg::TexEnvCombine::CONSTANT);
-	te2->setSource1_Alpha(osg::TexEnvCombine::PREVIOUS);
-	te2->setOperand0_Alpha(osg::TexEnvCombine::SRC_ALPHA);
-	te2->setOperand1_Alpha(osg::TexEnvCombine::SRC_ALPHA);
-
-	state->setTextureAttributeAndModes(
-		gs.effectsTexture ? 2 : 1,
-		te2,
-		osg::StateAttribute::ON
-	);
-	*/
-
-	state->setMode(GL_BLEND, osg::StateAttribute::ON);
-	state->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-
-	return true;
-}
-
-bool setGlyphGeometryState(osg::Drawable* drawable, const GlyphGeometryState& gs) {
-	return _setGlyphGeometryState(drawable, gs);
-}
-
-bool setGlyphGeometryState(osg::Node* node, const GlyphGeometryState& gs) {
-	return _setGlyphGeometryState(node, gs);
-}
-
-bool GlyphGeometry::finalize(const GlyphGeometryState& gs) {
-	if(!setGlyphGeometryState(this, gs)) return false;
-
+bool GlyphGeometry::finalize() {
 	addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, _numQuads * 4));
 
 	/*
@@ -540,26 +535,24 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	return true;
 }
 
-bool GlyphGeometry::setAlpha(double alpha) {
-	/*
-	osg::StateSet* state = getOrCreateStateSet();
-
-	if(!state) return false;
-
-	osg::TexEnvCombine* tec = dynamic_cast<osg::TexEnvCombine*>(
-		state->getTextureAttribute(
-			getNumTexCoordArrays() == 2 ? 2 : 1,
-			osg::StateAttribute::TEXENV
-		)
-	);
-
-	if(!tec) return false;
-
-	tec->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, alpha));
-	*/
-
-	return true;
-}
+//bool GlyphGeometry::setAlpha(double alpha) {
+//	osg::StateSet* state = getOrCreateStateSet();
+//
+//	if(!state) return false;
+//
+//	osg::TexEnvCombine* tec = dynamic_cast<osg::TexEnvCombine*>(
+//		state->getTextureAttribute(
+//			getNumTexCoordArrays() == 2 ? 2 : 1,
+//			osg::StateAttribute::TEXENV
+//		)
+//	);
+//
+//	if(!tec) return false;
+//
+//	tec->setConstantColor(osg::Vec4(0.0f, 0.0f, 0.0f, alpha));
+//
+//	return true;
+//}
 
 GlyphRendererOutline::GlyphRendererOutline(unsigned int size):
 _outline(size) {
