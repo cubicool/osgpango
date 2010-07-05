@@ -10,6 +10,7 @@
 #include <osg/MatrixTransform>
 #include <osgPango/String>
 #include <osgPango/Glyph>
+#include <osgPango/GeometryStatePolicy>
 
 namespace osgPango {
 
@@ -92,7 +93,6 @@ public:
 	void drawGlyphs     (PangoFont*, PangoGlyphString*, int, int);
 	void addText        (const std::string&, int, int, const TextOptions& = TextOptions());
 	void writeAllImages (const std::string&);
-	void setAlpha       (double);
 
 	const osg::Vec2& getSize() {
 		return _size;
@@ -149,7 +149,6 @@ protected:
 	int              _lastX;
 	int              _lastY;
 	int              _baseline;
-	double           _alpha;
 	bool             _init;
 	bool             _newGlyphs;
 	bool             _finalized;
@@ -160,8 +159,8 @@ protected:
 //! Using this class isn't strictly necessary, but it does provide a few very
 //! valuable services that could become quite cumbersome reimplimenting in
 //! every Text-derived object.
-template<typename T>
-class OSGPANGO_EXPORT TextGeodeInterface: public Text, public T {
+template<typename T, typename StatePolicy = GLSLGeometryState>
+class OSGPANGO_EXPORT TextGeodeInterface: public Text, public T, public StatePolicy {
 public:
 	TextGeodeInterface() {
 		osg::Geode* geode = new osg::Geode();
@@ -197,12 +196,15 @@ protected:
 		// geode->removeDrawables(0, geode->getNumDrawables());
 
 		GeometryList gl;
-
 		_finalizeGeometry(gl);
 
-		for(GeometryList::iterator i = gl.begin(); i != gl.end(); i++) {
-			geode->addDrawable(*i);
+		StatePolicy::apply(geode);
+
+		for(GeometryList::const_iterator i = gl.begin(); i != gl.end(); i++) {
+			StatePolicy::apply(i->first, i->second);
+			geode->addDrawable(i->first);
 		}
+		
 
 		return true;
 	}

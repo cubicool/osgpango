@@ -32,6 +32,7 @@ SET(SRC_FILES
 	src/Context.cpp
 	src/Glyph.cpp
 	src/Text.cpp
+	src/GeometryStatePolicy.cpp
 )
 
 SET(HEADER_FILES
@@ -41,6 +42,7 @@ SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/String
 	${osgPango_SOURCE_DIR}/include/osgPango/Text
 	${osgPango_SOURCE_DIR}/include/osgPango/Util
+	${osgPango_SOURCE_DIR}/include/osgPango/GeometryStatePolicy
 )
 
 SOURCE_GROUP("Header Files" FILES ${HEADER_FILES})

@@ -39,20 +39,19 @@ struct OSGPANGO_EXPORT GlyphGeometryState {
 		osg::Texture*,
 		osg::Texture*,
 		const osg::Vec3&,
-		const osg::Vec3&,
-		double
+		const osg::Vec3&
 	);
 
 	osg::Texture* texture;
 	osg::Texture* effectsTexture;
 	osg::Vec3     color;
 	osg::Vec3     effectsColor;
-	double        alpha;
 };
 
-typedef std::pair<unsigned int, osg::Vec2> GlyphPositionPair;
-typedef std::list<GlyphPositionPair>       GlyphPositionList;
-typedef std::list<osg::Geometry*>          GeometryList;
+typedef std::pair<unsigned int, osg::Vec2>              GlyphPositionPair;
+typedef std::list<GlyphPositionPair>                    GlyphPositionList;
+typedef std::pair<osg::Geometry*, GlyphGeometryState>   GeometryAndState;
+typedef std::list<GeometryAndState>                     GeometryList;
 
 /*
 // I would like to figure out how to best allow the user to choose between
@@ -182,16 +181,16 @@ private:
 	unsigned int _imgHeight;
 };
 
-bool setGlyphGeometryState (osg::Drawable*, const GlyphGeometryState&);
-bool setGlyphGeometryState (osg::Node*, const GlyphGeometryState&);
+//bool setGlyphGeometryState (osg::Drawable*, const GlyphGeometryState&);
+//bool setGlyphGeometryState (osg::Node*, const GlyphGeometryState&);
 
 class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
 public:
 	GlyphGeometry(bool = false);
 
-	bool finalize          (const GlyphGeometryState&);
+	bool finalize          ();
 	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&, bool);
-	bool setAlpha          (double);
+	//bool setAlpha          (double);
 
 private:
 	static osg::ref_ptr<osg::Vec3Array> _norms;
