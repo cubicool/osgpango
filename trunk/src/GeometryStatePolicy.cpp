@@ -3,6 +3,7 @@
 #include <osg/AlphaFunc>
 #include <osg/BlendColor>
 #include <osg/BlendFunc>
+#include <osg/Depth>
 #include <osgPango/GeometryStatePolicy>
 
 namespace osgPango {
@@ -15,6 +16,7 @@ _alpha(1.0f) {
 void TextEnvGeometryState::apply(osg::Geode * geode) const {
 	geode->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
 	geode->getOrCreateStateSet()->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
+	geode->getOrCreateStateSet()->setAttribute(new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false));
 }
 
 void TextEnvGeometryState::apply(osg::Geometry *obj, const GlyphGeometryState &gs) const {
@@ -153,6 +155,7 @@ void GLSLGeometryState::apply(osg::Geode * geode) const {
 	state->setAttributeAndModes(program);
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);
 	state->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
+	state->setAttribute(new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false));
 	
 	state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(_alpha);
 	state->getOrCreateUniform("pangoTex", osg::Uniform::INT)->set(0);
