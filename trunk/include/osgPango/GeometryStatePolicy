@@ -1,3 +1,5 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+
 #ifndef OSGPANGO_GEOEMETRY_STATE
 #define OSGPANGO_GEOEMETRY_STATE
 
@@ -24,21 +26,21 @@ public:
 	}
 
 protected:
-	float           _alpha;
+	float _alpha;
 };
 
-class TextEnvGeometryState : public BaseGeometryState {
+class TextEnvGeometryState: public BaseGeometryState {
 public:
-  void apply(osg::Geode *) const;
-  void apply(osg::Geometry *, const GlyphGeometryState &) const;
+	void apply (osg::Geode*) const;
+	void apply (osg::Geometry*, const GlyphGeometryState &) const;
 };
 
-class GLSLGeometryState  : public BaseGeometryState {
+class GLSLGeometryState: public BaseGeometryState {
 public:
 	GLSLGeometryState();
 
-  void apply(osg::Geode *) const;
-  void apply(osg::Geometry *, const GlyphGeometryState &) const;
+	void apply (osg::Geode*) const;
+	void apply (osg::Geometry*, const GlyphGeometryState&) const;
 
 	void setVertexShader(const std::string& shader) {
 		_vertexShader = shader; 
@@ -57,10 +59,10 @@ public:
 	}
 
 protected:
-	std::string						_vertexShader,
-												_fragmentShader;
+	std::string _vertexShader;
+	std::string _fragmentShader;
 };
 
-} //osgPango
+}
 
 #endif

@@ -1,9 +1,3 @@
-osgPango is primarily (95%) by:
-
-	Jeremy Moles (cubicool) <jeremy@emperorlinx.com>
-
-However, significant bugfixes and additional code have been provided by:
-
-	Cedric Pinson (mornifle) <mornifle@plopbyte.net>
-
-...who is also the author of the fantastic osgAnimation toolkit!
+Jeremy Moles  <cubicool@gmail.com>
+Jaromir Vitek <jaromir.vitek@gmail.com>
+Cedric Pinson <cedric.pinson@plopbyte.net>

@@ -1,3 +1,5 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+
 #include <osg/TexMat>
 #include <osg/TexEnvCombine>
 #include <osg/AlphaFunc>
@@ -12,7 +14,6 @@ BaseGeometryState::BaseGeometryState() :
 _alpha(1.0f) {
 }
 
-
 void TextEnvGeometryState::apply(osg::Geode * geode) const {
 	geode->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
 	geode->getOrCreateStateSet()->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
@@ -20,12 +21,12 @@ void TextEnvGeometryState::apply(osg::Geode * geode) const {
 }
 
 void TextEnvGeometryState::apply(osg::Geometry *obj, const GlyphGeometryState &gs) const {
-	osg::StateSet*      state = obj->getOrCreateStateSet();
+	osg::StateSet* state = obj->getOrCreateStateSet();
 
 	state->setTextureAttributeAndModes(0, gs.texture, osg::StateAttribute::ON);
 	state->setTextureAttributeAndModes(1, gs.effectsTexture, osg::StateAttribute::ON);
 
-	osg::TexEnvCombine* te0   = new osg::TexEnvCombine();
+	osg::TexEnvCombine* te0 = new osg::TexEnvCombine();
 
 	state->setTextureAttributeAndModes(
 		gs.effectsTexture ? 1 : 0,
@@ -110,44 +111,41 @@ void TextEnvGeometryState::apply(osg::Geometry *obj, const GlyphGeometryState &g
 	state->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
 }
 
-
 const char* VERTEX_SHADER =
-		"#version 120\n"
-		"varying vec4 pangoTexCoord0;"
-		"varying vec4 pangoTexCoord1;"
-		"void main() {"
-		"	pangoTexCoord0 = gl_MultiTexCoord0;"
-		"	pangoTexCoord1 = gl_MultiTexCoord1;"
-		"	gl_Position = ftransform();"
-		"}"
-		;
-	
-	const char* FRAGMENT_SHADER =
-		"varying vec4 pangoTexCoord0;"
-		"varying vec4 pangoTexCoord1;"
-		"uniform vec3 pangoColor[8];"
-		"uniform sampler2D pangoTex0;"
-		"uniform sampler2D pangoTex1;"
-		"uniform float pangoAlpha;"
-		"void main() {"
-		"	float tex0 = texture2D(pangoTex1, pangoTexCoord1.st).a;"   // effect
-		"	float tex1 = texture2D(pangoTex0, pangoTexCoord0.st).a;"   // base glyph
-		" vec3 color0 = pangoColor[1].rgb * tex0;"
-		" vec3 color1 = pangoColor[0].rgb * tex1 + color0 * (1.0 - tex1);"
-		" float alpha0 = tex0;"
-		" float alpha1 = tex0 + tex1;"
-		"	gl_FragColor = vec4(color1, alpha1 * pangoAlpha);"
-		"}"
-		;
+	"#version 120\n"
+	"varying vec4 pangoTexCoord0;"
+	"varying vec4 pangoTexCoord1;"
+	"void main() {"
+	"	pangoTexCoord0 = gl_MultiTexCoord0;"
+	"	pangoTexCoord1 = gl_MultiTexCoord1;"
+	"	gl_Position = ftransform();"
+	"}"
+;
+
+const char* FRAGMENT_SHADER =
+	"varying vec4 pangoTexCoord0;"
+	"varying vec4 pangoTexCoord1;"
+	"uniform vec3 pangoColor[8];"
+	"uniform sampler2D pangoTex0;"
+	"uniform sampler2D pangoTex1;"
+	"uniform float pangoAlpha;"
+	"void main() {"
+	"	float tex0   = texture2D(pangoTex1, pangoTexCoord1.st).a;" // effect
+	"	float tex1   = texture2D(pangoTex0, pangoTexCoord0.st).a;" // base glyph
+	"	vec3 color0  = pangoColor[1].rgb * tex0;"
+	"	vec3 color1  = pangoColor[0].rgb * tex1 + color0 * (1.0 - tex1);"
+	"	float alpha0 = tex0;"
+	"	float alpha1 = tex0 + tex1;"
+	"	gl_FragColor = vec4(color1, alpha1 * pangoAlpha);"
+	"}"
+;
 
 GLSLGeometryState::GLSLGeometryState(): 
-_vertexShader(VERTEX_SHADER),
-_fragmentShader(FRAGMENT_SHADER) {
-
+_vertexShader   (VERTEX_SHADER),
+_fragmentShader (FRAGMENT_SHADER) {
 }
 
-
-void GLSLGeometryState::apply(osg::Geode * geode) const {
+void GLSLGeometryState::apply(osg::Geode* geode) const {
 	osg::Program* program = new osg::Program();
 	osg::Shader*  vert    = new osg::Shader(osg::Shader::VERTEX, _vertexShader);
 	osg::Shader*  frag    = new osg::Shader(osg::Shader::FRAGMENT, _fragmentShader);
@@ -171,7 +169,7 @@ void GLSLGeometryState::apply(osg::Geode * geode) const {
 	state->getOrCreateUniform("pangoTex1", osg::Uniform::INT)->set(1);
 }
 
-void GLSLGeometryState::apply(osg::Geometry *geometry, const GlyphGeometryState &gs) const {
+void GLSLGeometryState::apply(osg::Geometry* geometry, const GlyphGeometryState& gs) const {
 	osg::Uniform* pangoColor = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "pangoColor", 8);
 
 	pangoColor->setElement(0, gs.color);

@@ -1,4 +1,4 @@
-// -*-c++-*- osgPango - Copyright (C) 2010 Jeremy Moles
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
 
 #ifndef OSGPANGO_TEXT
 #define OSGPANGO_TEXT
@@ -205,26 +205,25 @@ protected:
 			geode->addDrawable(i->first);
 		}
 		
-
 		return true;
 	}
 };
 
 
 template<typename T>
-class TextMultipassInterface : public Text, public T {
+class TextMultipassInterface: public Text, public T {
 public:
 	TextMultipassInterface() {
 	}
 
 	virtual void clear() {
 		Text::clear();
+		
 		this->removeChild(0, this->getNumChildren());
 	}
 
 protected:
 	bool _finalize() {
-
 		std::map<GlyphRenderer*, GeometryList> rendererGeometry;
 
 		for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
@@ -242,8 +241,7 @@ protected:
 					if(effects) effects->dirty();
 				}
 
-				if(!i->second->finalize())
-					continue;
+				if(!i->second->finalize()) continue;
 
 				if(rendererGeometry.find(gc->getGlyphRenderer()) == rendererGeometry.end())
 					rendererGeometry.insert(std::make_pair(gc->getGlyphRenderer(), GeometryList()));
@@ -251,63 +249,71 @@ protected:
 				rendererGeometry[gc->getGlyphRenderer()].push_back(std::make_pair(
 					i->second, 
 					GlyphGeometryState(
-					gc->getTexture(i->first),
-					gc->getTexture(i->first, true),
-					color.first,
-					color.second)
+						gc->getTexture(i->first),
+						gc->getTexture(i->first, true),
+						color.first,
+						color.second
 					)
-					);
+				));
 			}
 		}
 
 		unsigned int maxPasses = 0;
 
 		// First create/update geometry states which are common for each pass. During iteration update maximum number of passes.
-		for(std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin();
+		for(
+			std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin();
 			ct != rendererGeometry.end(); 
-			++ct) {
-				GlyphRenderer       *renderer  = ct->first;
-				const GeometryList  &gl        = ct->second;
+			++ct
+		) {
+			GlyphRenderer*      renderer = ct->first;
+			const GeometryList& gl       = ct->second;
 
-				maxPasses = std::max(renderer->getNumPasses(), maxPasses);
+			maxPasses = std::max(renderer->getNumPasses(), maxPasses);
 
-				for(GeometryList::const_iterator i = gl.begin(); i != gl.end(); i++) {
-					renderer->updateOrCreateState(i->first, i->second);
-				}
+			for(GeometryList::const_iterator i = gl.begin(); i != gl.end(); i++) {
+				renderer->updateOrCreateState(i->first, i->second);
+			}
 		}
-
 
 		// Create structure for passes
 		for(unsigned int i = 0; i < maxPasses; ++i) {
 			osg::Group* pass = new osg::Group();
+			
 			pass->getOrCreateStateSet()->setRenderBinDetails(i, "RenderBin");
+			
 			this->addChild(pass);
 		}
 
 		// Assign renderers to passes
-		for(std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin(); 
+		for(
+			std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin(); 
 			ct != rendererGeometry.end(); 
-			++ct) {
-				GlyphRenderer       *renderer  = ct->first;
-				const GeometryList  &gl        = ct->second;
+			++ct
+		) {
+			GlyphRenderer*      renderer  = ct->first;
+			const GeometryList& gl        = ct->second;
 
-				for(unsigned int i = 0; i < renderer->getNumPasses(); ++i) {
+			for(unsigned int i = 0; i < renderer->getNumPasses(); ++i) {
+				// Each renderer has own geode node with assigned state required for pass.
+				osg::Geode* pass = new osg::Geode();
 
-					// Each renderer has own geode node with assigned state required for pass.
-					osg::Geode *pass = new osg::Geode();
-					renderer->updateOrCreateState(i, pass);
+				renderer->updateOrCreateState(i, pass);
 
-					// Attach renderer pass to common group.
-					if(osg::Group* attachTo = dynamic_cast<osg::Group*>(this->getChild(maxPasses - renderer->getNumPasses() + i))) {
-						attachTo->addChild(pass);
+				// Attach renderer pass to common group.
+				osg::Group* attachTo = dynamic_cast<osg::Group*>(this->getChild(maxPasses - renderer->getNumPasses() + i));
+				
+				if(attachTo) {
+					attachTo->addChild(pass);
 
-						// Attach geometries
-						for(GeometryList::const_iterator glit = gl.begin(); glit != gl.end(); glit++) {
-							pass->addDrawable(glit->first);
-						}
+					// Attach geometries
+					for(GeometryList::const_iterator glit = gl.begin(); glit != gl.end(); glit++) {
+						pass->addDrawable(glit->first);
 					}
 				}
+			}
 		}
+
 		_finalized = true;
 
 		return true;

@@ -9,9 +9,7 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgPango/Context>
 
-
-namespace osgPango
-{
+namespace osgPango {
 
 // testing new interface
 class NewInterfaceTransform : public TextMultipassInterface<osg::MatrixTransform> {
@@ -68,41 +66,41 @@ protected:
 
 		if(_alignment == POS_ALIGN_TOP) 
 			origin.x() -= osg::round(size.x() / 2.0f)
-			;
+		;
 
 		else if(_alignment == POS_ALIGN_TOP_LEFT)
 			origin.x() -= osg::round(size.x())
-			;
+		;
 
 		else if(_alignment == POS_ALIGN_LEFT) origin -= osg::Vec3(
 			osg::round(size.x()),
 			osg::round(size.y() / 2.0f),
 			0.0f
-			);
+		);
 
 		else if(_alignment == POS_ALIGN_BOTTOM_LEFT)
 			origin -= size
-			;
+		;
 
 		else if(_alignment == POS_ALIGN_BOTTOM) origin -= osg::Vec3(
 			osg::round(size.x() / 2.0f),
 			size.y(),
 			0.0f
-			);
+		);
 
 		else if(_alignment == POS_ALIGN_BOTTOM_RIGHT)
 			origin.y() -= size.y()
-			;
+		;
 
 		else if(_alignment == POS_ALIGN_RIGHT)
 			origin.y() -= osg::round(size.y() / 2.0f)
-			;
+		;
 
 		else if(_alignment == POS_ALIGN_CENTER) origin += osg::Vec3(
 			osg::round(-size.x() / 2.0f),
 			osg::round(-size.y() / 2.0f),
 			0.0f
-			);
+		);
 
 		setMatrix(osg::Matrix::translate(origin + _position));
 	}
@@ -113,7 +111,6 @@ private:
 };
 
 }
-
 
 const std::string LOREM_IPSUM(
 	"<span color='red' font='Verdana 15'>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod</span> "
