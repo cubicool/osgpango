@@ -1,4 +1,4 @@
-// -*-c++-*- osgPango - Copyright (C) 2010 Jeremy Moles
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
 
 #ifndef OSGPANGO_GLYPHCACHE
 #define OSGPANGO_GLYPHCACHE
@@ -48,19 +48,10 @@ struct OSGPANGO_EXPORT GlyphGeometryState {
 	osg::Vec3     effectsColor;
 };
 
-typedef std::pair<unsigned int, osg::Vec2>              GlyphPositionPair;
-typedef std::list<GlyphPositionPair>                    GlyphPositionList;
-typedef std::pair<osg::Geometry*, GlyphGeometryState>   GeometryAndState;
-typedef std::list<GeometryAndState>                     GeometryList;
-
-/*
-// I would like to figure out how to best allow the user to choose between
-// the fixed function and shader usage. Until then, these are just a fleeting idea...
-enum GlyphEffectsMethod {
-	GLYPH_EFFECTS_METHOD_DEFAULT,
-	GLYPH_EFFECTS_METHOD_GLSL
-};
-*/
+typedef std::pair<unsigned int, osg::Vec2>            GlyphPositionPair;
+typedef std::list<GlyphPositionPair>                  GlyphPositionList;
+typedef std::pair<osg::Geometry*, GlyphGeometryState> GeometryAndState;
+typedef std::list<GeometryAndState>                   GeometryList;
 
 class OSGPANGO_EXPORT GlyphRenderer: public osg::Referenced {
 public:
@@ -90,9 +81,8 @@ public:
 
 	virtual unsigned int getNumPasses() const;
 
-	virtual bool updateOrCreateState(int pass, osg::Geode*);
-
-	virtual bool updateOrCreateState(osg::Geometry*, const GlyphGeometryState&);
+	virtual bool updateOrCreateState (int pass, osg::Geode*);
+	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
 };
 
 // There is one GlyphCache object PER FONT object.
@@ -187,16 +177,12 @@ private:
 	unsigned int _imgHeight;
 };
 
-//bool setGlyphGeometryState (osg::Drawable*, const GlyphGeometryState&);
-//bool setGlyphGeometryState (osg::Node*, const GlyphGeometryState&);
-
 class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
 public:
 	GlyphGeometry(bool = false);
 
 	bool finalize          ();
 	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&, bool);
-	//bool setAlpha          (double);
 
 private:
 	static osg::ref_ptr<osg::Vec3Array> _norms;
@@ -322,9 +308,8 @@ public:
 
 	virtual unsigned int getNumPasses() const;
 
-	virtual bool updateOrCreateState(int pass, osg::Geode*);
-
-	virtual bool updateOrCreateState(osg::Geometry*, const GlyphGeometryState&);
+	virtual bool updateOrCreateState (int pass, osg::Geode*);
+	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
 
 private:
 	unsigned int _radius;

@@ -1,4 +1,4 @@
-// -*-c++-*- osgPango - Copyright (C) 2010 Jeremy Moles
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
 
 #include <sstream>
 #include <algorithm>
