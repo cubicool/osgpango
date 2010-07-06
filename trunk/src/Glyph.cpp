@@ -11,6 +11,15 @@
 #include <osgCairo/Util>
 #include <osgPango/Context>
 
+///XXX
+#include <osg/TexMat>
+#include <osg/TexEnvCombine>
+#include <osg/AlphaFunc>
+#include <osg/BlendColor>
+#include <osg/BlendFunc>
+#include <osg/Depth>
+//XXX
+
 namespace osgPango {
 
 CachedGlyph::CachedGlyph(
@@ -68,6 +77,83 @@ bool GlyphRenderer::renderGlyphEffects(
 	unsigned int            h
 ) {
 	return false;
+}
+
+unsigned int GlyphRenderer::getNumPasses() const {
+	return 1;
+}
+
+
+bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
+	
+	const char* VERTEX_SHADER =
+		"#version 120\n"
+		"varying vec4 pangoTexCoord0;"
+		"varying vec4 pangoTexCoord1;"
+		"void main() {"
+		"	pangoTexCoord0 = gl_MultiTexCoord0;"
+		"	pangoTexCoord1 = gl_MultiTexCoord1;"
+		"	gl_Position = ftransform();"
+		"}"
+		;
+	
+	const char* FRAGMENT_SHADER =
+		"varying vec4 pangoTexCoord0;"
+		"varying vec4 pangoTexCoord1;"
+		"uniform vec3 pangoColor[8];"
+		"uniform sampler2D pangoTex0;"
+		"uniform sampler2D pangoTex1;"
+		"uniform float pangoAlpha;"
+		"void main() {"
+		"	float tex1 = texture2D(pangoTex0, pangoTexCoord0.st).a;"   // base glyph
+		"	float tex0 = texture2D(pangoTex1, pangoTexCoord1.st).a;"   // effect
+		" vec3 color0 = pangoColor[1].rgb * tex0;"
+		" vec3 color1 = pangoColor[0].rgb * tex1 + color0 * (1.0 - tex1);"
+		" float alpha0 = tex0;"
+		" float alpha1 = tex0 + tex1;"
+		"	gl_FragColor = vec4(color1, alpha1 * pangoAlpha);"
+		"}"
+		;
+
+
+	osg::Program* program = new osg::Program();
+	osg::Shader*  vert    = new osg::Shader(osg::Shader::VERTEX, VERTEX_SHADER);
+	osg::Shader*  frag    = new osg::Shader(osg::Shader::FRAGMENT, FRAGMENT_SHADER);
+
+	vert->setName("pangoRendererVert");
+	frag->setName("pangoRendererFrag");
+	program->setName("pangoRenderer");
+
+	program->addShader(vert);
+	program->addShader(frag);
+
+	osg::StateSet* state = geode->getOrCreateStateSet();
+
+	state->setAttributeAndModes(program);
+	state->setMode(GL_BLEND, osg::StateAttribute::ON);
+	state->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
+	state->setAttribute(new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false));
+	
+	state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(1.0f);
+	state->getOrCreateUniform("pangoTex0", osg::Uniform::INT)->set(0);
+	state->getOrCreateUniform("pangoTex1", osg::Uniform::INT)->set(1);
+
+	return true;
+}
+
+bool GlyphRenderer::updateOrCreateState(osg::Geometry* geometry, const GlyphGeometryState& gs) {
+	osg::Uniform* pangoColor = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "pangoColor", 8);
+
+	pangoColor->setElement(0, gs.color);
+	pangoColor->setElement(1, gs.effectsColor);
+	
+	osg::StateSet* state = geometry->getOrCreateStateSet();
+
+	state->setTextureAttributeAndModes(0, gs.texture, osg::StateAttribute::ON);
+	state->setTextureAttributeAndModes(1, gs.effectsTexture, osg::StateAttribute::ON);
+	state->addUniform(pangoColor);
+
+	return true;
 }
 
 GlyphCache::GlyphCache(
@@ -718,6 +804,160 @@ bool GlyphRendererShadowGaussian::renderGlyphEffects(
 
 	si->setSourceSurface(&i, 0, 0);
 	si->paint();
+
+	return true;
+}
+
+
+GlyphRendererShadowGaussianMultipass::GlyphRendererShadowGaussianMultipass(unsigned int radius):
+_radius(radius) {
+}
+
+osg::Vec4 GlyphRendererShadowGaussianMultipass::getExtraGlyphExtents() const {
+	return osg::Vec4(_radius * 2, _radius * 2, _radius * 4, _radius * 4);
+}
+
+bool GlyphRendererShadowGaussianMultipass::renderGlyph(
+	osgCairo::Surface*     si,
+	const osgCairo::Glyph& g,
+	unsigned int           w,
+	unsigned int           h
+) {
+	if(!si) return false;
+
+	si->translate(_radius * 2, _radius * 2);
+
+	GlyphRenderer::renderGlyph(si, g, w, h);
+
+	return true;
+}
+
+bool GlyphRendererShadowGaussianMultipass::renderGlyphEffects(
+	osgCairo::Surface*     si,
+	const osgCairo::Glyph& g,
+	unsigned int           w,
+	unsigned int           h
+) {
+	if(!si) return false;
+
+	double add = _radius * 4.0f;
+	
+	// Create a temporary small surface and then copy that to the bigger one.
+	osgCairo::ImageSurface i(CAIRO_FORMAT_ARGB32, w + add, h + add);
+
+	if(!i.createContext()) return false;
+ 
+	osgCairo::CairoScaledFont* sf = si->getScaledFont();
+
+	i.setScaledFont(sf);
+	i.setLineJoin(CAIRO_LINE_JOIN_ROUND);
+	i.setLineWidth(_radius - 0.5f);
+	i.setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
+	i.translate(_radius * 2, _radius * 2);
+	i.glyphPath(g);
+	i.strokePreserve();
+	i.fill();
+
+	osgCairo::gaussianBlur(
+		i.getData(),
+		i.getFormat(),
+		i.getWidth(),
+		i.getHeight(),
+		_radius
+	);
+	
+	i.setOperator(CAIRO_OPERATOR_CLEAR);
+	
+	GlyphRenderer::renderGlyph(&i, g, w, h);
+
+	// i.writeToPNG("i.png");
+
+	si->setSourceSurface(&i, 0, 0);
+	si->paint();
+
+	return true;
+}
+
+unsigned int GlyphRendererShadowGaussianMultipass::getNumPasses() const {
+	return 2;
+}
+
+bool GlyphRendererShadowGaussianMultipass::updateOrCreateState(int pass, osg::Geode* geode) {
+		
+	std::string VERTEX_SHADER =
+		"#version 120\n"
+		"varying vec4 pangoTexCoord;"
+		"void main() {"
+		"	pangoTexCoord = gl_MultiTexCoord0;"
+		"	gl_Position = ftransform();"
+		"}"
+		;
+
+	std::string FRAGMENT_SHADER =
+		"varying vec4 pangoTexCoord;"
+		"uniform vec3 pangoColor[8];"
+		"uniform sampler2D pangoTex0;"
+		"uniform sampler2D pangoTex1;"
+		"uniform float pangoAlpha;"
+		"void main() {"
+		"	float tex0 = texture2D(pangoTex0, pangoTexCoord.st).a;"   
+		"	float tex1 = texture2D(pangoTex1, pangoTexCoord.st).a;"   
+		" vec3 color0 = pangoColor[0].rgb * tex0;"
+		" vec3 color1 = pangoColor[1].rgb * tex1;"
+		" float alpha0 = tex0;"
+		" float alpha1 = tex1;"
+		;
+
+	if(pass == 0)		
+	{
+		FRAGMENT_SHADER += 
+			"gl_FragColor = vec4(color1, alpha1);"
+			"}";
+	}
+
+	if(pass == 1)
+	{
+		FRAGMENT_SHADER += 
+			"gl_FragColor = vec4(color0, alpha0);"
+			"}";
+	}
+	
+	osg::Program* program = new osg::Program();
+	osg::Shader*  vert    = new osg::Shader(osg::Shader::VERTEX, VERTEX_SHADER);
+	osg::Shader*  frag    = new osg::Shader(osg::Shader::FRAGMENT, FRAGMENT_SHADER);
+
+	vert->setName("pangoRendererVert");
+	frag->setName("pangoRendererFrag");
+	program->setName("pangoRenderer");
+
+	program->addShader(vert);
+	program->addShader(frag);
+
+	osg::StateSet* state = geode->getOrCreateStateSet();
+
+	state->setAttributeAndModes(program);
+	state->setMode(GL_BLEND, osg::StateAttribute::ON);
+	state->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
+	state->setAttribute(new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false));
+	
+	state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(1.0f);
+	state->getOrCreateUniform("pangoTex0", osg::Uniform::INT)->set(0);
+	state->getOrCreateUniform("pangoTex1", osg::Uniform::INT)->set(1);
+
+	return true;
+}
+
+bool GlyphRendererShadowGaussianMultipass::updateOrCreateState(osg::Geometry* geometry, const GlyphGeometryState& gs) {
+	osg::Uniform* pangoColor = new osg::Uniform(osg::Uniform::FLOAT_VEC3, "pangoColor", 8);
+
+	pangoColor->setElement(0, gs.color);
+	pangoColor->setElement(1, gs.effectsColor);
+	
+	osg::StateSet* state = geometry->getOrCreateStateSet();
+
+	state->setTextureAttributeAndModes(0, gs.texture, osg::StateAttribute::ON);
+	state->setTextureAttributeAndModes(1, gs.effectsTexture, osg::StateAttribute::ON);
+	state->addUniform(pangoColor);
 
 	return true;
 }
