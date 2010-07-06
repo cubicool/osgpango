@@ -9,6 +9,112 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgPango/Context>
 
+
+namespace osgPango
+{
+
+// testing new interface
+class NewInterfaceTransform : public TextMultipassInterface<osg::MatrixTransform> {
+public:
+	enum PositionAlignment {
+		POS_ALIGN_BOTTOM_LEFT,
+		POS_ALIGN_BOTTOM,
+		POS_ALIGN_BOTTOM_RIGHT,
+		POS_ALIGN_RIGHT,
+		POS_ALIGN_TOP_RIGHT,
+		POS_ALIGN_TOP,
+		POS_ALIGN_TOP_LEFT,
+		POS_ALIGN_LEFT,
+		POS_ALIGN_CENTER
+	};
+
+	NewInterfaceTransform() : 
+		_alignment (POS_ALIGN_TOP_RIGHT),
+		_position  (osg::Vec3(0.0f, 0.0f, 0.0f)) {
+	}
+
+	virtual bool finalize() {
+		if(!_finalize()) return false;
+
+		_calculatePosition();
+
+		return true;
+	}
+	
+	const osg::Vec3& getPosition() const {
+		return _position;
+	}
+
+	PositionAlignment getAlignment() const {
+		return _alignment;
+	}
+	
+	void setPosition(const osg::Vec3& position, bool recalculate=true) {
+		_position = position;
+
+		if(recalculate) _calculatePosition();
+	}
+	
+	void setAlignment(PositionAlignment alignment, bool recalculate=true) {
+		_alignment = alignment;
+
+		if(recalculate) _calculatePosition();
+	}
+
+protected:
+	void _calculatePosition() {
+		osg::Vec3 origin(getOriginTranslated(), 0.0f);
+		osg::Vec3 size(_size, 0.0f);
+
+		if(_alignment == POS_ALIGN_TOP) 
+			origin.x() -= osg::round(size.x() / 2.0f)
+			;
+
+		else if(_alignment == POS_ALIGN_TOP_LEFT)
+			origin.x() -= osg::round(size.x())
+			;
+
+		else if(_alignment == POS_ALIGN_LEFT) origin -= osg::Vec3(
+			osg::round(size.x()),
+			osg::round(size.y() / 2.0f),
+			0.0f
+			);
+
+		else if(_alignment == POS_ALIGN_BOTTOM_LEFT)
+			origin -= size
+			;
+
+		else if(_alignment == POS_ALIGN_BOTTOM) origin -= osg::Vec3(
+			osg::round(size.x() / 2.0f),
+			size.y(),
+			0.0f
+			);
+
+		else if(_alignment == POS_ALIGN_BOTTOM_RIGHT)
+			origin.y() -= size.y()
+			;
+
+		else if(_alignment == POS_ALIGN_RIGHT)
+			origin.y() -= osg::round(size.y() / 2.0f)
+			;
+
+		else if(_alignment == POS_ALIGN_CENTER) origin += osg::Vec3(
+			osg::round(-size.x() / 2.0f),
+			osg::round(-size.y() / 2.0f),
+			0.0f
+			);
+
+		setMatrix(osg::Matrix::translate(origin + _position));
+	}
+
+private:
+	PositionAlignment _alignment;
+	osg::Vec3         _position;
+};
+
+}
+
+
 const std::string LOREM_IPSUM(
 	"<span color='red' font='Verdana 15'>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod</span> "
 	"<span color='orange' font='Verdana 17'>tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,</span> "
@@ -19,7 +125,7 @@ const std::string LOREM_IPSUM(
 	"\n\n"
 	"<span font='Monospace 15'>"
 	"Experiment with this application by using the following arguments:\n\n"
-	"\t<b>--renderer [string] [float]:</b> One of shadowOffset, shadowBlur, or outline, with a size value.\n"
+	"\t<b>--renderer [string] [float]:</b> One of shadowOffset, shadowBlur, shadowBlurMultipass, or outline, with a size value.\n"
 	"\t<b>            --alpha [float]:</b> The alpha value, from 0.0 to 1.0 (fully opaque).\n"
 	"\t<b>              --width [int]:</b> Allowable text area width.\n"
 	"\t<b>                --alignment:</b> One of left, right, center, or justify."
@@ -57,7 +163,7 @@ void setupArguments(osg::ArgumentParser& args) {
 
 	args.getApplicationUsage()->addCommandLineOption(
 		"--renderer <string> <int>",
-		"The GlyphRenderer object to use (outline, shadowOffset, shadowBlur) and size."
+		"The GlyphRenderer object to use (outline, shadowOffset, shadowBlur, shadowBlurMultipass) and size."
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
@@ -101,7 +207,7 @@ int main(int argc, char** argv) {
 
 	context.init();
 
-	osgPango::TextTransform* t = new osgPango::TextTransform();
+	osgPango::NewInterfaceTransform* t = new osgPango::NewInterfaceTransform();
 
 	osgPango::TextOptions to;
 
@@ -123,6 +229,11 @@ int main(int argc, char** argv) {
 			new osgPango::GlyphRendererShadowGaussian(s)
 		);
 
+		else if(renderer == "shadowBlurMultipass") context.addGlyphRenderer(
+			"shadowBlurMultipass",
+			new osgPango::GlyphRendererShadowGaussianMultipass(s)
+		);
+
 		else continue;
 
 		to.renderer = renderer;
@@ -131,7 +242,7 @@ int main(int argc, char** argv) {
 	while(args.read("--alpha", alpha)) {
 		float a = std::atof(alpha.c_str());
 
-		t->setAlpha(a);
+		//t->setAlpha(a);
 	}
 
 	while(args.read("--width", width)) to.width = std::atoi(width.c_str());
