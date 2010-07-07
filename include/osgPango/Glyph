@@ -281,38 +281,14 @@ private:
 	unsigned int _radius;
 };
 
-
-class OSGPANGO_EXPORT GlyphRendererShadowGaussianMultipass: public GlyphRenderer {
+class OSGPANGO_EXPORT GlyphRendererShadowGaussianMultipass: public GlyphRendererShadowGaussian {
 public:
 	GlyphRendererShadowGaussianMultipass(unsigned int = 1);
-
-	virtual bool hasEffects() const {
-		return true;
-	}	
-
-	virtual osg::Vec4 getExtraGlyphExtents() const;
-
-	virtual bool renderGlyph(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
-
-	virtual bool renderGlyphEffects(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
 
 	virtual unsigned int getNumPasses() const;
 
 	virtual bool updateOrCreateState (int pass, osg::Geode*);
 	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
-
-private:
-	unsigned int _radius;
 };
 
 }
