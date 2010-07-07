@@ -1,0 +1,115 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_GLYPHRENDERER
+#define OSGPANGO_GLYPHRENDERER
+
+#include <osg/Geometry>
+#include <osg/Texture>
+#include <osgCairo/Image>
+#include <osgPango/Export>
+#include <osgPango/GlyphLayer>
+
+namespace osgPango {
+
+
+// This object packages up all the state stuff we need to shimmy around.
+struct OSGPANGO_EXPORT GlyphGeometryState {
+	std::vector<osg::Texture*>  textures;
+	std::vector<osg::Vec3>      colors;
+};
+
+typedef std::pair<osg::Geometry*, GlyphGeometryState> GeometryAndState;
+typedef std::list<GeometryAndState>                   GeometryList;
+
+
+class OSGPANGO_EXPORT GlyphRenderer: public osg::Referenced {
+public:
+	// This method returns an osg::Vec4 object whose values correspond to the following:
+	// the x origin offset, y origin offset, extra width, and extra height respectively.
+	// It is used when custom "effects" implementations needs to inform the cache object
+	// that additional space should be required for proper positioning.
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+
+	virtual bool renderLayer(
+		unsigned int,
+		osgCairo::Surface*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	) {
+		return true;
+	}
+	
+	virtual unsigned int getNumLayers() const {
+		return 0;
+	} 
+
+	virtual unsigned int getNumPasses() const {
+		return 1;
+	}
+
+	virtual bool updateOrCreateState (int pass, osg::Geode*);
+	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
+};
+
+
+class OSGPANGO_EXPORT SinglePassGlyphRenderer: public GlyphRenderer {
+public:
+	SinglePassGlyphRenderer();
+	
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+	
+	virtual bool renderLayer(
+		unsigned int,
+		osgCairo::Surface*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
+	
+	virtual unsigned int getNumLayers() const {
+		return _layers.size();
+	}
+
+	virtual unsigned int getNumPasses() const { 
+		return 1;
+	}
+
+	virtual bool updateOrCreateState (int pass, osg::Geode*);
+	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
+	
+	void addLayer(GlyphLayer *);
+	void removeLayer(unsigned int);
+	void replaceLayer(unsigned int, GlyphLayer*);
+	
+protected:
+	std::vector<osg::ref_ptr<GlyphLayer> > _layers;	
+	
+};
+
+
+class OSGPANGO_EXPORT GlyphRendererOutline : public SinglePassGlyphRenderer {
+public:
+	GlyphRendererOutline(unsigned int = 2);
+};
+
+class OSGPANGO_EXPORT GlyphRendererShadowOffset : public SinglePassGlyphRenderer {
+public:
+	GlyphRendererShadowOffset(int = 1, int = 1);
+};
+
+class OSGPANGO_EXPORT GlyphRendererShadowGaussian : public SinglePassGlyphRenderer {
+public:
+	GlyphRendererShadowGaussian(unsigned int = 1);
+};
+
+//TEMP
+class OSGPANGO_EXPORT GlyphRendererShadowGaussianMultipass : public SinglePassGlyphRenderer {
+public:
+	GlyphRendererShadowGaussianMultipass(unsigned int = 1);
+};
+
+}
+
+#endif

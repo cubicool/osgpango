@@ -1,0 +1,104 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_GLYPHLAYER
+#define OSGPANGO_GLYPHLAYER
+
+#include <osg/Texture>
+#include <osgCairo/Image>
+#include <osgPango/Export>
+
+namespace osgPango {
+
+class OSGPANGO_EXPORT GlyphLayer: public osg::Referenced {
+public:
+	virtual bool render(
+		osgCairo::Surface*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
+	
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+};
+
+class OSGPANGO_EXPORT GlyphLayerOutline : public GlyphLayer {
+public:
+	GlyphLayerOutline(unsigned int = 2);
+	
+	virtual bool render(
+		osgCairo::Surface*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
+	
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+	
+	void setOutline(unsigned int outline) {
+		_outline = outline;
+	}
+	
+	unsigned int getOutline() const {
+		return _outline;
+	}
+	
+private:	
+	unsigned int _outline;
+};
+
+
+class OSGPANGO_EXPORT GlyphLayerShadowOffset : public GlyphLayer {
+public:
+	GlyphLayerShadowOffset(int = 1, int = 1);
+
+	virtual bool render(
+		osgCairo::Surface*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
+	
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+	
+	void setOffsetX(int offset) {
+		_xOffset = offset;
+	}
+	
+	int getOffsetX() const {
+		return _xOffset; 
+	}
+	
+	void setOffsetY(int offset) {
+		_yOffset = offset; 
+	}
+	
+	int getOffsetY() const {
+		return _yOffset; 
+	}
+		
+private:
+	int _xOffset;
+	int _yOffset;
+};
+
+class OSGPANGO_EXPORT GlyphLayerShadowGaussian : public GlyphLayer {
+public:
+	GlyphLayerShadowGaussian(unsigned int = 1);
+	
+	virtual bool render(
+		osgCairo::Surface*,
+		const osgCairo::Glyph&,
+		unsigned int,
+		unsigned int
+	);
+	
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+	
+private:
+	unsigned int _radius;	
+};
+
+}
+
+#endif
