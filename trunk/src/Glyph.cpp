@@ -646,109 +646,35 @@ bool GlyphRendererShadowGaussian::renderGlyphEffects(
 	double add = _radius * 4.0f;
 	
 	// Create a temporary small surface and then copy that to the bigger one.
-	osgCairo::ImageSurface i(CAIRO_FORMAT_ARGB32, w + add, h + add);
+	osgCairo::Surface tmp(w + add, h + add, CAIRO_FORMAT_ARGB32);
 
-	if(!i.createContext()) return false;
+	if(!tmp.createContext()) return false;
  
 	osgCairo::CairoScaledFont* sf = si->getScaledFont();
 
-	i.setScaledFont(sf);
-	i.setLineJoin(CAIRO_LINE_JOIN_ROUND);
-	i.setLineWidth(_radius - 0.5f);
-	i.setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
-	i.translate(_radius * 2, _radius * 2);
-	i.glyphPath(g);
-	i.strokePreserve();
-	i.fill();
+	tmp.setScaledFont(sf);
+	tmp.setLineJoin(CAIRO_LINE_JOIN_ROUND);
+	tmp.setLineWidth(_radius - 0.5f);
+	tmp.setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
+	tmp.translate(_radius * 2, _radius * 2);
+	tmp.glyphPath(g);
+	tmp.strokePreserve();
+	tmp.fill();
 
-	osgCairo::gaussianBlur(
-		i.getData(),
-		i.getFormat(),
-		i.getWidth(),
-		i.getHeight(),
-		_radius
-	);
+	osgCairo::util::gaussianBlur(&tmp, _radius);
 	
-	i.setOperator(CAIRO_OPERATOR_CLEAR);
+	tmp.setOperator(CAIRO_OPERATOR_CLEAR);
 	
-	GlyphRenderer::renderGlyph(&i, g, w, h);
+	GlyphRenderer::renderGlyph(&tmp, g, w, h);
 
-	// i.writeToPNG("i.png");
-
-	si->setSourceSurface(&i, 0, 0);
+	si->setSourceSurface(&tmp, 0, 0);
 	si->paint();
 
 	return true;
 }
-
 
 GlyphRendererShadowGaussianMultipass::GlyphRendererShadowGaussianMultipass(unsigned int radius):
-_radius(radius) {
-}
-
-osg::Vec4 GlyphRendererShadowGaussianMultipass::getExtraGlyphExtents() const {
-	return osg::Vec4(_radius * 2, _radius * 2, _radius * 4, _radius * 4);
-}
-
-bool GlyphRendererShadowGaussianMultipass::renderGlyph(
-	osgCairo::Surface*     si,
-	const osgCairo::Glyph& g,
-	unsigned int           w,
-	unsigned int           h
-) {
-	if(!si) return false;
-
-	si->translate(_radius * 2, _radius * 2);
-
-	GlyphRenderer::renderGlyph(si, g, w, h);
-
-	return true;
-}
-
-bool GlyphRendererShadowGaussianMultipass::renderGlyphEffects(
-	osgCairo::Surface*     si,
-	const osgCairo::Glyph& g,
-	unsigned int           w,
-	unsigned int           h
-) {
-	if(!si) return false;
-
-	double add = _radius * 4.0f;
-	
-	// Create a temporary small surface and then copy that to the bigger one.
-	osgCairo::ImageSurface i(CAIRO_FORMAT_ARGB32, w + add, h + add);
-
-	if(!i.createContext()) return false;
- 
-	osgCairo::CairoScaledFont* sf = si->getScaledFont();
-
-	i.setScaledFont(sf);
-	i.setLineJoin(CAIRO_LINE_JOIN_ROUND);
-	i.setLineWidth(_radius - 0.5f);
-	i.setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
-	i.translate(_radius * 2, _radius * 2);
-	i.glyphPath(g);
-	i.strokePreserve();
-	i.fill();
-
-	osgCairo::gaussianBlur(
-		i.getData(),
-		i.getFormat(),
-		i.getWidth(),
-		i.getHeight(),
-		_radius
-	);
-	
-	i.setOperator(CAIRO_OPERATOR_CLEAR);
-	
-	GlyphRenderer::renderGlyph(&i, g, w, h);
-
-	// i.writeToPNG("i.png");
-
-	si->setSourceSurface(&i, 0, 0);
-	si->paint();
-
-	return true;
+GlyphRendererShadowGaussian(radius) {
 }
 
 unsigned int GlyphRendererShadowGaussianMultipass::getNumPasses() const {
