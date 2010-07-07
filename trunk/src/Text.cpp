@@ -54,7 +54,7 @@ void Text::clear() {
 	_finalized = false;
 }
 
-GlyphGeometry* createGlyphGeometry(bool hasEffects) {
+GlyphGeometry* createGlyphGeometry() {
 	static unsigned int ggId = 0;
 
 	std::ostringstream ss;
@@ -63,7 +63,7 @@ GlyphGeometry* createGlyphGeometry(bool hasEffects) {
 
 	ggId++;
 
-	GlyphGeometry* gg = new GlyphGeometry(hasEffects);
+	GlyphGeometry* gg = new GlyphGeometry();
 
 	gg->setName(ss.str());
 
@@ -120,14 +120,11 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 				(gi->geometry.y_offset / PANGO_SCALE) + extents[1]
 			);
 
-			bool hasEffects = gc->getGlyphRenderer()->hasEffects();
-
-			if(!ggi[cg->img]) ggi[cg->img] = createGlyphGeometry(hasEffects);
+			if(!ggi[cg->img]) ggi[cg->img] = createGlyphGeometry();
 
 			ggi[cg->img]->pushCachedGlyphAt(
 				cg,
-				pos + layoutPos,
-				hasEffects
+				pos + layoutPos
 			);
 		}
 
@@ -200,27 +197,6 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 	_init = true;
 }
 
-//void Text::setAlpha(double alpha) {
-//	if(!_finalized) {
-//		_alpha = alpha;
-//
-//		return;
-//	}
-//
-//	// TODO: make it different way, do this by custom state set policy
-//	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
-//		GlyphGeometryIndex& ggi = g->second;
-//
-//		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
-//			if(!i->second->setAlpha(alpha)) osg::notify(osg::WARN)
-//				<< "Failed to set new alpha value for GlyphGeometryIndex "
-//				<< i->first
-//				<< std::endl
-//			;
-//		}
-//	}
-//}
-
 osg::Vec2 Text::getOriginBaseline() const {
 	return osg::Vec2(_origin.x(), _baseline);
 }
@@ -229,38 +205,103 @@ osg::Vec2 Text::getOriginTranslated() const {
 	return osg::Vec2(_origin.x(), _size.y() + _origin.y());
 }
 
-void Text::_finalizeGeometry(GeometryList& drawables) {
+bool Text::_finalizeGeometry(osg::Group *group) {
+	std::map<GlyphRenderer*, GeometryList> rendererGeometry;
+
 	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
 		GlyphGeometryIndex& ggi = g->second;
 
 		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
 			GlyphCache* gc      = g->first.first;
 			ColorPair   color   = g->first.second;
-			osg::Image* texture = gc->getImage(i->first);
-			osg::Image* effects = gc->getImage(i->first, true);
+			
+			for(unsigned int layer = 0; layer < gc->getNumLayers(); ++layer) {
+				osg::Image* texture = gc->getImage(i->first, layer);
 
-			if(_newGlyphs) {
-				if(texture) texture->dirty();
-				
-				if(effects) effects->dirty();
+				if(_newGlyphs && texture) 
+					texture->dirty();
 			}
 
-			if(!i->second->finalize())
-				continue;
+			if(!i->second->finalize()) continue;
 
-			drawables.push_back(std::make_pair(
+			if(rendererGeometry.find(gc->getGlyphRenderer()) == rendererGeometry.end())
+				rendererGeometry.insert(std::make_pair(gc->getGlyphRenderer(), GeometryList()));
+
+			rendererGeometry[gc->getGlyphRenderer()].push_back(std::make_pair(
 				i->second, 
-				GlyphGeometryState(
-					gc->getTexture(i->first),
-					gc->getTexture(i->first, true),
-					color.first,
-					color.second)
-				)
-			);
+				GlyphGeometryState()));
+			
+			GlyphGeometryState &gs = rendererGeometry[gc->getGlyphRenderer()].back().second;
+			for(unsigned int layer = 0; layer < gc->getNumLayers(); ++layer) {
+				gs.textures.push_back(gc->getTexture(i->first, layer));
+				//HACK
+				if(layer == 0) 
+					gs.colors.push_back(color.first);
+				else
+					gs.colors.push_back(color.second);
+			}
 		}
 	}
 
+	unsigned int maxPasses = 0;
+
+	// First create/update geometry states which are common for each pass. During iteration update maximum number of passes.
+	for(
+		std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin();
+		ct != rendererGeometry.end(); 
+	++ct
+		) {
+			GlyphRenderer*      renderer = ct->first;
+			const GeometryList& gl       = ct->second;
+
+			maxPasses = std::max(renderer->getNumPasses(), maxPasses);
+
+			for(GeometryList::const_iterator i = gl.begin(); i != gl.end(); i++) {
+				renderer->updateOrCreateState(i->first, i->second);
+			}
+	}
+
+	// Create structure for passes
+	for(unsigned int i = 0; i < maxPasses; ++i) {
+		osg::Group* pass = new osg::Group();
+
+		pass->getOrCreateStateSet()->setRenderBinDetails(i, "RenderBin");
+
+		group->addChild(pass);
+	}
+
+	// Assign renderers to passes
+	for(
+		std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin(); 
+		ct != rendererGeometry.end(); 
+	++ct
+		) {
+			GlyphRenderer*      renderer  = ct->first;
+			const GeometryList& gl        = ct->second;
+
+			for(unsigned int i = 0; i < renderer->getNumPasses(); ++i) {
+				// Each renderer has own geode node with assigned state required for pass.
+				osg::Geode* pass = new osg::Geode();
+
+				renderer->updateOrCreateState(i, pass);
+
+				// Attach renderer pass to common group.
+				osg::Group* attachTo = dynamic_cast<osg::Group*>(group->getChild(maxPasses - renderer->getNumPasses() + i));
+
+				if(attachTo) {
+					attachTo->addChild(pass);
+
+					// Attach geometries
+					for(GeometryList::const_iterator glit = gl.begin(); glit != gl.end(); glit++) {
+						pass->addDrawable(glit->first);
+					}
+				}
+			}
+	}
+
 	_finalized = true;
+	
+	return true;
 }
 
 TextTransform::TextTransform():
@@ -269,7 +310,7 @@ _position  (osg::Vec3(0.0f, 0.0f, 0.0f)) {
 }
 
 bool TextTransform::finalize() {
-	if(!_finalizeGeode()) return false;
+	if(!_finalizeGeometry(this)) return false;
 
 	_calculatePosition();
 
@@ -334,7 +375,7 @@ void TextTransform::_calculatePosition() {
 }
 
 bool TextAutoTransform::finalize() {
-	return _finalizeGeode();
+	return _finalizeGeometry(this);
 }
 
 }

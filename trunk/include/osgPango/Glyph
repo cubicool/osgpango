@@ -8,6 +8,7 @@
 #include <osg/Texture>
 #include <osgCairo/Image>
 #include <osgPango/Export>
+#include <osgPango/GlyphRenderer>
 
 namespace osgPango {
 
@@ -33,64 +34,19 @@ struct OSGPANGO_EXPORT CachedGlyph {
 	osg::Vec2    ul;
 };
 
-// This object packages up all the state stuff we need to shimmy around.
-struct OSGPANGO_EXPORT GlyphGeometryState {
-	GlyphGeometryState(
-		osg::Texture*,
-		osg::Texture*,
-		const osg::Vec3&,
-		const osg::Vec3&
-	);
-
-	osg::Texture* texture;
-	osg::Texture* effectsTexture;
-	osg::Vec3     color;
-	osg::Vec3     effectsColor;
-};
 
 typedef std::pair<unsigned int, osg::Vec2>            GlyphPositionPair;
 typedef std::list<GlyphPositionPair>                  GlyphPositionList;
-typedef std::pair<osg::Geometry*, GlyphGeometryState> GeometryAndState;
-typedef std::list<GeometryAndState>                   GeometryList;
 
-class OSGPANGO_EXPORT GlyphRenderer: public osg::Referenced {
-public:
-	virtual bool hasEffects() const {
-		return false;
-	}
-
-	// This method returns an osg::Vec4 object whose values correspond to the following:
-	// the x origin offset, y origin offset, extra width, and extra height respectively.
-	// It is used when custom "effects" implementations needs to inform the cache object
-	// that additional space should be required for proper positioning.
-	virtual osg::Vec4 getExtraGlyphExtents() const;
-
-	virtual bool renderGlyph(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
-	
-	virtual bool renderGlyphEffects(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
-
-	virtual unsigned int getNumPasses() const;
-
-	virtual bool updateOrCreateState (int pass, osg::Geode*);
-	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
-};
 
 // There is one GlyphCache object PER FONT object.
 class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {
+	
 public:
 	typedef std::map<unsigned int, CachedGlyph>         GlyphMap;
-	typedef std::vector<osg::ref_ptr<osgCairo::Image> > ImageVector;
-	typedef std::vector<osg::ref_ptr<osg::Texture> >    TextureVector;
+	typedef std::pair<osg::ref_ptr<osgCairo::Image>, 
+	                  osg::ref_ptr<osg::Texture> >      CairoAndTexture;
+	typedef std::vector<CairoAndTexture>                Images;
 
 	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0);
 
@@ -101,25 +57,21 @@ public:
 	void setName(const std::string& name) {
 		_name = name;
 	}
-
-	osgCairo::Image* getImage(unsigned int index, bool effects = false) {
-		return _getImage(index, effects);
+	
+	osgCairo::Image* getImage(unsigned int index, unsigned int layerIndex) {
+		return _getImage(index, layerIndex);
 	}
-
-	const osgCairo::Image* getImage(unsigned int index, bool effects = false) const {
-		return _getImage(index, effects);
+	
+	const osgCairo::Image* getImage(unsigned int index, unsigned int layerIndex) const {
+		return _getImage(index, layerIndex);
 	}
-
-	osg::Texture* getTexture(unsigned int index, bool effects = false) {
-		return _getTexture(index, effects);
+	
+	osg::Texture* getTexture(unsigned int index, unsigned int layerIndex) {
+		return _getTexture(index, layerIndex);
 	}
-
-	const osg::Texture* getTexture(unsigned int index, bool effects = false) const {
-		return _getTexture(index, effects);
-	}
-
-	unsigned int getNumImages() const {
-		return _images.size();
+	
+	const osg::Texture* getTexture(unsigned int index, unsigned int layerIndex) const {
+		return _getTexture(index, layerIndex);
 	}
 
 	unsigned int getImageWidth() const {
@@ -137,34 +89,34 @@ public:
 	const GlyphRenderer* getGlyphRenderer() const {
 		return _renderer.get();
 	}
+	
+	unsigned int getNumLayers() const {
+		return _renderer->getNumLayers();
+	}
 
 	const std::string& getName() const {
 		return _name;
 	}
 
 private:
-	bool _newImageAndTexture(ImageVector&, TextureVector&);
+	bool _newImageAndTexture(osgCairo::CairoScaledFont*);
 
 	void _writeImageVectorFiles(
 		const std::string&,
 		const std::string&,
-		const ImageVector&
+		const Images&
 	) const;
 
-	osgCairo::Image* _getImage   (unsigned int, bool) const;
-	osg::Texture*    _getTexture (unsigned int, bool) const;
+	osgCairo::Image* _getImage   (unsigned int, unsigned int) const;
+	osg::Texture*    _getTexture (unsigned int, unsigned int) const;
 
 	std::string _name;
 
 	// The "renderer" object, not bound to any local data.
 	osg::ref_ptr<GlyphRenderer> _renderer;
 
-	// A container of texture image data where the glyphs are cached.
-	ImageVector   _images;
-	ImageVector   _effects;
-	TextureVector _textures;
-	TextureVector _effectsTextures;
-
+	std::vector<Images> _layers;
+	
 	// A map of external Pango glyph indexes to their internally CachedGlyph data structures.
 	// We also have a flag of what effects to use, though their rendering method is passed
 	// on from the text object.
@@ -175,121 +127,31 @@ private:
 	double       _h;
 	unsigned int _imgWidth;
 	unsigned int _imgHeight;
+	
+	static const float DEFAULT_BASE_X;
+	static const float DEFAULT_BASE_Y;
+	static const float DEFAULT_BASE_H;
 };
 
 class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
 public:
-	GlyphGeometry(bool = false);
+	GlyphGeometry();
 
 	bool finalize          ();
-	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&, bool);
+	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&);
 
 private:
 	static osg::ref_ptr<osg::Vec3Array> _norms;
 	static osg::ref_ptr<osg::Vec4Array> _cols;
 
-	unsigned int _numQuads;
+	unsigned int _numQuads,
+	             _numTextureCoords;
 };
 
 // We don't use an osg::ref_ptr here becase the Geometry will actually only be temporary.
 // The newly allocated osg::Geometry will passed to an osg::Geode during finalize, and
 // the Geode will properly dictate when the resources are freed.
 typedef std::map<unsigned int, GlyphGeometry*> GlyphGeometryIndex;
-
-class OSGPANGO_EXPORT GlyphRendererOutline: public GlyphRenderer {
-public:
-	GlyphRendererOutline(unsigned int = 2);
-
-	virtual bool hasEffects() const {
-		return true;
-	}
-
-	virtual osg::Vec4 getExtraGlyphExtents() const;
-
-	virtual bool renderGlyph(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
-
-	virtual bool renderGlyphEffects(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
-
-private:
-	unsigned int _outline;
-};
-
-class OSGPANGO_EXPORT GlyphRendererShadowOffset: public GlyphRenderer {
-public:
-	GlyphRendererShadowOffset(int = 1, int = 1);
-
-	virtual bool hasEffects() const {
-		return true;
-	}
-	
-	virtual osg::Vec4 getExtraGlyphExtents() const;
-
-	virtual bool renderGlyph(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
-
-	virtual bool renderGlyphEffects(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
-
-private:
-	int _xOffset;
-	int _yOffset;
-};
-
-class OSGPANGO_EXPORT GlyphRendererShadowGaussian: public GlyphRenderer {
-public:
-	GlyphRendererShadowGaussian(unsigned int = 1);
-
-	virtual bool hasEffects() const {
-		return true;
-	}	
-
-	virtual osg::Vec4 getExtraGlyphExtents() const;
-
-	virtual bool renderGlyph(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
-
-	virtual bool renderGlyphEffects(
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
-		unsigned int,
-		unsigned int
-	);
-
-private:
-	unsigned int _radius;
-};
-
-class OSGPANGO_EXPORT GlyphRendererShadowGaussianMultipass: public GlyphRendererShadowGaussian {
-public:
-	GlyphRendererShadowGaussianMultipass(unsigned int = 1);
-
-	virtual unsigned int getNumPasses() const;
-
-	virtual bool updateOrCreateState (int pass, osg::Geode*);
-	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
-};
 
 }
 
