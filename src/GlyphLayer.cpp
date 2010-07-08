@@ -1,19 +1,28 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
 #include <cmath>
 #include <osgCairo/Util>
 #include <osgPango/GlyphLayer>
 
 namespace osgPango {
 
+GlyphLayer::GlyphLayer(unsigned int xt, unsigned int yt):
+_xTranslate (xt),
+_yTranslate (yt) {
+}
+
 bool GlyphLayer::render(
-	osgCairo::Surface*      si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
+	osgCairo::Surface*     surface,
+	const osgCairo::Glyph& glyph,
+	unsigned int           width,
+	unsigned int           height
 ) {
-	if(!si) return false;
-	
-	si->glyphPath(g);
-	si->fill();
+	if(!surface) return false;
+
+	surface->translate(_xTranslate, _yTranslate);
+	surface->glyphPath(glyph);
+	surface->fill();
 
 	return true;
 }
@@ -27,23 +36,23 @@ _outline(outline) {
 }
 
 bool GlyphLayerOutline::render(
-	osgCairo::Surface*      si,
-	const osgCairo::Glyph&  g,
-	unsigned int            w,
-	unsigned int            h
+	osgCairo::Surface*     surface,
+	const osgCairo::Glyph& glyph,
+	unsigned int           width,
+	unsigned int           height
 ) {
-	if(!si) return false;
+	if(!surface) return false;
 
-	si->setLineJoin(CAIRO_LINE_JOIN_ROUND);
-	si->setLineWidth((_outline * 2) - 0.5f);
-	si->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
-	si->translate(_outline, _outline);
-	si->glyphPath(g);
-	si->strokePreserve();
-	si->fill();
-	si->setOperator(CAIRO_OPERATOR_CLEAR);
+	surface->setLineJoin(CAIRO_LINE_JOIN_ROUND);
+	surface->setLineWidth((_outline * 2) - 0.5f);
+	surface->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
+	surface->translate(_outline, _outline);
+	surface->glyphPath(glyph);
+	surface->strokePreserve();
+	surface->fill();
+	surface->setOperator(CAIRO_OPERATOR_CLEAR);
 	
-	GlyphLayer::render(si, g, w, h);
+	GlyphLayer::render(surface, glyph, width, height);
 
 	return true;
 }
@@ -58,29 +67,29 @@ _yOffset(offsetY) {
 }
 
 bool GlyphLayerShadowOffset::render(
-	osgCairo::Surface* si,
-	const osgCairo::Glyph& g,
-	unsigned int w,
-	unsigned int h
+	osgCairo::Surface*     surface,
+	const osgCairo::Glyph& glyph,
+	unsigned int           width,
+	unsigned int           height
 ) {
-	if(!si) return false;
+	if(!surface) return false;
 
-	si->save();
+	surface->save();
 
-	if(_xOffset > 0) si->translate(_xOffset, 0.0f);
+	if(_xOffset > 0) surface->translate(_xOffset, 0.0f);
 
-	if(_yOffset > 0) si->translate(0.0f, _yOffset);
+	if(_yOffset > 0) surface->translate(0.0f, _yOffset);
 
-	GlyphLayer::render(si, g, w, h);
+	GlyphLayer::render(surface, glyph, width, height);
 
-	si->restore();
-	si->setOperator(CAIRO_OPERATOR_CLEAR);
+	surface->restore();
+	surface->setOperator(CAIRO_OPERATOR_CLEAR);
 
-	if(_xOffset < 0) si->translate(std::fabs(_xOffset), 0.0f);
+	if(_xOffset < 0) surface->translate(std::fabs(_xOffset), 0.0f);
 
-	if(_yOffset < 0) si->translate(0.0f, std::fabs(_yOffset));
+	if(_yOffset < 0) surface->translate(0.0f, std::fabs(_yOffset));
 
-	GlyphLayer::render(si, g, w, h);
+	GlyphLayer::render(surface, glyph, width, height);
 
 	return true;
 }
@@ -94,28 +103,28 @@ _radius(radius) {
 }
 	
 bool GlyphLayerShadowGaussian::render(
-	osgCairo::Surface* si,
-	const osgCairo::Glyph& g,
-	unsigned int w,
-	unsigned int h
+	osgCairo::Surface*     surface,
+	const osgCairo::Glyph& glyph,
+	unsigned int           width,
+	unsigned int           height
 ) {
-	if(!si) return false;
+	if(!surface) return false;
 
 	double add = _radius * 4.0f;
 	
 	// Create a temporary small surface and then copy that to the bigger one.
-	osgCairo::Surface tmp(w + add, h + add, CAIRO_FORMAT_ARGB32);
+	osgCairo::Surface tmp(width + add, height + add, CAIRO_FORMAT_ARGB32);
 
 	if(!tmp.createContext()) return false;
  
-	osgCairo::CairoScaledFont* sf = si->getScaledFont();
+	osgCairo::CairoScaledFont* sf = surface->getScaledFont();
 
 	tmp.setScaledFont(sf);
 	tmp.setLineJoin(CAIRO_LINE_JOIN_ROUND);
 	tmp.setLineWidth(_radius - 0.5f);
 	tmp.setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
 	tmp.translate(_radius * 2, _radius * 2);
-	tmp.glyphPath(g);
+	tmp.glyphPath(glyph);
 	tmp.strokePreserve();
 	tmp.fill();
 
@@ -123,10 +132,10 @@ bool GlyphLayerShadowGaussian::render(
 	
 	tmp.setOperator(CAIRO_OPERATOR_CLEAR);
 	
-	GlyphLayer::render(&tmp, g, w, h);
+	GlyphLayer::render(&tmp, glyph, width, height);
 
-	si->setSourceSurface(&tmp, 0, 0);
-	si->paint();
+	surface->setSourceSurface(&tmp, 0, 0);
+	surface->paint();
 
 	return true;
 }

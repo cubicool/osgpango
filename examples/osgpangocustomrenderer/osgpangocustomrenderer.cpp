@@ -1,3 +1,6 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
 #include <sstream>
 #include <osg/Texture2D>
 #include <osg/MatrixTransform>
@@ -16,25 +19,31 @@ const std::string LOREM_IPSUM(
 	"culpa qui officia deserunt mollit anim id est laborum."
 );
 
-class GlyphRendererGradient: public osgPango::GlyphRenderer {
-	virtual bool renderGlyph(
-		osgCairo::Surface*      si,
-		const osgCairo::Glyph&  g,
-		unsigned int            w,
-		unsigned int            h
+struct GlyphLayerGradient: public osgPango::GlyphLayer {
+	virtual bool render(
+		osgCairo::Surface*     surface,
+		const osgCairo::Glyph& glyph,
+		unsigned int           width,
+		unsigned int           height
 	) {
-		si->setLineWidth(1.5f);
-		si->glyphPath(g);
+		surface->setLineWidth(1.5f);
+		surface->glyphPath(glyph);
 	
-		osgCairo::LinearPattern lp(w / 2.0f, 0.0f, w / 2.0f, h);
+		osgCairo::LinearPattern lp(width / 2.0f, 0.0f, width / 2.0f, height);
 
 		lp.addColorStopRGBA(0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
 		lp.addColorStopRGBA(0.8f, 0.0f, 1.0f, 0.0f, 0.0f);
 
-		si->setSource(&lp);
-		si->fill();
+		surface->setSource(&lp);
+		surface->fill();
 
 		return true;
+	}
+};
+
+struct GlyphRendererGradient: public osgPango::GlyphRendererSinglePass {
+	GlyphRendererGradient() {
+		addLayer(new GlyphLayerGradient());
 	}
 };
 

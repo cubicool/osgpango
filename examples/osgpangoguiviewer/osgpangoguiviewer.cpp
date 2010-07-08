@@ -1,3 +1,6 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
 #include <iostream>
 #include <osg/BlendFunc>
 #include <osgDB/ReadFile>

@@ -1,3 +1,6 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
 #include <sstream>
 #include <osg/Node>
 #include <osg/Timer>

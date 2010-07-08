@@ -1,3 +1,6 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
 #include <iostream>
 #include <osg/io_utils>
 #include <osg/ArgumentParser>
@@ -19,7 +22,7 @@ const std::string LOREM_IPSUM(
 	"\n\n"
 	"<span font='Monospace 15'>"
 	"Experiment with this application by using the following arguments:\n\n"
-	"\t<b>--renderer [string] [float]:</b> One of shadowOffset, shadowBlur, shadowBlurMultipass, or outline, with a size value.\n"
+	"\t<b>--renderer [string] [float]:</b> One of shadowOffset, shadowBlur, or outline, with a size value.\n"
 	"\t<b>            --alpha [float]:</b> The alpha value, from 0.0 to 1.0 (fully opaque).\n"
 	"\t<b>              --width [int]:</b> Allowable text area width.\n"
 	"\t<b>                --alignment:</b> One of left, right, center, or justify."
@@ -57,7 +60,7 @@ void setupArguments(osg::ArgumentParser& args) {
 
 	args.getApplicationUsage()->addCommandLineOption(
 		"--renderer <string> <int>",
-		"The GlyphRenderer object to use (outline, shadowOffset, shadowBlur, shadowBlurMultipass) and size."
+		"The GlyphRenderer object to use (outline, shadowOffset, shadowBlur) and size."
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
@@ -123,11 +126,6 @@ int main(int argc, char** argv) {
 			new osgPango::GlyphRendererShadowGaussian(s)
 		);
 
-		else if(renderer == "shadowBlurMultipass") context.addGlyphRenderer(
-			"shadowBlurMultipass",
-			new osgPango::GlyphRendererShadowGaussianMultipass(s)
-		);
-
 		else continue;
 
 		to.renderer = renderer;
@@ -136,7 +134,7 @@ int main(int argc, char** argv) {
 	while(args.read("--alpha", alpha)) {
 		float a = std::atof(alpha.c_str());
 
-		//t->setAlpha(a);
+		// t->setAlpha(a);
 	}
 
 	while(args.read("--width", width)) to.width = std::atoi(width.c_str());
