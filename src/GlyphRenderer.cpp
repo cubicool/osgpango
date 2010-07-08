@@ -237,9 +237,9 @@ GlyphRendererShadowOffset::GlyphRendererShadowOffset(int offsetX, int offsetY) {
 	unsigned int xt = 0;
 	unsigned int yt = 0;
 
-	if(offsetX < 0) xt = std::fabs(offsetX);
+	if(offsetX < 0) xt = std::abs(offsetX);
 
-	if(offsetY < 0) yt = std::fabs(offsetY);
+	if(offsetY < 0) yt = std::abs(offsetY);
 	
 	addLayer(new GlyphLayer(xt, yt));
 	addLayer(new GlyphLayerShadowOffset(offsetX, offsetY));
