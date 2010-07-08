@@ -12,6 +12,8 @@ namespace osgPango {
 
 class OSGPANGO_EXPORT GlyphLayer: public osg::Referenced {
 public:
+	GlyphLayer(unsigned int = 0, unsigned int = 0);
+
 	virtual bool render(
 		osgCairo::Surface*,
 		const osgCairo::Glyph&,
@@ -20,6 +22,10 @@ public:
 	);
 	
 	virtual osg::Vec4 getExtraGlyphExtents() const;
+
+private:
+	unsigned int _xTranslate;
+	unsigned int _yTranslate;
 };
 
 class OSGPANGO_EXPORT GlyphLayerOutline : public GlyphLayer {
@@ -43,12 +49,11 @@ public:
 		return _outline;
 	}
 	
-private:	
+private:
 	unsigned int _outline;
 };
 
-
-class OSGPANGO_EXPORT GlyphLayerShadowOffset : public GlyphLayer {
+class OSGPANGO_EXPORT GlyphLayerShadowOffset: public GlyphLayer {
 public:
 	GlyphLayerShadowOffset(int = 1, int = 1);
 
@@ -76,7 +81,7 @@ public:
 	int getOffsetY() const {
 		return _yOffset; 
 	}
-		
+
 private:
 	int _xOffset;
 	int _yOffset;

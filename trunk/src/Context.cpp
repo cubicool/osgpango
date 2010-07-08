@@ -1,4 +1,5 @@
 // -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
 
 #include <algorithm>
 #include <sstream>
@@ -215,16 +216,12 @@ void Context::drawLayout(Text* text, PangoLayout* layout, int x, int y) {
 }
 
 void Context::writeCachesToPNGFiles(const std::string& path) {
-	// TODO: Temporary hack!
-	static int count = 0;
-
 	for(GlyphCacheFontMap::iterator i = _gcfMap.begin(); i != _gcfMap.end(); i++) {
 		PangoFontDescription* d  = pango_font_describe(i->first.first);
 		GlyphCache*           gc = i->second.get();
 
 		std::ostringstream os;
 
-		/*
 		std::string family(pango_font_description_get_family(d));
 
 		// Get the PangoStyle and convert it to a string.
@@ -240,14 +237,14 @@ void Context::writeCachesToPNGFiles(const std::string& path) {
 
 		std::replace(family.begin(), family.end(), ' ', '_');
 
-		os << path << "_" << family << "_" << style << "_" << size;
-		*/
+		os << path << "_" << family << "_" << style << "_" << size << "_";
 
-		os << path << "_" << count << "_";
+		osg::notify(osg::NOTICE) << "Writing font file: " << os.str() << std::endl;
 
-		count++;
-
-		gc->writeImagesAsFiles(os.str());
+		// TODO: Sometimes, we'll have a font in our map from Pango that was never
+		// actually USED, so it has nothing in it's cache! This is usually the "default"
+		// font or whatever, and we need to figure out why this is happening.
+		if(gc->getLayerSize()) gc->writeImagesAsFiles(os.str());
 
 		pango_font_description_free(d);
 	}
@@ -255,6 +252,8 @@ void Context::writeCachesToPNGFiles(const std::string& path) {
 
 bool Context::addGlyphRenderer(const std::string& name, GlyphRenderer* renderer) {
 	std::string key(name);
+
+	renderer->setName(name);
 
 	_grMap[key] = renderer;
 
@@ -269,7 +268,9 @@ _text          (0),
 _color         (ColorPair(osg::Vec3(1.0f, 1.0f, 1.0f), osg::Vec3(0.0f, 0.0f, 0.0f))),
 _textureWidth  (DEFAULT_CACHE_WIDTH),
 _textureHeight (DEFAULT_CACHE_HEIGHT) {
-	_grMap[""] = new GlyphRenderer();
+	_grMap[""] = new GlyphRendererDefault();
+
+	_grMap[""]->setName("Default");
 }
 
 }

@@ -1,3 +1,6 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
 #include <iostream>
 #include <osg/io_utils>
 #include <osg/Texture2D>

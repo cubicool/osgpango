@@ -1,4 +1,5 @@
 // -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
 
 #include <sstream>
 #include <algorithm>
@@ -212,14 +213,13 @@ bool Text::_finalizeGeometry(osg::Group *group) {
 		GlyphGeometryIndex& ggi = g->second;
 
 		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
-			GlyphCache* gc      = g->first.first;
-			ColorPair   color   = g->first.second;
+			GlyphCache* gc    = g->first.first;
+			ColorPair   color = g->first.second;
 			
 			for(unsigned int layer = 0; layer < gc->getNumLayers(); ++layer) {
 				osg::Image* texture = gc->getImage(i->first, layer);
 
-				if(_newGlyphs && texture) 
-					texture->dirty();
+				if(_newGlyphs && texture) texture->dirty();
 			}
 
 			if(!i->second->finalize()) continue;
@@ -229,39 +229,42 @@ bool Text::_finalizeGeometry(osg::Group *group) {
 
 			rendererGeometry[gc->getGlyphRenderer()].push_back(std::make_pair(
 				i->second, 
-				GlyphGeometryState()));
+				GlyphGeometryState())
+			);
 			
-			GlyphGeometryState &gs = rendererGeometry[gc->getGlyphRenderer()].back().second;
+			GlyphGeometryState& ggs = rendererGeometry[gc->getGlyphRenderer()].back().second;
+			
 			for(unsigned int layer = 0; layer < gc->getNumLayers(); ++layer) {
-				gs.textures.push_back(gc->getTexture(i->first, layer));
-				//HACK
-				if(layer == 0) 
-					gs.colors.push_back(color.first);
-				else
-					gs.colors.push_back(color.second);
+				ggs.textures.push_back(gc->getTexture(i->first, layer));
+				
+				// TODO: HACK!
+				if(!layer) ggs.colors.push_back(color.first);
+				
+				else ggs.colors.push_back(color.second);
 			}
 		}
 	}
 
 	unsigned int maxPasses = 0;
 
-	// First create/update geometry states which are common for each pass. During iteration update maximum number of passes.
+	// First create/update geometry states which are common for each pass. During iteration update maximum
+	// number of passes.
 	for(
 		std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin();
 		ct != rendererGeometry.end(); 
-	++ct
-		) {
-			GlyphRenderer*      renderer = ct->first;
-			const GeometryList& gl       = ct->second;
+		++ct
+	) {
+		GlyphRenderer*      renderer = ct->first;
+		const GeometryList& gl       = ct->second;
 
-			maxPasses = std::max(renderer->getNumPasses(), maxPasses);
+		maxPasses = std::max(renderer->getNumPasses(), maxPasses);
 
-			for(GeometryList::const_iterator i = gl.begin(); i != gl.end(); i++) {
-				renderer->updateOrCreateState(i->first, i->second);
-			}
+		for(GeometryList::const_iterator i = gl.begin(); i != gl.end(); i++) {
+			renderer->updateOrCreateState(i->first, i->second);
+		}
 	}
 
-	// Create structure for passes
+	// Create structure for passes.
 	for(unsigned int i = 0; i < maxPasses; ++i) {
 		osg::Group* pass = new osg::Group();
 
@@ -270,33 +273,33 @@ bool Text::_finalizeGeometry(osg::Group *group) {
 		group->addChild(pass);
 	}
 
-	// Assign renderers to passes
+	// Assign renderers to passes.
 	for(
 		std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin(); 
 		ct != rendererGeometry.end(); 
-	++ct
-		) {
-			GlyphRenderer*      renderer  = ct->first;
-			const GeometryList& gl        = ct->second;
+		++ct
+	) {
+		GlyphRenderer*      renderer  = ct->first;
+		const GeometryList& gl        = ct->second;
 
-			for(unsigned int i = 0; i < renderer->getNumPasses(); ++i) {
-				// Each renderer has own geode node with assigned state required for pass.
-				osg::Geode* pass = new osg::Geode();
+		for(unsigned int i = 0; i < renderer->getNumPasses(); ++i) {
+			// Each renderer has own geode node with assigned state required for pass.
+			osg::Geode* pass = new osg::Geode();
 
-				renderer->updateOrCreateState(i, pass);
+			renderer->updateOrCreateState(i, pass);
 
-				// Attach renderer pass to common group.
-				osg::Group* attachTo = dynamic_cast<osg::Group*>(group->getChild(maxPasses - renderer->getNumPasses() + i));
+			// Attach renderer pass to common group.
+			osg::Group* attachTo = dynamic_cast<osg::Group*>(group->getChild(maxPasses - renderer->getNumPasses() + i));
 
-				if(attachTo) {
-					attachTo->addChild(pass);
+			if(attachTo) {
+				attachTo->addChild(pass);
 
-					// Attach geometries
-					for(GeometryList::const_iterator glit = gl.begin(); glit != gl.end(); glit++) {
-						pass->addDrawable(glit->first);
-					}
+				// Attach geometries
+				for(GeometryList::const_iterator glit = gl.begin(); glit != gl.end(); glit++) {
+					pass->addDrawable(glit->first);
 				}
 			}
+		}
 	}
 
 	_finalized = true;

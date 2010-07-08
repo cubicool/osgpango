@@ -1,4 +1,5 @@
 // -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
 
 #ifndef OSGPANGO_GLYPHCACHE
 #define OSGPANGO_GLYPHCACHE
@@ -34,19 +35,16 @@ struct OSGPANGO_EXPORT CachedGlyph {
 	osg::Vec2    ul;
 };
 
-
-typedef std::pair<unsigned int, osg::Vec2>            GlyphPositionPair;
-typedef std::list<GlyphPositionPair>                  GlyphPositionList;
-
+typedef std::pair<unsigned int, osg::Vec2> GlyphPositionPair;
+typedef std::list<GlyphPositionPair>       GlyphPositionList;
 
 // There is one GlyphCache object PER FONT object.
-class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {
-	
+class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {	
 public:
-	typedef std::map<unsigned int, CachedGlyph>         GlyphMap;
+	typedef std::map<unsigned int, CachedGlyph>      GlyphMap;
 	typedef std::pair<osg::ref_ptr<osgCairo::Image>, 
-	                  osg::ref_ptr<osg::Texture> >      CairoAndTexture;
-	typedef std::vector<CairoAndTexture>                Images;
+	                  osg::ref_ptr<osg::Texture> >   CairoAndTexture;
+	typedef std::vector<CairoAndTexture>             Images;
 
 	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0);
 
@@ -92,6 +90,12 @@ public:
 	
 	unsigned int getNumLayers() const {
 		return _renderer->getNumLayers();
+	}
+
+	// TODO: THIS SHOULDN'T BE NECESSARY! Please see the comment in Context.cpp,
+	// in the writeCachesToPNGFiles function.
+	unsigned int getLayerSize() const {
+		return _layers.size();
 	}
 
 	const std::string& getName() const {
