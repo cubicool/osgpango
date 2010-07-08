@@ -85,9 +85,9 @@ bool GlyphLayerShadowOffset::render(
 	surface->restore();
 	surface->setOperator(CAIRO_OPERATOR_CLEAR);
 
-	if(_xOffset < 0) surface->translate(std::fabs(_xOffset), 0.0f);
+	if(_xOffset < 0) surface->translate(std::abs(_xOffset), 0.0f);
 
-	if(_yOffset < 0) surface->translate(0.0f, std::fabs(_yOffset));
+	if(_yOffset < 0) surface->translate(0.0f, std::abs(_yOffset));
 
 	GlyphLayer::render(surface, glyph, width, height);
 
@@ -95,7 +95,7 @@ bool GlyphLayerShadowOffset::render(
 }
 
 osg::Vec4 GlyphLayerShadowOffset::getExtraGlyphExtents() const {
-	return osg::Vec4(0.0f, 0.0f, std::fabs(_xOffset), std::fabs(_yOffset));
+	return osg::Vec4(0.0f, 0.0f, std::abs(_xOffset), std::abs(_yOffset));
 }
 
 GlyphLayerShadowGaussian::GlyphLayerShadowGaussian(unsigned int radius):
