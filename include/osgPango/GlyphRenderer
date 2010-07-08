@@ -102,6 +102,8 @@ protected:
 class OSGPANGO_EXPORT GlyphRendererDefault: public GlyphRendererSinglePass {
 public:
 	GlyphRendererDefault();
+	
+	virtual bool updateOrCreateState (int pass, osg::Geode*);
 };
 
 class OSGPANGO_EXPORT GlyphRendererOutline: public GlyphRendererSinglePass {
@@ -117,6 +119,8 @@ public:
 class OSGPANGO_EXPORT GlyphRendererShadowGaussian: public GlyphRendererSinglePass {
 public:
 	GlyphRendererShadowGaussian(unsigned int = 1);
+	
+	virtual bool updateOrCreateState (int pass, osg::Geode*);
 };
 
 }
