@@ -44,7 +44,7 @@ bool GlyphRendererSinglePass::renderLayer(
 }
 	
 bool GlyphRendererSinglePass::updateOrCreateState(int pass, osg::Geode* geode) {
-	const char* VERTEX_SHADER =
+	static const char* VERTEX_SHADER =
 		"#version 120\n"
 		"varying vec4 pangoTexCoord;"
 		"void main() {"
@@ -53,23 +53,22 @@ bool GlyphRendererSinglePass::updateOrCreateState(int pass, osg::Geode* geode) {
 		"}"
 	;
 
-	const char* OLD_FRAGMENT_SHADER = 
+	static const char* FRAGMENT_SHADER = 
+		"#version 120\n"
 		"varying vec4 pangoTexCoord;"
 		"uniform vec3 pangoColor[8];"
 		"uniform sampler2D pangoTex0;"
 		"uniform sampler2D pangoTex1;"
 		"uniform float pangoAlpha;"
+		"vec4 osgPango_GetFragment(vec4, sampler2D[8], vec3[8], float);"
 		"void main() {"
-		"	float tex0   = texture2D(pangoTex1, pangoTexCoord.st).a;"
-		"	float tex1   = texture2D(pangoTex0, pangoTexCoord.st).a;"
-		"	vec3 color0  = pangoColor[1].rgb * tex0;"
-		"	vec3 color1  = pangoColor[0].rgb * tex1 + color0 * (1.0 - tex1);"
-		"	float alpha0 = tex0;"
-		"	float alpha1 = tex0 + tex1;"
-		"	gl_FragColor = vec4(color1, alpha1 * pangoAlpha);"
+		"	sampler2D textures[8];"
+		"	textures[0] = pangoTex0;"
+		"	textures[1] = pangoTex1;"
+		"	gl_FragColor = osgPango_GetFragment(pangoTexCoord, textures, pangoColor, pangoAlpha);"
 		"}"
 	;
-	
+
 	// XXX: OMG OMG OMG
 	// XXX: OMG OMG OMG
 	// XXX: OMG OMG OMG
@@ -83,7 +82,7 @@ bool GlyphRendererSinglePass::updateOrCreateState(int pass, osg::Geode* geode) {
 	// and maintain. Lets see if we can come up with a way to to have each Renderer compile it's own
 	// GetFragment() GLSL function, and have the default fragment shader's main() call that function:
 	//
-	// 	gl_FragColor = GetFragment();
+	// 	gl_FragColor = osgPango_GetFragment();
 	//
 	// We will probably need to SLIGHTLY change the API further in order to achieve this.
 	
@@ -131,7 +130,7 @@ bool GlyphRendererSinglePass::updateOrCreateState(int pass, osg::Geode* geode) {
 
 	osg::Program* program = new osg::Program();
 	osg::Shader*  vert    = new osg::Shader(osg::Shader::VERTEX, VERTEX_SHADER);
-	osg::Shader*  frag    = new osg::Shader(osg::Shader::FRAGMENT, OLD_FRAGMENT_SHADER);
+	osg::Shader*  frag    = new osg::Shader(osg::Shader::FRAGMENT, FRAGMENT_SHADER);
 
 	vert->setName("pangoRendererVert");
 	frag->setName("pangoRendererFrag");
@@ -204,6 +203,31 @@ GlyphRendererDefault::GlyphRendererDefault() {
 	addLayer(new GlyphLayer());
 }
 
+bool GlyphRendererDefault::updateOrCreateState(int pass, osg::Geode* geode) {
+	if(!GlyphRendererSinglePass::updateOrCreateState(pass, geode)) return false;
+
+	osg::StateSet* state   = geode->getOrCreateStateSet();
+	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
+
+	if(!program) return false;
+
+	const char* GET_FRAGMENT =
+		"#version 120\n"
+		"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
+		"	float tex0   = texture2D(textures[0], coord.st).a;"
+		"	vec3 color0  = colors[0].rgb * tex0;"
+		"	float alpha0 = tex0;"
+		"	return vec4(color0, alpha0 * alpha);"
+		"}"
+	;
+
+	osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
+
+	program->addShader(frag);
+
+	return true;
+}
+
 GlyphRendererOutline::GlyphRendererOutline(unsigned int outline) {
 	addLayer(new GlyphLayer(outline, outline));
 	addLayer(new GlyphLayerOutline(outline));
@@ -224,6 +248,34 @@ GlyphRendererShadowOffset::GlyphRendererShadowOffset(int offsetX, int offsetY) {
 GlyphRendererShadowGaussian::GlyphRendererShadowGaussian(unsigned int radius) {
 	addLayer(new GlyphLayer(radius * 2, radius * 2));
 	addLayer(new GlyphLayerShadowGaussian(radius));
+}
+
+bool GlyphRendererShadowGaussian::updateOrCreateState(int pass, osg::Geode* geode) {
+	if(!GlyphRendererSinglePass::updateOrCreateState(pass, geode)) return false;
+
+	osg::StateSet* state   = geode->getOrCreateStateSet();
+	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
+
+	if(!program) return false;
+
+	const char* GET_FRAGMENT =
+		"#version 120\n"
+		"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
+		"	float tex0   = texture2D(textures[1], coord.st).a;"
+		"	float tex1   = texture2D(textures[0], coord.st).a;"
+		"	vec3 color0  = colors[1].rgb * tex0;"
+		"	vec3 color1  = colors[0].rgb * tex1 + color0 * (1.0 - tex1);"
+		"	float alpha0 = tex0;"
+		"	float alpha1 = tex0 + tex1;"
+		"	return vec4(color1, alpha1 * alpha);"
+		"}"
+	;
+
+	osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
+
+	program->addShader(frag);
+
+	return true;
 }
 
 }
