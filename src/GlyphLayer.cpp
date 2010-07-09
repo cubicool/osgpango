@@ -7,9 +7,7 @@
 
 namespace osgPango {
 
-GlyphLayer::GlyphLayer(unsigned int xt, unsigned int yt):
-_xTranslate (xt),
-_yTranslate (yt) {
+GlyphLayer::GlyphLayer() {
 }
 
 bool GlyphLayer::render(
@@ -20,7 +18,6 @@ bool GlyphLayer::render(
 ) {
 	if(!surface) return false;
 
-	surface->translate(_xTranslate, _yTranslate);
 	surface->glyphPath(glyph);
 	surface->fill();
 
@@ -46,12 +43,12 @@ bool GlyphLayerOutline::render(
 	surface->setLineJoin(CAIRO_LINE_JOIN_ROUND);
 	surface->setLineWidth((_outline * 2) - 0.5f);
 	surface->setAntialias(CAIRO_ANTIALIAS_SUBPIXEL);
-	surface->translate(_outline, _outline);
 	surface->glyphPath(glyph);
 	surface->strokePreserve();
 	surface->fill();
+
 	surface->setOperator(CAIRO_OPERATOR_CLEAR);
-	
+	surface->setAntialias(CAIRO_ANTIALIAS_NONE); // TODO: Looks better, why ?
 	GlyphLayer::render(surface, glyph, width, height);
 
 	return true;
@@ -109,6 +106,8 @@ bool GlyphLayerShadowGaussian::render(
 	unsigned int           height
 ) {
 	if(!surface) return false;
+	
+	surface->translate(-static_cast<double>(_radius * 2), -static_cast<double>(_radius * 2));
 
 	double add = _radius * 4.0f;
 	

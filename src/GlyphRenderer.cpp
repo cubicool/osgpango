@@ -227,8 +227,36 @@ bool GlyphRendererDefault::updateOrCreateState(int pass, osg::Geode* geode) {
 }
 
 GlyphRendererOutline::GlyphRendererOutline(unsigned int outline) {
-	addLayer(new GlyphLayer(outline, outline));
+	addLayer(new GlyphLayer());
 	addLayer(new GlyphLayerOutline(outline));
+}
+
+bool GlyphRendererOutline::updateOrCreateState(int pass, osg::Geode* geode) {
+	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
+
+	osg::StateSet* state   = geode->getOrCreateStateSet();
+	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
+
+	if(!program) return false;
+
+	const char* GET_FRAGMENT =
+		"#version 120\n"
+		"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
+		"	float tex0   = texture2D(textures[1], coord.st).a;"
+		"	float tex1   = texture2D(textures[0], coord.st).a;"
+		"	vec3 color0  = colors[1].rgb * tex0;"
+		"	vec3 color1  = colors[0].rgb * tex1 + color0 * (1.0 - tex1);"
+		"	float alpha0 = tex0;"
+		"	float alpha1 = tex0 + tex1;"
+		"	return vec4(color1, alpha1 * alpha);"
+		"}"
+	;
+
+	osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
+
+	program->addShader(frag);
+
+	return true;
 }
 
 GlyphRendererShadowOffset::GlyphRendererShadowOffset(int offsetX, int offsetY) {
@@ -239,12 +267,40 @@ GlyphRendererShadowOffset::GlyphRendererShadowOffset(int offsetX, int offsetY) {
 
 	if(offsetY < 0) yt = std::abs(offsetY);
 	
-	addLayer(new GlyphLayer(xt, yt));
+	addLayer(new GlyphLayer());
 	addLayer(new GlyphLayerShadowOffset(offsetX, offsetY));
 }
 
+bool GlyphRendererShadowOffset::updateOrCreateState(int pass, osg::Geode* geode) {
+	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
+
+	osg::StateSet* state   = geode->getOrCreateStateSet();
+	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
+
+	if(!program) return false;
+
+	const char* GET_FRAGMENT =
+		"#version 120\n"
+		"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
+		"	float tex0   = texture2D(textures[1], coord.st).a;"
+		"	float tex1   = texture2D(textures[0], coord.st).a;"
+		"	vec3 color0  = colors[1].rgb * tex0;"
+		"	vec3 color1  = colors[0].rgb * tex1 + color0 * (1.0 - tex1);"
+		"	float alpha0 = tex0;"
+		"	float alpha1 = tex0 + tex1;"
+		"	return vec4(color1, alpha1 * alpha);"
+		"}"
+	;
+
+	osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
+
+	program->addShader(frag);
+
+	return true;
+}
+
 GlyphRendererShadowGaussian::GlyphRendererShadowGaussian(unsigned int radius) {
-	addLayer(new GlyphLayer(radius * 2, radius * 2));
+	addLayer(new GlyphLayer());
 	addLayer(new GlyphLayerShadowGaussian(radius));
 }
 

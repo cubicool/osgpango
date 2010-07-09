@@ -105,7 +105,9 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		osgCairo::Image* img = _layers[layerIndex].back().first.get();
 		  
 		img->identityMatrix();
-		img->translate(_x, _y);
+		// Set position in image and then move write position to origin of glyph. 
+		// Each GlyphLayer can assume that writes on right position if don't apply any effect.
+		img->translate(_x + extents[0], _y + extents[1]);
 		img->save();
 
 		if(!_renderer->renderLayer(layerIndex, img, g, w, h)) osg::notify(osg::WARN) 
