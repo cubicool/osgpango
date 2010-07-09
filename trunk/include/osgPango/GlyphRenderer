@@ -77,11 +77,15 @@ public:
 class OSGPANGO_EXPORT GlyphRendererOutline: public GlyphRenderer {
 public:
 	GlyphRendererOutline(unsigned int = 2);
+
+	virtual bool updateOrCreateState (int pass, osg::Geode*);
 };
 
 class OSGPANGO_EXPORT GlyphRendererShadowOffset : public GlyphRenderer {
 public:
 	GlyphRendererShadowOffset(int = 1, int = 1);
+
+	virtual bool updateOrCreateState (int pass, osg::Geode*);
 };
 
 class OSGPANGO_EXPORT GlyphRendererShadowGaussian: public GlyphRenderer {

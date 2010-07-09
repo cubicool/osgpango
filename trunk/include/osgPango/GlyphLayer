@@ -12,8 +12,9 @@ namespace osgPango {
 
 class OSGPANGO_EXPORT GlyphLayer: public osg::Referenced {
 public:
-	GlyphLayer(unsigned int = 0, unsigned int = 0);
+	GlyphLayer();
 
+	// Render custom shape of glyph.
 	virtual bool render(
 		osgCairo::Surface*,
 		const osgCairo::Glyph&,
@@ -22,10 +23,6 @@ public:
 	);
 	
 	virtual osg::Vec4 getExtraGlyphExtents() const;
-
-private:
-	unsigned int _xTranslate;
-	unsigned int _yTranslate;
 };
 
 class OSGPANGO_EXPORT GlyphLayerOutline : public GlyphLayer {
