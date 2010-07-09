@@ -41,7 +41,7 @@ struct GlyphLayerGradient: public osgPango::GlyphLayer {
 	}
 };
 
-struct GlyphRendererGradient: public osgPango::GlyphRendererSinglePass {
+struct GlyphRendererGradient: public osgPango::GlyphRenderer{
 	GlyphRendererGradient() {
 		addLayer(new GlyphLayerGradient());
 	}
