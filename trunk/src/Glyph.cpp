@@ -7,6 +7,7 @@
 #include <osg/Texture2D>
 #include <osgDB/Registry>
 #include <osgDB/ReadFile>
+#include <osgCairo/Util>
 #include <osgPango/Context>
 
 namespace osgPango {
@@ -62,7 +63,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	pango_font_get_glyph_extents(font, glyph, &r, 0);
 	pango_extents_to_pixels(&r, 0);
 
-	osgCairo::Glyph g(glyph, -r.x, -r.y);
+	cairo_glyph_t g = { glyph, -r.x, -r.y };
 
 	double w = r.width;
 	double h = r.height;
@@ -73,8 +74,6 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		return const_cast<const CachedGlyph*>(&_glyphs[glyph]);
 	}
 
-	osgCairo::CairoScaledFont* sf = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
-	
 	osg::Vec4 extents = _renderer->getExtraGlyphExtents();
 
 	double addw = extents[2] + 1.0f;
@@ -98,26 +97,37 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	}
 
 	// Make sure we have enough vertical space, too.
-	if(_y + h + addh >= _imgHeight || !_layers.size()) _newImageAndTexture(sf);
+	if(_y + h + addh >= _imgHeight || !_layers.size()) _newImageAndTexture();
 	
+	cairo_scaled_font_t* sf  = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
+
 	// Render glyph to layers.
 	for(unsigned int layerIndex = 0; layerIndex < getNumLayers(); layerIndex++) {
 		osgCairo::Image* img = _layers[layerIndex].back().first.get();
-		  
-		img->identityMatrix();
+		cairo_t*         c   = img->createContext();
+
+		if(cairo_status(c)) continue;
+
+		cairo_set_scaled_font(c, sf);
+		cairo_identity_matrix(c);
+
 		// Set position in image and then move write position to origin of glyph. 
 		// Each GlyphLayer can assume that writes on right position if don't apply any effect.
-		img->translate(_x + extents[0], _y + extents[1]);
-		img->save();
+		cairo_translate(c, _x + extents[0], _y + extents[1]);
+		cairo_save(c);
 
-		if(!_renderer->renderLayer(layerIndex, img, g, w, h)) osg::notify(osg::WARN) 
+		if(!_renderer->renderLayer(layerIndex, c, &g, w, h)) osg::notify(osg::WARN) 
 			<< "The GlyphRenderer object '" << _renderer->getName() << "' failed to render "
 			<< "a glyph to the internal surface."
 			<< std::endl
 		;
 
-		img->restore();
+		cairo_restore(c);
+		cairo_destroy(c);
 	}
+
+	// TODO: Why can't I destroy this here? Is it because the 'font' object has it locked up?
+	// cairo_scaled_font_destroy(sf);
 	
 	if(h > _h) _h = h;
 
@@ -163,17 +173,26 @@ void GlyphCache::writeImagesAsFiles(const std::string& prefix) const {
 	}
 }
 
-bool GlyphCache::_newImageAndTexture(osgCairo::CairoScaledFont* sf) {
+unsigned long GlyphCache::getMemoryUsageInBytes() const {
+	unsigned long bytes = 0;
+
+	for(Layers::const_iterator i = _layers.begin(); i != _layers.end(); i++) {
+		for(Images::const_iterator j = i->begin(); j != i->end(); j++) {
+			bytes += j->first->getImageSizeInBytes();
+		}
+	}
+
+	return bytes;
+}
+
+bool GlyphCache::_newImageAndTexture() {
 	if(!_layers.size()) _layers.resize(getNumLayers());
 	
 	for(unsigned int i = 0; i < getNumLayers(); ++i) {
-		// TODO: ? get imgWidth, imgHeight from renderer ?
 		osgCairo::Image* img = new osgCairo::Image(_imgWidth, _imgHeight, CAIRO_FORMAT_A8);
 	
 		if(!img || !img->valid() || !img->createContext()) return false;
 	
-		img->setScaledFont(sf);
-		
 		osg::Texture2D* texture = new osg::Texture2D();
 
 		texture->setImage(img);
@@ -208,7 +227,7 @@ void GlyphCache::_writeImageVectorFiles(
 
 		ss << prefix << num << postfix << ".png";
 
-		i->first.get()->writeToPNG(ss.str().c_str());
+		osgCairo::util::writeToPNG(i->first->getSurface(), ss.str().c_str());
 
 		osg::notify(osg::NOTICE)
 			<< "Wrote " << ss.str()

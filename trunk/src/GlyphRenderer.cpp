@@ -30,13 +30,13 @@ osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {
 }
 	
 bool GlyphRenderer::renderLayer(
-	unsigned int           layer,
-	osgCairo::Surface*     surface,
-	const osgCairo::Glyph& glyph,
-	unsigned int           width,
-	unsigned int           height
+	unsigned int   layer,
+	cairo_t*       c,
+	cairo_glyph_t* glyph,
+	unsigned int   width,
+	unsigned int   height
 ) {
-	if(layer < _layers.size()) return _layers[layer]->render(surface, glyph, width, height);
+	if(layer < _layers.size()) return _layers[layer]->render(c, glyph, width, height);
 	
 	else return false;
 }
@@ -206,9 +206,9 @@ GlyphRendererShadowOffset::GlyphRendererShadowOffset(int offsetX, int offsetY) {
 	unsigned int xt = 0;
 	unsigned int yt = 0;
 
-	if(offsetX < 0) xt = std::abs(offsetX);
+	if(offsetX < 0) xt = std::abs(static_cast<double>(offsetX));
 
-	if(offsetY < 0) yt = std::abs(offsetY);
+	if(offsetY < 0) yt = std::abs(static_cast<double>(offsetY));
 	
 	addLayer(new GlyphLayer());
 	addLayer(new GlyphLayerShadowOffset(offsetX, offsetY));

@@ -45,12 +45,14 @@ public:
 	typedef std::pair<osg::ref_ptr<osgCairo::Image>, 
 	                  osg::ref_ptr<osg::Texture> >   CairoAndTexture;
 	typedef std::vector<CairoAndTexture>             Images;
+	typedef std::vector<Images>                      Layers;
 
 	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0);
 
-	const CachedGlyph* getCachedGlyph     (unsigned int);
-	const CachedGlyph* createCachedGlyph  (PangoFont*, PangoGlyphInfo*);
-	void               writeImagesAsFiles (const std::string&) const;
+	const CachedGlyph* getCachedGlyph        (unsigned int);
+	const CachedGlyph* createCachedGlyph     (PangoFont*, PangoGlyphInfo*);
+	void               writeImagesAsFiles    (const std::string&) const;
+	unsigned long      getMemoryUsageInBytes () const;
 
 	void setName(const std::string& name) {
 		_name = name;
@@ -103,7 +105,7 @@ public:
 	}
 
 private:
-	bool _newImageAndTexture(osgCairo::CairoScaledFont*);
+	bool _newImageAndTexture();
 
 	void _writeImageVectorFiles(
 		const std::string&,
@@ -119,7 +121,7 @@ private:
 	// The "renderer" object, not bound to any local data.
 	osg::ref_ptr<GlyphRenderer> _renderer;
 
-	std::vector<Images> _layers;
+	Layers _layers;
 	
 	// A map of external Pango glyph indexes to their internally CachedGlyph data structures.
 	// We also have a flag of what effects to use, though their rendering method is passed

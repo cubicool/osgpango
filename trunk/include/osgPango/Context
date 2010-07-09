@@ -82,14 +82,14 @@ public:
 		//! <a href="http://www.cairographics.org/manual/cairo-context.html#cairo-antialias-t">
 		//! this Cairo API reference link</a> for more information on what each
 		//! possible value means. The osgPango Context default is CAIRO_ANTIALIAS_SUBPIXEL.
-		osgCairo::CairoAntialias aa = CAIRO_ANTIALIAS_SUBPIXEL,
+		cairo_antialias_t aa = CAIRO_ANTIALIAS_NONE,
 
 		//! This osgCairo::CairoHintStyle enum defines what kind of
 		//! hinting style should be used by the rendering backend. Please see
 		//! <a href="http://www.cairographics.org/manual/cairo-font-options.html#cairo-hint-style-t">
 		//! this Cairo API reference link</a> for more information on what each
 		//! possible value means. The osgPango Context default is CAIRO_HINT_STYLE_FULL.
-		osgCairo::CairoHintStyle hs = CAIRO_HINT_STYLE_FULL,
+		cairo_hint_style_t hs = CAIRO_HINT_STYLE_DEFAULT,
 
 		//! This osgCairo::CairoSubpixelOrder enum defines what kind of
 		//! subpixel ordering style should be used by the rendering backend
@@ -97,7 +97,7 @@ public:
 		//! <a href="http://www.cairographics.org/manual/cairo-font-options.html#cairo-subpixel-order-t">
 		//! this Cairo API reference link</a> for more information on what each
 		//! possible value means. The osgPango Context default is CAIRO_SUBPIXEL_ORDER_RGB.
-		osgCairo::CairoSubpixelOrder spo = CAIRO_SUBPIXEL_ORDER_RGB
+		cairo_subpixel_order_t spo = CAIRO_SUBPIXEL_ORDER_DEFAULT
 	);
 
 	//! Populates a FontList object and, optionally, whether or not you want
@@ -129,7 +129,11 @@ public:
 	//! Write all the current caches of fonts and their effects to files prefixed with
 	//! the string path parameter. This is great for debugging when you want to see
 	//! how your textures are being created and arranged internally by the engine.
-	void writeCachesToPNGFiles(const std::string& path);
+	void writeCachesToPNGFiles(const std::string& path) const;
+	
+	//! Returns the numbers of bytes used by each Image object in each GlyphCache's 
+	//! layer container.
+	unsigned long getMemoryUsageInBytes() const;
 	
 	//! Add a newly created GlyphRenderer object to the internal cache of known 
 	//! renderers within the Context. For more information about what
