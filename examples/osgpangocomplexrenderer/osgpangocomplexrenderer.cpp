@@ -1,7 +1,6 @@
 // -*-c++-*- Copyright (C) 2010 osgPango Development Team
 // $Id$
 
-#include <sstream>
 #include <osg/Texture2D>
 #include <osg/MatrixTransform>
 #include <osg/AlphaFunc>
@@ -13,23 +12,68 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgPango/Context>
 
-const std::string LOREM_IPSUM(
-	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
-	"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-	"quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
-	"fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
-	"culpa qui officia deserunt mollit anim id est laborum."
-);
+struct GlyphLayerLines: public osgPango::GlyphLayer {
+	virtual bool render(
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
+	) {
+		if(cairo_status(c) || !glyph) return false;
 
-struct GlyphRendererComplex: public osgPango::GlyphRenderer{
-	GlyphRendererComplex() {
-		addLayer(new osgPango::GlyphLayerShadowGaussian(20.0));
-		addLayer(new osgPango::GlyphLayerOutline(2.0));
-		addLayer(new osgPango::GlyphLayer());
+		cairo_surface_t* tmp = cairo_image_surface_create(CAIRO_FORMAT_A8, width, height);
+	
+		if(cairo_surface_status(tmp)) return false;
+
+		cairo_t* tc = cairo_create(tmp);
+
+		if(cairo_status(tc)) return false;
+
+		// Clear the temporary 'pattern' surface.
+		cairo_save(tc);
+		cairo_set_operator(tc, CAIRO_OPERATOR_CLEAR);
+		cairo_rectangle(tc, 0.0f, 0.0f, width, height);
+		cairo_paint(tc);
+		cairo_restore(tc);
+
+		// Now, we draw our lines to the temporary surface.
+		cairo_set_line_width(tc, 1.0f);
+
+		for(unsigned int w = 0; w < width; w += 3) {
+			cairo_move_to(tc, w + 0.5f, 0.0);
+			cairo_line_to(tc, w + 0.5f, height);
+			cairo_stroke(tc);
+		}
+
+		for(unsigned int h = 0; h < height; h += 3) {
+			cairo_move_to(tc, 0.0f, h + 0.5f);
+			cairo_line_to(tc, width, h + 0.5f);
+			cairo_stroke(tc);
+		}
+
+		// Use our temporary surface to fill the glyph path.
+		cairo_set_source_surface(c, tmp, 0, 0);
+		cairo_glyph_path(c, glyph, 1);
+		cairo_fill(c);
+
+		cairo_destroy(tc);
+		cairo_surface_destroy(tmp);
+
+		return true;
+	}
+};
+
+struct GlyphRendererComplex: public osgPango::GlyphRenderer {
+	GlyphRendererComplex(bool useCustomLayer = false) {
+		addLayer(new osgPango::GlyphLayerShadowGaussian(17.0f));
+		addLayer(new osgPango::GlyphLayerOutline(2.0f));
+
+		if(useCustomLayer) addLayer(new GlyphLayerLines());
+		
+		else addLayer(new osgPango::GlyphLayer());
 	}
 
-	virtual unsigned int getNumPasses() const { 
+	virtual unsigned int getNumPasses() const {
 		return 3;
 	}
 
@@ -44,66 +88,71 @@ struct GlyphRendererComplex: public osgPango::GlyphRenderer{
 		switch(pass) {
 			// blur shadow
 			case 0: {
-					const char* GET_FRAGMENT =
-						"#version 120\n"
-						"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
-						"	float tex0   = texture2D(textures[0], coord.st).a;"
-						"	vec3 color0  = vec3(0.0, 0.0, 0.0) * tex0;"
-						"	float alpha0 = tex0;"
-						"	return vec4(color0, alpha0 * alpha);"
-						"}"
-						;
+				const char* GET_FRAGMENT =
+					"#version 120\n"
+					"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
+					"	float tex0   = texture2D(textures[0], coord.st).a;"
+					"	vec3 color0  = vec3(0.0, 0.0, 0.0) * tex0;"
+					"	float alpha0 = tex0;"
+					"	return vec4(color0, alpha0 * alpha);"
+					"}"
+				;
 
-					osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
+				osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
 
-					program->addShader(frag);
-				} 
-				break;
+				program->addShader(frag);
+			} 
+			
+			break;
 			
 			// outline + base
 			case 1: {
-					const char* GET_FRAGMENT =
-						"#version 120\n"
-						"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
-						"	float tex0   = texture2D(textures[1], coord.st).a;"
-						"	float tex1   = texture2D(textures[2], coord.st).a;"
-						"	vec3 color0  = vec3(1.0, 1.0, 1.0) * tex0;"
-						"	vec3 color1  = vec3(0.0, 0.4, 1.0) * tex1 + color0 * (1.0 - tex1);"
-						"	float alpha0 = tex0;"
-						"	float alpha1 = tex0 + tex1;"
-						"	return vec4(color1, alpha1 * alpha);"
-						"}"
-						;
-					
-					osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
+				const char* GET_FRAGMENT =
+					"#version 120\n"
+					"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
+					"	float tex0   = texture2D(textures[1], coord.st).a;"
+					"	float tex1   = texture2D(textures[2], coord.st).a;"
+					"	vec3 color0  = vec3(1.0, 1.0, 1.0) * tex0;"
+					"	vec3 color1  = vec3(0.0, 0.4, 1.0) * tex1 + color0 * (1.0 - tex1);"
+					"	float alpha0 = tex0;"
+					"	float alpha1 = tex0 + tex1;"
+					"	return vec4(color1, alpha1 * alpha);"
+					"}"
+				;
+				
+				osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
 
-					program->addShader(frag);
-				} 
-				break;
+				program->addShader(frag);
+			} 
+			
+			break;
 
 			// write to depth only with base
 			case 2: {
-					const char* GET_FRAGMENT =
-						"#version 120\n"
-						"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
-						"	float tex0   = texture2D(textures[2], coord.st).a;"
-						"	vec3 color0  = vec3(0.0, 0.0, 0.0) * tex0;"
-						"	float alpha0 = tex0;"
-						"	return vec4(color0, alpha0 * alpha);"
-						"}"
-						;
+				const char* GET_FRAGMENT =
+					"#version 120\n"
+					"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
+					"	float tex0   = texture2D(textures[2], coord.st).a;"
+					"	vec3 color0  = vec3(0.0, 0.0, 0.0) * tex0;"
+					"	float alpha0 = tex0;"
+					"	return vec4(color0, alpha0 * alpha);"
+					"}"
+				;
 
-					osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
+				osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
 
-					program->addShader(frag);
-					
-					state->removeAttribute(osg::StateAttribute::DEPTH);
-					state->setAttribute(new osg::ColorMask(false, false, false, false));
-					state->setMode(GL_BLEND, osg::StateAttribute::OFF);	
-					state->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
-				} 
-				break;
+				program->addShader(frag);
+				
+				state->removeAttribute(osg::StateAttribute::DEPTH);
+				state->setAttribute(new osg::ColorMask(false, false, false, false));
+				state->setMode(GL_BLEND, osg::StateAttribute::OFF);	
+				state->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+			} 
+			
+			break;
+
 		}
+
 		return true;
 	}
 };
@@ -141,14 +190,6 @@ osg::Geometry* createGeometry(osg::Image* image) {
 	return geom;
 }
 
-osg::Matrix createInvertedYOrthoProjectionMatrix(float width, float height) {
-	osg::Matrix m = osg::Matrix::ortho2D(0.0f, width, 0.0f, height);
-	osg::Matrix s = osg::Matrix::scale(1.0f, -1.0f, 1.0f);
-	osg::Matrix t = osg::Matrix::translate(0.0f, -height, 0.0f);
-
-	return t * s * m;
-}
-
 osg::Camera* createOrthoCamera(float width, float height) {
 	osg::Camera* camera = new osg::Camera();
 
@@ -166,39 +207,40 @@ osg::Camera* createOrthoCamera(float width, float height) {
 	return camera;
 }
 
-osg::Camera* createInvertedYOrthoCamera(float width, float height) {
-	osg::Camera* camera = createOrthoCamera(width, height);
-
-	camera->setProjectionMatrix(createInvertedYOrthoProjectionMatrix(width, height));
-
-	return camera;
-}
+const int WINDOW_WIDTH  = 800;
+const int WINDOW_HEIGHT = 600;
 
 int main(int argc, char** argv) {
 	osgPango::Context& context = osgPango::Context::instance();
 
 	context.init();
 	context.addGlyphRenderer("complex", new GlyphRendererComplex());
+	context.addGlyphRenderer("complex-lines", new GlyphRendererComplex(true));
 
 	osgPango::TextTransform* t = new osgPango::TextTransform();
 
-	std::ostringstream os;
-	
-	os << "<span font='Verdana Bold 50'>" << LOREM_IPSUM << "</span>";
+	t->addText(
+		"<span font='Verdana Bold 40'>This is a cow.</span>",
+		0,
+		0,
+		osgPango::TextOptions("complex")
+	);
 
-	t->addText(os.str().c_str(), 0, 0, osgPango::TextOptions(
-		"complex",
-		osgPango::TextOptions::TEXT_ALIGN_CENTER,
-		1230
-	));
+	t->addText(
+		"<span font='Verdana Bold 40'>Yes, a cow.</span>",
+		0,
+		-60,
+		osgPango::TextOptions("complex-lines")
+	);
 
 	t->finalize();
-	// t->setPosition(t->getOriginTranslated());
+	t->setPosition(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f));
+	t->setAlignment(osgPango::TextTransform::POS_ALIGN_CENTER);
 
 	osgViewer::Viewer viewer;
 
 	osg::Group*  group  = new osg::Group();
-	osg::Camera* camera = createOrthoCamera(1280, 1024);
+	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
 	
         viewer.addEventHandler(new osgViewer::StatsHandler());
@@ -214,11 +256,18 @@ int main(int argc, char** argv) {
 
 	viewer.setSceneData(group);
 	viewer.getCamera()->setClearColor(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
-	viewer.setUpViewInWindow(50, 50, 1280, 1024);
+	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.run();
 
-	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangocustomrenderer");
+	osgPango::Context::instance().writeCachesToPNGFiles("osgpangocustomrenderer");
+	
+	unsigned long bytes = osgPango::Context::instance().getMemoryUsageInBytes();
+	
+	osg::notify(osg::NOTICE)
+		<< "Used " << (bytes / 1024.0f) / 1024.0f << "MB of Image data internally."
+		<< std::endl
+	;
 
 	return 0;
 }

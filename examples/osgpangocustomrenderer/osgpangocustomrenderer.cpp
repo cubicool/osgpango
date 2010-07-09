@@ -21,21 +21,23 @@ const std::string LOREM_IPSUM(
 
 struct GlyphLayerGradient: public osgPango::GlyphLayer {
 	virtual bool render(
-		osgCairo::Surface*     surface,
-		const osgCairo::Glyph& glyph,
-		unsigned int           width,
-		unsigned int           height
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
 	) {
-		surface->setLineWidth(1.5f);
-		surface->glyphPath(glyph);
+		if(cairo_status(c) || !glyph) return false;
+
+		cairo_set_line_width(c, 1.5f);
+		cairo_glyph_path(c, glyph, 1);
 	
-		osgCairo::LinearPattern lp(width / 2.0f, 0.0f, width / 2.0f, height);
+		cairo_pattern_t* lp = cairo_pattern_create_linear(width / 2.0f, 0.0f, width / 2.0f, height);
 
-		lp.addColorStopRGBA(0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-		lp.addColorStopRGBA(0.8f, 0.0f, 1.0f, 0.0f, 0.0f);
-
-		surface->setSource(&lp);
-		surface->fill();
+		cairo_pattern_add_color_stop_rgba(lp, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+		cairo_pattern_add_color_stop_rgba(lp, 0.8f, 0.0f, 1.0f, 0.0f, 0.0f);
+		cairo_set_source(c, lp);
+		cairo_fill(c);
+		cairo_pattern_destroy(lp);
 
 		return true;
 	}

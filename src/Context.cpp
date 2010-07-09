@@ -52,10 +52,10 @@ Context& Context::instance() {
 }
 
 bool Context::init(
-	unsigned int                 dpi,
-	osgCairo::CairoAntialias     aa,
-	osgCairo::CairoHintStyle     hs,
-	osgCairo::CairoSubpixelOrder spo
+	unsigned int           dpi,
+	cairo_antialias_t      aa,
+	cairo_hint_style_t     hs,
+	cairo_subpixel_order_t spo
 ) {
 	if(_pfMap && _pContext) return false;
 
@@ -215,8 +215,8 @@ void Context::drawLayout(Text* text, PangoLayout* layout, int x, int y) {
 	_text = 0;
 }
 
-void Context::writeCachesToPNGFiles(const std::string& path) {
-	for(GlyphCacheFontMap::iterator i = _gcfMap.begin(); i != _gcfMap.end(); i++) {
+void Context::writeCachesToPNGFiles(const std::string& path) const {
+	for(GlyphCacheFontMap::const_iterator i = _gcfMap.begin(); i != _gcfMap.end(); i++) {
 		PangoFontDescription* d  = pango_font_describe(i->first.first);
 		GlyphCache*           gc = i->second.get();
 
@@ -237,7 +237,14 @@ void Context::writeCachesToPNGFiles(const std::string& path) {
 
 		std::replace(family.begin(), family.end(), ' ', '_');
 
-		os << path << "_" << family << "_" << style << "_" << size << "_";
+		os 
+			<< path
+			<< "_" << gc->getGlyphRenderer()->getName()
+			<< "_" << family
+			<< "_" << style
+			<< "_" << size
+			<< "_"
+		;
 
 		osg::notify(osg::NOTICE) << "Writing font file: " << os.str() << std::endl;
 
@@ -248,6 +255,18 @@ void Context::writeCachesToPNGFiles(const std::string& path) {
 
 		pango_font_description_free(d);
 	}
+}
+
+unsigned long Context::getMemoryUsageInBytes() const {
+	unsigned long bytes = 0;
+
+	for(GlyphCacheFontMap::const_iterator i = _gcfMap.begin(); i != _gcfMap.end(); i++) {
+		GlyphCache* gc = i->second.get();
+
+		bytes += gc->getMemoryUsageInBytes();
+	}
+
+	return bytes;
 }
 
 bool Context::addGlyphRenderer(const std::string& name, GlyphRenderer* renderer) {

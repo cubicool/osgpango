@@ -33,8 +33,8 @@ public:
 	
 	virtual bool renderLayer(
 		unsigned int,
-		osgCairo::Surface*,
-		const osgCairo::Glyph&,
+		cairo_t*,
+		cairo_glyph_t*,
 		unsigned int,
 		unsigned int
 	);
@@ -81,7 +81,7 @@ public:
 	virtual bool updateOrCreateState (int pass, osg::Geode*);
 };
 
-class OSGPANGO_EXPORT GlyphRendererShadowOffset : public GlyphRenderer {
+class OSGPANGO_EXPORT GlyphRendererShadowOffset: public GlyphRenderer {
 public:
 	GlyphRendererShadowOffset(int = 1, int = 1);
 
