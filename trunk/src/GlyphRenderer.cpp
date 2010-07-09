@@ -55,78 +55,14 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 		"#version 120\n"
 		"varying vec4 pangoTexCoord;"
 		"uniform vec3 pangoColor[8];"
-		"uniform sampler2D pangoTex0;"
-		"uniform sampler2D pangoTex1;"
-		"uniform sampler2D pangoTex2;"
+		"uniform sampler2D pangoTexture[8];"
 		"uniform float pangoAlpha;"
 		"vec4 osgPango_GetFragment(vec4, sampler2D[8], vec3[8], float);"
 		"void main() {"
-		"	sampler2D textures[8];"
-		"	textures[0] = pangoTex0;"
-		"	textures[1] = pangoTex1;"
-		"	textures[2] = pangoTex2;"
-		"	gl_FragColor = osgPango_GetFragment(pangoTexCoord, textures, pangoColor, pangoAlpha);"
+		"	gl_FragColor = osgPango_GetFragment(pangoTexCoord, pangoTexture, pangoColor, pangoAlpha);"
 		"}"
 	;
-
-	// XXX: OMG OMG OMG
-	// XXX: OMG OMG OMG
-	// XXX: OMG OMG OMG
-	// XXX: OMG OMG OMG
-	// XXX: OMG OMG OMG
-	// XXX: OMG OMG OMG
-	// XXX: OMG OMG OMG
-	// XXX: OMG OMG OMG
-	// XXX: OMG OMG OMG
-	// JAROMIR! We cannot go down this route (below)! :) That code would be impossible to understand
-	// and maintain. Lets see if we can come up with a way to to have each Renderer compile it's own
-	// GetFragment() GLSL function, and have the default fragment shader's main() call that function:
-	//
-	// 	gl_FragColor = osgPango_GetFragment();
-	//
-	// We will probably need to SLIGHTLY change the API further in order to achieve this.
-	
-	/*
-	std::ostringstream fragment;
-	
-	fragment 
-		<< "varying vec4 pangoTexCoord;" << std::endl 
-		<< "uniform float pangoAlpha;" << std::endl 
-		<< "uniform vec3 pangoColor[" << _layers.size() << "];"  << std::endl
-	;
 		
-	for(unsigned int i = 0; i < _layers.size(); ++i) fragment 
-		<< "uniform sampler2D pangoTex" << i << ";" << std::endl
-	;
-		
-	fragment << "void main() {" << std::endl;
-	
-	for(unsigned int i = 0; i < _layers.size(); ++i) fragment 
-		<< "	float tex" << i << " = texture2D(pangoTex" << i <<", pangoTexCoord.st).a;" << std::endl
-	;
-
-	for(unsigned int i = 0; i < _layers.size(); ++i) {
-		if(i == 0) {
-			fragment 
-				<< "	vec3 color0 = pangoColor[0].rgb * tex0;" << std::endl
-				<< "	float alpha = tex0;" << std::endl
-			;
-		}
-		
-		else {
-			fragment 
-				<< "	vec3 color" << i << "  = pangoColor[" << i << "].rgb * tex" 
-				<< i << " + color" << i - 1 << " * (1.0 - tex" << i << ");" << std::endl
-				<< "	alpha = alpha + tex" << i << ";" << std::endl
-			;
-		}
-	}
-		
-	fragment 
-		<< "	gl_FragColor = vec4(color" << _layers.size() - 1 <<", alpha * pangoAlpha);" << std::endl
-		<<"}" << std::endl
-	;
-	*/
 
 	osg::Program* program = new osg::Program();
 	osg::Shader*  vert    = new osg::Shader(osg::Shader::VERTEX, VERTEX_SHADER);
@@ -142,21 +78,24 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 	osg::StateSet* state = geode->getOrCreateStateSet();
 
 	state->setAttributeAndModes(program);
+	
+	osg::Uniform* pangoTexture = new osg::Uniform(
+		osg::Uniform::INT,
+		"pangoTexture",
+		_layers.size()
+	);
+
+	for(unsigned int i = 0; i < _layers.size(); ++i) 
+		pangoTexture->setElement(i, static_cast<int>(i));;
+
+	state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(1.0f);
+	state->addUniform(pangoTexture);
+	
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);	
 	state->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
 	state->setAttribute(new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false));
-
-	state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(1.0f);
-
-	for(unsigned int i = 0; i < _layers.size(); ++i) {
-		std::ostringstream str;
-		
-		str << "pangoTex" << i;
-		
-		state->getOrCreateUniform(str.str(), osg::Uniform::INT)->set(static_cast<int>(i));
-	}
 	
-	return true;
+return true;
 }
 
 bool GlyphRenderer::updateOrCreateState(
@@ -211,6 +150,7 @@ bool GlyphRendererDefault::updateOrCreateState(int pass, osg::Geode* geode) {
 
 	if(!program) return false;
 
+	// TODO: move this to pango shader generator
 	const char* GET_FRAGMENT =
 		"#version 120\n"
 		"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
@@ -241,6 +181,7 @@ bool GlyphRendererOutline::updateOrCreateState(int pass, osg::Geode* geode) {
 
 	if(!program) return false;
 
+	// TODO: move this to pango shader generator
 	const char* GET_FRAGMENT =
 		"#version 120\n"
 		"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
@@ -280,7 +221,8 @@ bool GlyphRendererShadowOffset::updateOrCreateState(int pass, osg::Geode* geode)
 	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
 
 	if(!program) return false;
-
+	
+	// TODO: move this to pango shader generator
 	const char* GET_FRAGMENT =
 		"#version 120\n"
 		"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
@@ -313,7 +255,8 @@ bool GlyphRendererShadowGaussian::updateOrCreateState(int pass, osg::Geode* geod
 	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
 
 	if(!program) return false;
-
+	
+	// TODO: move this to pango shader generator
 	const char* GET_FRAGMENT =
 		"#version 120\n"
 		"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
