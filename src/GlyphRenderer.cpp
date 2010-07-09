@@ -11,10 +11,8 @@
 #include <osgPango/GlyphRenderer>
 
 namespace osgPango {
-GlyphRendererSinglePass::GlyphRendererSinglePass() {
-}
 
-osg::Vec4 GlyphRendererSinglePass::getExtraGlyphExtents() const {
+osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {
 	if(!_layers.size()) return osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		
 	osg::Vec4 result = _layers[0]->getExtraGlyphExtents();
@@ -31,7 +29,7 @@ osg::Vec4 GlyphRendererSinglePass::getExtraGlyphExtents() const {
 	return result;
 }
 	
-bool GlyphRendererSinglePass::renderLayer(
+bool GlyphRenderer::renderLayer(
 	unsigned int           layer,
 	osgCairo::Surface*     surface,
 	const osgCairo::Glyph& glyph,
@@ -43,7 +41,7 @@ bool GlyphRendererSinglePass::renderLayer(
 	else return false;
 }
 	
-bool GlyphRendererSinglePass::updateOrCreateState(int pass, osg::Geode* geode) {
+bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 	static const char* VERTEX_SHADER =
 		"#version 120\n"
 		"varying vec4 pangoTexCoord;"
@@ -159,7 +157,7 @@ bool GlyphRendererSinglePass::updateOrCreateState(int pass, osg::Geode* geode) {
 	return true;
 }
 
-bool GlyphRendererSinglePass::updateOrCreateState(
+bool GlyphRenderer::updateOrCreateState(
 	osg::Geometry*            geometry,
 	const GlyphGeometryState& ggs
 ) {
@@ -187,15 +185,15 @@ bool GlyphRendererSinglePass::updateOrCreateState(
 	return true;
 }
 	
-void GlyphRendererSinglePass::addLayer(GlyphLayer *layer) {
+void GlyphRenderer::addLayer(GlyphLayer *layer) {
 	_layers.push_back(layer);
 }
 
-void GlyphRendererSinglePass::removeLayer(unsigned int index) {
+void GlyphRenderer::removeLayer(unsigned int index) {
 	if(index < _layers.size()) _layers.erase(_layers.begin() + index);
 }
 
-void GlyphRendererSinglePass::replaceLayer(unsigned int index, GlyphLayer* layer) {
+void GlyphRenderer::replaceLayer(unsigned int index, GlyphLayer* layer) {
 	if(index < _layers.size()) _layers[index] = layer;
 }
 
@@ -204,7 +202,7 @@ GlyphRendererDefault::GlyphRendererDefault() {
 }
 
 bool GlyphRendererDefault::updateOrCreateState(int pass, osg::Geode* geode) {
-	if(!GlyphRendererSinglePass::updateOrCreateState(pass, geode)) return false;
+	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
 	osg::StateSet* state   = geode->getOrCreateStateSet();
 	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
@@ -251,7 +249,7 @@ GlyphRendererShadowGaussian::GlyphRendererShadowGaussian(unsigned int radius) {
 }
 
 bool GlyphRendererShadowGaussian::updateOrCreateState(int pass, osg::Geode* geode) {
-	if(!GlyphRendererSinglePass::updateOrCreateState(pass, geode)) return false;
+	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
 	osg::StateSet* state   = geode->getOrCreateStateSet();
 	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
