@@ -307,78 +307,11 @@ bool Text::_finalizeGeometry(osg::Group *group) {
 	return true;
 }
 
-TextTransform::TextTransform():
-_alignment (POS_ALIGN_TOP_RIGHT),
-_position  (osg::Vec3(0.0f, 0.0f, 0.0f)) {
+
+TextTransform::TextTransform() {
 }
 
-bool TextTransform::finalize() {
-	if(!_finalizeGeometry(this)) return false;
-
-	_calculatePosition();
-
-	return true;
-}
-
-void TextTransform::setPosition(const osg::Vec3& position, bool recalculate) {
-	_position = position;
-
-	if(recalculate) _calculatePosition();
-}
-
-void TextTransform::setAlignment(PositionAlignment alignment, bool recalculate) {
-	_alignment = alignment;
-
-	if(recalculate) _calculatePosition();
-}
-
-void TextTransform::_calculatePosition() {
-	osg::Vec3 origin(getOriginTranslated(), 0.0f);
-	osg::Vec3 size(_size, 0.0f);
-
-	if(_alignment == POS_ALIGN_TOP) 
-		origin.x() -= osg::round(size.x() / 2.0f)
-	;
-	
-	else if(_alignment == POS_ALIGN_TOP_LEFT)
-		origin.x() -= osg::round(size.x())
-	;
-	
-	else if(_alignment == POS_ALIGN_LEFT) origin -= osg::Vec3(
-		osg::round(size.x()),
-		osg::round(size.y() / 2.0f),
-		0.0f
-	);
-	
-	else if(_alignment == POS_ALIGN_BOTTOM_LEFT)
-		origin -= size
-	;
-	
-	else if(_alignment == POS_ALIGN_BOTTOM) origin -= osg::Vec3(
-		osg::round(size.x() / 2.0f),
-		size.y(),
-		0.0f
-	);
-	
-	else if(_alignment == POS_ALIGN_BOTTOM_RIGHT)
-		origin.y() -= size.y()
-	;
-	
-	else if(_alignment == POS_ALIGN_RIGHT)
-		origin.y() -= osg::round(size.y() / 2.0f)
-	;
-	
-	else if(_alignment == POS_ALIGN_CENTER) origin += osg::Vec3(
-		osg::round(-size.x() / 2.0f),
-		osg::round(-size.y() / 2.0f),
-		0.0f
-	);
-
-	setMatrix(osg::Matrix::translate(origin + _position));
-}
-
-bool TextAutoTransform::finalize() {
-	return _finalizeGeometry(this);
+TextAutoTransform:: TextAutoTransform() {
 }
 
 }
