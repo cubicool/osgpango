@@ -100,7 +100,7 @@ public:
 				0,
 				osgPango::TextOptions("outline")
 			);
-			oldTransform->setAlignment(pal.first, false);
+			oldTransform->setPositionAlignment(pal.first, false);
 			oldTransform->finalize();
 		}
 
@@ -152,8 +152,8 @@ int main(int ac, char **av) {
 	
 	osg::Vec3 pos(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f);
 
-	textTransform->setPosition(pos);
-	textTransform->setAlignment(osgPango::TextTransform::POS_ALIGN_CENTER);
+	textTransform->setMatrix(osg::Matrixd::translate(pos));
+	textTransform->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER);
 	textTransform->addText(
 		FONT "POS_ALIGN_CENTER</span>",
 		0,
