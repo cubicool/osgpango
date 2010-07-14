@@ -4,6 +4,13 @@
 #ifndef OSGPANGO_UTIL
 #define OSGPANGO_UTIL
 
-// Stuff! But, where is it? :)
+#include <string>
+#include <osgPango/Export>
+
+namespace osgPango {
+
+OSGPANGO_EXPORT std::string getFilePath(const std::string&);
+
+}
 
 #endif

@@ -1,0 +1,22 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_SHADER_GENERATOR
+#define OSGPANGO_SHADER_GENERATOR
+
+#include <string>
+#include <osgPango/Export>
+
+namespace osgPango {
+namespace shadergen {
+
+std::string create1xLayerShader (unsigned int = 0);
+std::string create2xLayerShader (unsigned int = 0, unsigned int = 1);
+
+const char* getDefaultVertexShader();
+const char* getDefaultFragmentShader();
+
+}
+}
+
+#endif

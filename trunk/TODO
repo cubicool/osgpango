@@ -4,5 +4,29 @@
 - Add a Pango Markup "pre-parser" that will give us additional 
   inputs for user-defined color values.
 
-- Extend GlyphRenderer so that each inherited class can simply add
-  a new GLSL function to compile.
+- Add GlyphCache loading from images/metadata.
+
+- Add the ability to dump the caches in one large PNG, instead of a
+  bunch of pngs.
+
+- Create a generic, layer-combining shader, so that we can avoid
+  having to create custom shaders on the fly and can instead
+  just set various Uniforms to indicate the paramaters.
+  PSUEDOCODE:
+
+  	uniform pangoNumLayers;
+	uniform pangoIndices[8];
+
+	vec3 osgPango_GetFragment(...) {
+		for(int i=0; i < pangoNumLayers; i++) {
+			float alpha = samper2D(pangoTextures[pangoIndices[i]], pangoTexCoord.st).a;
+			vec3 color = pangoColors[pangoIndices[i]];
+
+			combine_with_previous_layer(...);
+		}
+	}
+
+  The problem with this approach is that it seems (unconfirmed, but I've
+  seen it personally) that GLSL can't use array indices that aren't
+  resolvable at compile time. :(
+

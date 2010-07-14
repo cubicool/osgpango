@@ -11,6 +11,8 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgPango/Context>
+#include <osgPango/ShaderGenerator>
+#include <osgPango/ShaderManager>
 
 struct GlyphLayerLines: public osgPango::GlyphLayer {
 	virtual bool render(
@@ -71,6 +73,19 @@ struct GlyphRendererComplex: public osgPango::GlyphRenderer {
 		if(useCustomLayer) addLayer(new GlyphLayerLines());
 		
 		else addLayer(new osgPango::GlyphLayer());
+
+		osgPango::ShaderManager::instance().addShaderSource(
+			"my-shader-pass-2",
+			osg::Shader::FRAGMENT,
+			osgPango::shadergen::create2xLayerShader(1, 2)
+
+		);
+		
+		osgPango::ShaderManager::instance().addShaderSource(
+			"my-shader-pass-3",
+			osg::Shader::FRAGMENT,
+			osgPango::shadergen::create1xLayerShader(2)
+		);
 	}
 
 	virtual unsigned int getNumPasses() const {
@@ -80,115 +95,39 @@ struct GlyphRendererComplex: public osgPango::GlyphRenderer {
 	bool updateOrCreateState(int pass, osg::Geode* geode) {
 		if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
-		osg::StateSet* state   = geode->getOrCreateStateSet();
-		osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
+		osg::StateSet* state = geode->getOrCreateStateSet();
+		
+		osg::Program* program = dynamic_cast<osg::Program*>(
+			state->getAttribute(osg::StateAttribute::PROGRAM)
+		);
 
 		if(!program) return false;
 		
-		switch(pass) {
-			// blur shadow
-			case 0: {
-				const char* GET_FRAGMENT =
-					"#version 120\n"
-					"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
-					"	float tex0   = texture2D(textures[0], coord.st).a;"
-					"	vec3 color0  = vec3(0.0, 0.0, 0.0) * tex0;"
-					"	float alpha0 = tex0;"
-					"	return vec4(color0, alpha0 * alpha);"
-					"}"
-				;
+		osgPango::ShaderManager& sm = osgPango::ShaderManager::instance();
 
-				osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
+		osg::Shader* frag = 0;
+	
+		// Blurred shadow.
+		if(pass == 0) frag = sm.getShader("osgPango-lib-1xLayer");
+		
+		// Outline + base glyph.
+		else if(pass == 1) frag = sm.getShader("my-shader-pass-2");
 
-				program->addShader(frag);
-			} 
+		// Write to depth only with base.
+		else if(pass == 2) {
+			frag = sm.getShader("my-shader-pass-3");
 			
-			break;
-			
-			// outline + base
-			case 1: {
-				const char* GET_FRAGMENT =
-					"#version 120\n"
-					"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
-					"	float tex0   = texture2D(textures[1], coord.st).a;"
-					"	float tex1   = texture2D(textures[2], coord.st).a;"
-					"	vec3 color0  = vec3(1.0, 1.0, 1.0) * tex0;"
-					"	vec3 color1  = vec3(0.0, 0.4, 1.0) * tex1 + color0 * (1.0 - tex1);"
-					"	float alpha0 = tex0;"
-					"	float alpha1 = tex0 + tex1;"
-					"	return vec4(color1, alpha1 * alpha);"
-					"}"
-				;
-				
-				osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
+			state->removeAttribute(osg::StateAttribute::DEPTH);
+			state->setAttribute(new osg::ColorMask(false, false, false, false));
+			state->setMode(GL_BLEND, osg::StateAttribute::OFF);	
+			state->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+		} 
 
-				program->addShader(frag);
-			} 
-			
-			break;
-
-			// write to depth only with base
-			case 2: {
-				const char* GET_FRAGMENT =
-					"#version 120\n"
-					"vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {"
-					"	float tex0   = texture2D(textures[2], coord.st).a;"
-					"	vec3 color0  = vec3(0.0, 0.0, 0.0) * tex0;"
-					"	float alpha0 = tex0;"
-					"	return vec4(color0, alpha0 * alpha);"
-					"}"
-				;
-
-				osg::Shader* frag = new osg::Shader(osg::Shader::FRAGMENT, GET_FRAGMENT);
-
-				program->addShader(frag);
-				
-				state->removeAttribute(osg::StateAttribute::DEPTH);
-				state->setAttribute(new osg::ColorMask(false, false, false, false));
-				state->setMode(GL_BLEND, osg::StateAttribute::OFF);	
-				state->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
-			} 
-			
-			break;
-
-		}
+		if(frag) program->addShader(frag);
 
 		return true;
 	}
 };
-
-osg::Geometry* createGeometry(osg::Image* image) {
-	static osg::Vec3 pos(50.0f, 50.0f, -0.8f);
-
-	osg::Texture2D* texture = new osg::Texture2D();
-	osg::Geometry*  geom    = osg::createTexturedQuadGeometry(
-		pos,
-		osg::Vec3(image->s(), 0.0f, 0.0f),
-		osg::Vec3(0.0f, image->t(), 0.0f),
-		0.0f,
-		0.0f, 
-		1.0f,
-		1.0f
-	);
-
-	texture->setImage(image);
-	texture->setDataVariance(osg::Object::DYNAMIC);
-
-	osg::StateSet* state = geom->getOrCreateStateSet();
-
-	state->setTextureAttributeAndModes(
-		0,
-		texture,
-		osg::StateAttribute::ON
-	);
-
-	state->setMode(GL_BLEND, osg::StateAttribute::ON);
-	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-
-	pos += osg::Vec3(image->s() + 50.0f, 0.0f, 0.1f);
-
-	return geom;
-}
 
 osg::Camera* createOrthoCamera(float width, float height) {
 	osg::Camera* camera = new osg::Camera();
@@ -220,7 +159,7 @@ int main(int argc, char** argv) {
 	osgPango::TextTransform* t = new osgPango::TextTransform();
 
 	t->addText(
-		"<span font='Verdana Bold 40'>This is a cow.</span>",
+		"<span font='Verdana Bold 40' fgcolor='#000' bgcolor='#fff'>This is a cow.</span>",
 		0,
 		0,
 		osgPango::TextOptions("complex")
@@ -260,7 +199,7 @@ int main(int argc, char** argv) {
 
 	viewer.run();
 
-	osgPango::Context::instance().writeCachesToPNGFiles("osgpangocustomrenderer");
+	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangocomplexrenderer");
 	
 	unsigned long bytes = osgPango::Context::instance().getMemoryUsageInBytes();
 	
