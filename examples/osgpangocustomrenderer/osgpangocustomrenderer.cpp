@@ -43,52 +43,11 @@ struct GlyphLayerGradient: public osgPango::GlyphLayer {
 	}
 };
 
-struct GlyphRendererGradient: public osgPango::GlyphRenderer{
+struct GlyphRendererGradient: public osgPango::GlyphRendererDefault {
 	GlyphRendererGradient() {
-		addLayer(new GlyphLayerGradient());
+		replaceLayer(0, new GlyphLayerGradient());
 	}
 };
-
-osg::Geometry* createGeometry(osg::Image* image) {
-	static osg::Vec3 pos(50.0f, 50.0f, -0.8f);
-
-	osg::Texture2D* texture = new osg::Texture2D();
-	osg::Geometry*  geom    = osg::createTexturedQuadGeometry(
-		pos,
-		osg::Vec3(image->s(), 0.0f, 0.0f),
-		osg::Vec3(0.0f, image->t(), 0.0f),
-		0.0f,
-		0.0f, 
-		1.0f,
-		1.0f
-	);
-
-	texture->setImage(image);
-	texture->setDataVariance(osg::Object::DYNAMIC);
-
-	osg::StateSet* state = geom->getOrCreateStateSet();
-
-	state->setTextureAttributeAndModes(
-		0,
-		texture,
-		osg::StateAttribute::ON
-	);
-
-	state->setMode(GL_BLEND, osg::StateAttribute::ON);
-	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-
-	pos += osg::Vec3(image->s() + 50.0f, 0.0f, 0.1f);
-
-	return geom;
-}
-
-osg::Matrix createInvertedYOrthoProjectionMatrix(float width, float height) {
-	osg::Matrix m = osg::Matrix::ortho2D(0.0f, width, 0.0f, height);
-	osg::Matrix s = osg::Matrix::scale(1.0f, -1.0f, 1.0f);
-	osg::Matrix t = osg::Matrix::translate(0.0f, -height, 0.0f);
-
-	return t * s * m;
-}
 
 osg::Camera* createOrthoCamera(float width, float height) {
 	osg::Camera* camera = new osg::Camera();
@@ -103,14 +62,6 @@ osg::Camera* createOrthoCamera(float width, float height) {
 	camera->setViewMatrix(osg::Matrix::identity());
 	camera->setClearMask(GL_DEPTH_BUFFER_BIT);
 	camera->setRenderOrder(osg::Camera::POST_RENDER);
-
-	return camera;
-}
-
-osg::Camera* createInvertedYOrthoCamera(float width, float height) {
-	osg::Camera* camera = createOrthoCamera(width, height);
-
-	camera->setProjectionMatrix(createInvertedYOrthoProjectionMatrix(width, height));
 
 	return camera;
 }

@@ -11,8 +11,6 @@
 
 namespace osgPango {
 
-#define MSG osg::notify(osg::WARN)
-
 //! A list of string names of available fonts recognized by Pango; used
 //! in Context::getFontList().
 typedef std::list<std::string> FontList;
