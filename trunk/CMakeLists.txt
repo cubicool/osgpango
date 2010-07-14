@@ -97,6 +97,8 @@ TARGET_LINK_LIBRARIES(osgPango
 	optimized osgText
 	debug     osgViewer${CMAKE_DEBUG_POSTFIX}
 	optimized osgViewer
+	debug     osgDB${CMAKE_DEBUG_POSTFIX}
+	optimized osgDB
 	debug     osgCairo${CMAKE_DEBUG_POSTFIX}
 	optimized osgCairo
         debug     cairo
