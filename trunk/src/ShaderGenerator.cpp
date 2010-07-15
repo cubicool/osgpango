@@ -46,6 +46,24 @@ std::string create1xLayerShader(unsigned int layer) {
 	return shaderSource.str();
 }
 
+// TODO: Refine this, make it iterate over a uniform.
+std::string create2xLayerShader_new(unsigned int layer0, unsigned int layer1) {
+	std::ostringstream shaderSource;
+
+	shaderSource
+		<< "#version 120\n"
+		<< GET_FRAGMENT_PROTOTYPE << "{"
+		<< "float alpha0 = texture2D(textures[" << layer0 << "], coord.st).a;"
+		<< "float alpha1 = texture2D(textures[" << layer1 << "], coord.st).a;"
+		<< "vec3 color0 = colors[" << layer0 << "];"
+		<< "vec3 color1 = colors[" << layer1 << "];"
+		<< "return mix(vec4(color0, alpha0), vec4(color1, alpha1), alpha1 * alpha);"
+		<< "}"
+	;
+
+	return shaderSource.str();
+}
+
 std::string create2xLayerShader(unsigned int layer0, unsigned int layer1) {
 	std::ostringstream shaderSource;
 
