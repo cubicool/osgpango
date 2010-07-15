@@ -30,14 +30,3 @@
   seen it personally) that GLSL can't use array indices that aren't
   resolvable at compile time. :(
 
-- Investigate expanding the following code to address the PREVIOUS TODO item:
-
-vec4 osgPango_GetFragment(vec4 coord, sampler2D textures[8], vec3 colors[8], float alpha) {
-	float alpha0 = texture2D(textures[1], coord.st).a;
-	float alpha1 = texture2D(textures[0], coord.st).a;
-	
-	vec3 color0 = colors[1];
-	vec3 color1 = colors[0];
-
-	return mix(vec4(color0, alpha0), vec4(color1, alpha1), alpha1 * alpha);
-}
