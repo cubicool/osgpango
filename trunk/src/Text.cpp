@@ -34,7 +34,8 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 	return true;
 }
 
-Text::Text() {
+Text::Text(ColorMode cm):
+_colorMode(cm) {
 	clear();
 }
 
@@ -90,8 +91,22 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	// osg::Vec4 extents = gc->getGlyphRenderer()->getExtraGlyphExtents();
 	osg::Vec4 extents = osg::Vec4();
 
-	const ColorPair& color = Context::instance().getColorPair();
+	ColorPair color = Context::instance().getColorPair();
 	
+	if(_colorMode == COLOR_MODE_PALETTE_ONLY) {
+		if(_palette.size() >= 2) {
+			color.first.set(_palette[0]);
+			color.second.set(_palette[1]);
+		}
+
+		else osg::notify(osg::WARN)
+			<< "You have set the ColorMode to COLOR_MODE_PALETTE_ONLY on a Text object but "
+			<< "did not actually provide the ColorPalette before calling addText(); this will "
+			<< "cause strange effects and create extraneous StateSet objects, but is not fatal."
+			<< std::endl
+		;
+	}
+
 	for(int i = 0; i < glyphs->num_glyphs; i++) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
 
@@ -198,6 +213,10 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 	_init = true;
 }
 
+void Text::setColorPalette(const ColorPalette& cp) {
+	_palette = cp;
+}
+
 osg::Vec2 Text::getOriginBaseline() const {
 	return osg::Vec2(_origin.x(), _baseline);
 }
@@ -206,8 +225,10 @@ osg::Vec2 Text::getOriginTranslated() const {
 	return osg::Vec2(_origin.x(), _size.y() + _origin.y());
 }
 
-bool Text::_finalizeGeometry(osg::Group *group) {
-	std::map<GlyphRenderer*, GeometryList> rendererGeometry;
+bool Text::_finalizeGeometry(osg::Group* group) {
+	typedef std::map<GlyphRenderer*, GeometryList> RendererGeometry;
+
+	RendererGeometry rg;
 
 	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
 		GlyphGeometryIndex& ggi = g->second;
@@ -224,23 +245,27 @@ bool Text::_finalizeGeometry(osg::Group *group) {
 
 			if(!i->second->finalize()) continue;
 
-			if(rendererGeometry.find(gc->getGlyphRenderer()) == rendererGeometry.end())
-				rendererGeometry.insert(std::make_pair(gc->getGlyphRenderer(), GeometryList()));
+			if(rg.find(gc->getGlyphRenderer()) == rg.end())
+				rg.insert(std::make_pair(gc->getGlyphRenderer(), GeometryList()))
+			;
 
-			rendererGeometry[gc->getGlyphRenderer()].push_back(std::make_pair(
+			rg[gc->getGlyphRenderer()].push_back(std::make_pair(
 				i->second, 
-				GlyphGeometryState())
-			);
+				GlyphGeometryState()
+			));
 			
-			GlyphGeometryState& ggs = rendererGeometry[gc->getGlyphRenderer()].back().second;
-			
+			GlyphGeometryState& ggs = rg[gc->getGlyphRenderer()].back().second;
+
+			if(_palette.size() < 2) _palette.resize(2);
+
+			if(_colorMode == COLOR_MODE_MARKUP_OVERWRITE) {
+				_palette[0] = color.first;
+				_palette[1] = color.second;
+			}
+
 			for(unsigned int layer = 0; layer < gc->getNumLayers(); ++layer) {
 				ggs.textures.push_back(gc->getTexture(i->first, layer));
-				
-				// TODO: HACK!
-				if(!layer) ggs.colors.push_back(color.first);
-				
-				else ggs.colors.push_back(color.second);
+				ggs.colors.push_back(_palette[layer]);
 			}
 		}
 	}
@@ -249,11 +274,7 @@ bool Text::_finalizeGeometry(osg::Group *group) {
 
 	// First create/update geometry states which are common for each pass. During iteration update maximum
 	// number of passes.
-	for(
-		std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin();
-		ct != rendererGeometry.end(); 
-		++ct
-	) {
+	for(RendererGeometry::const_iterator ct = rg.begin(); ct != rg.end(); ++ct) {
 		GlyphRenderer*      renderer = ct->first;
 		const GeometryList& gl       = ct->second;
 
@@ -274,11 +295,7 @@ bool Text::_finalizeGeometry(osg::Group *group) {
 	}
 
 	// Assign renderers to passes.
-	for(
-		std::map<GlyphRenderer*, GeometryList>::const_iterator ct = rendererGeometry.begin(); 
-		ct != rendererGeometry.end(); 
-		++ct
-	) {
+	for(RendererGeometry::const_iterator ct = rg.begin(); ct != rg.end(); ++ct) {
 		GlyphRenderer*      renderer  = ct->first;
 		const GeometryList& gl        = ct->second;
 
@@ -294,7 +311,7 @@ bool Text::_finalizeGeometry(osg::Group *group) {
 			if(attachTo) {
 				attachTo->addChild(pass);
 
-				// Attach geometries
+				// Attach geometries.
 				for(GeometryList::const_iterator glit = gl.begin(); glit != gl.end(); glit++) {
 					pass->addDrawable(glit->first);
 				}
@@ -305,13 +322,6 @@ bool Text::_finalizeGeometry(osg::Group *group) {
 	_finalized = true;
 	
 	return true;
-}
-
-
-TextTransform::TextTransform() {
-}
-
-TextAutoTransform:: TextAutoTransform() {
 }
 
 }
