@@ -28,48 +28,48 @@ public:
 		_elapsed = _time->time_s();
 
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_BOTTOM_LEFT, 
-			"POS_ALIGN_BOTTOM_LEFT"
+			osgPango::TextTransform::POS_ALIGN_LEFT_BOTTOM, 
+			"POS_ALIGN_LEFT_BOTTOM"
 		));
 
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_BOTTOM,
-			"POS_ALIGN_BOTTOM"
+			osgPango::TextTransform::POS_ALIGN_CENTER_BOTTOM,
+			"POS_ALIGN_CENTER_BOTTOM"
 		));
 
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_BOTTOM_RIGHT,
-			"POS_ALIGN_BOTTOM_RIGHT"
+			osgPango::TextTransform::POS_ALIGN_RIGHT_BOTTOM,
+			"POS_ALIGN_RIGHT_BOTTOM"
 		));
 
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_RIGHT,
-			"POS_ALIGN_RIGHT"
+			osgPango::TextTransform::POS_ALIGN_RIGHT_CENTER,
+			"POS_ALIGN_RIGHT_CENTER"
 		));
 
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_TOP_RIGHT,
-			"POS_ALIGN_TOP_RIGHT"
+			osgPango::TextTransform::POS_ALIGN_RIGHT_TOP,
+			"POS_ALIGN_RIGHT_TOP"
 		));
 		
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_TOP,
-			"POS_ALIGN_TOP"
+			osgPango::TextTransform::POS_ALIGN_CENTER_TOP,
+			"POS_ALIGN_CENTER_TOP"
 		));
 
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_TOP_LEFT,
-			"POS_ALIGN_TOP_LEFT"
+			osgPango::TextTransform::POS_ALIGN_LEFT_TOP,
+			"POS_ALIGN_LEFT_TOP"
 		));
 
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_LEFT,
-			"POS_ALIGN_LEFT"
+			osgPango::TextTransform::POS_ALIGN_LEFT_CENTER,
+			"POS_ALIGN_LEFT_CENTER"
 		));
 
 		_list.push_back(PositionAlignmentPair(
-			osgPango::TextTransform::POS_ALIGN_CENTER,
-			"POS_ALIGN_CENTER"
+			osgPango::TextTransform::POS_ALIGN_CENTER_CENTER,
+			"POS_ALIGN_CENTER_CENTER"
 		));
 	}
 
@@ -153,9 +153,9 @@ int main(int ac, char **av) {
 	osg::Vec3 pos(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f);
 
 	textTransform->setMatrix(osg::Matrixd::translate(pos));
-	textTransform->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER);
+	textTransform->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER);
 	textTransform->addText(
-		FONT "POS_ALIGN_CENTER</span>",
+		FONT "POS_ALIGN_CENTER_CENTER</span>",
 		0,
 		0,
 		osgPango::TextOptions("outline")

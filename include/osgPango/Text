@@ -159,6 +159,7 @@ public:
 
 protected:
 	bool _finalizeGeometry(osg::Group *);
+	void _applyTransform(const osg::Matrixd &);
 
 	GlyphGeometryMap _ggMap;
 	osg::Vec2        _size;
@@ -172,6 +173,7 @@ protected:
 	std::string      _glyphRenderer;
 	ColorMode        _colorMode;
 	ColorPalette     _palette;
+	osg::Matrixd     _lastTransform;
 };
 
 //! This is a wrapper template class that makes deriving from Text much easier.
@@ -186,15 +188,15 @@ public:
 	//! text is arranged RELATIVE TO IT'S POSITION. They're pretty much
 	//! self-explanatory so I won't document each one individually.
 	enum PositionAlignment {
-		POS_ALIGN_BOTTOM_LEFT,
-		POS_ALIGN_BOTTOM,
-		POS_ALIGN_BOTTOM_RIGHT,
-		POS_ALIGN_RIGHT,
-		POS_ALIGN_TOP_RIGHT,
-		POS_ALIGN_TOP,
-		POS_ALIGN_TOP_LEFT,
-		POS_ALIGN_LEFT,
-		POS_ALIGN_CENTER
+		POS_ALIGN_LEFT_TOP,
+		POS_ALIGN_LEFT_BOTTOM,
+		POS_ALIGN_LEFT_CENTER,
+		POS_ALIGN_RIGHT_TOP,
+		POS_ALIGN_RIGHT_CENTER,
+		POS_ALIGN_RIGHT_BOTTOM,
+		POS_ALIGN_CENTER_TOP,
+		POS_ALIGN_CENTER_CENTER,
+		POS_ALIGN_CENTER_BOTTOM,
 	};
 
 	enum AxisAlignment { 
@@ -208,11 +210,8 @@ public:
 	
 	TextInterface(ColorMode cm = COLOR_MODE_MARKUP_OVERWRITE):
 	Text               (cm),
-	_positionAlignment (POS_ALIGN_TOP_RIGHT),
+	_positionAlignment (POS_ALIGN_LEFT_BOTTOM),
 	_axisAlignment     (AXIS_ALIGN_XY_PLANE) {
-		_alignmentTransform = new osg::MatrixTransform();
-		
-		T::addChild(_alignmentTransform);
 	}
 
 	//! Necessary override required by Text; it's purpose is to commit
@@ -222,7 +221,7 @@ public:
 	//! if you only adjust the position or alignment; as long as the text
 	//! doesn't change, there is no need to call finalize().
 	virtual bool finalize() {
-		if(!_finalizeGeometry(_alignmentTransform)) return false;
+		if(!_finalizeGeometry(this)) return false;
 	
 		_calculatePosition();
 		return true;
@@ -231,7 +230,7 @@ public:
 	virtual void clear() {
 		Text::clear();
 		
-		_alignmentTransform->removeChild(0, _alignmentTransform->getNumChildren());
+		T::removeChild(0, T::getNumChildren());
 	}
 
 	//! Returns the PositionAlignment enum currently in use.
@@ -245,7 +244,7 @@ public:
 	
 	//! Sets the PositionAlignment enum to use for modifying the position of
 	//! the Text, modifying it's absolute placement. The default PositionAlignment
-	//! of POS_ALIGN_BOTTOM_LEFT however is a no-op, since it corresponds to how
+	//! of POS_ALIGN_LEFT_BOTTOM however is a no-op, since it corresponds to how
 	//! Pango arranges the layout by default. The recalculate argument is the
 	//! same as for setPosition().
 	void setPositionAlignment(PositionAlignment alignment, bool recalculate=true) {
@@ -266,39 +265,39 @@ protected:
 		osg::Vec3 size(_size, 0.0f);
 		osg::Matrixd axisMatrix(osg::Matrix::identity());
 
-		if(_positionAlignment == POS_ALIGN_TOP) 
+		if(_positionAlignment == POS_ALIGN_CENTER_BOTTOM) 
 			origin.x() -= osg::round(size.x() / 2.0f)
 		;
 
-		else if(_positionAlignment == POS_ALIGN_TOP_LEFT)
+		else if(_positionAlignment == POS_ALIGN_RIGHT_BOTTOM)
 			origin.x() -= osg::round(size.x())
 		;
 
-		else if(_positionAlignment == POS_ALIGN_LEFT) origin -= osg::Vec3(
+		else if(_positionAlignment == POS_ALIGN_RIGHT_CENTER) origin -= osg::Vec3(
 			osg::round(size.x()),
 			osg::round(size.y() / 2.0f),
 			0.0f
 		);
 
-		else if(_positionAlignment == POS_ALIGN_BOTTOM_LEFT)
+		else if(_positionAlignment == POS_ALIGN_RIGHT_TOP)
 			origin -= size
 			;
 
-		else if(_positionAlignment == POS_ALIGN_BOTTOM) origin -= osg::Vec3(
+		else if(_positionAlignment == POS_ALIGN_CENTER_TOP) origin -= osg::Vec3(
 			osg::round(size.x() / 2.0f),
 			size.y(),
 			0.0f
 		);
 
-		else if(_positionAlignment == POS_ALIGN_BOTTOM_RIGHT)
+		else if(_positionAlignment == POS_ALIGN_LEFT_TOP)
 			origin.y() -= size.y()
 		;
 
-		else if(_positionAlignment == POS_ALIGN_RIGHT)
+		else if(_positionAlignment == POS_ALIGN_LEFT_CENTER)
 			origin.y() -= osg::round(size.y() / 2.0f)
 		;
 
-		else if(_positionAlignment == POS_ALIGN_CENTER) origin += osg::Vec3(
+		else if(_positionAlignment == POS_ALIGN_CENTER_CENTER) origin += osg::Vec3(
 			osg::round(-size.x() / 2.0f),
 			osg::round(-size.y() / 2.0f),
 			0.0f
@@ -306,35 +305,45 @@ protected:
 				
 				
 		if(_axisAlignment == AXIS_ALIGN_XZ_PLANE) axisMatrix = osg::Matrixd(
-			osg::Quat( osg::inDegrees(90.0f), osg::Vec3(1.0f, 0.0f, 0.0f))
+			 1.0,  0.0,  0.0,  0.0,
+			 0.0,  0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0,  0.0,
+			 0.0,  0.0,  0.0,  1.0
 		);
 			
 		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XZ_PLANE) axisMatrix = osg::Matrixd(
-			osg::Quat(osg::inDegrees(180.0f), osg::Vec3(0.0f, 1.0f, 0.0f)) * 
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(1.0f, 0.0f, 0.0f))
+			-1.0,  0.0,  0.0,  0.0,
+			 0.0,  0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0,  0.0,
+			 0.0,  0.0,  0.0,  1.0
 		); 
 
 		else if(_axisAlignment == AXIS_ALIGN_YZ_PLANE) axisMatrix = osg::Matrixd(
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(1.0f, 0.0f, 0.0f)) * 
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(0.0f, 0.0f, 1.0f))
+			 0.0,  1.0,  0.0, 0.0,
+			 0.0,  0.0,  1.0, 0.0,
+			 1.0,  0.0,  0.0, 0.0,
+			 0.0,  0.0,  0.0, 1.0
 		);
 			 
 		else if(_axisAlignment == AXIS_ALIGN_REVERSED_YZ_PLANE) axisMatrix = osg::Matrixd(
-			osg::Quat(osg::inDegrees(180.0f), osg::Vec3(0.0f, 1.0f, 0.0f)) * 
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(1.0f, 0.0f, 0.0f)) * 
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(0.0f, 0.0f, 1.0f))
+			 0.0, -1.0,  0.0, 0.0,
+			 0.0,  0.0,  1.0, 0.0,
+			 1.0,  0.0,  0.0, 0.0,
+			 0.0,  0.0,  0.0, 1.0
 		); 
 
 		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XY_PLANE) axisMatrix = osg::Matrixd(
-			osg::Quat(osg::inDegrees(180.0f), osg::Vec3(0.0f,1.0f,0.0f))
+			-1.0,  0.0,  0.0, 0.0,
+			 0.0,  1.0,  0.0, 0.0,
+			 0.0,  0.0,  1.0, 0.0,
+			 0.0,  0.0,  0.0, 1.0
 		);
 
-		_alignmentTransform->setMatrix(osg::Matrix::translate(origin) * axisMatrix);
+		_applyTransform(osg::Matrix::translate(origin) * axisMatrix);
 	}
 		
 	PositionAlignment      _positionAlignment;
 	AxisAlignment          _axisAlignment;
-	osg::MatrixTransform*  _alignmentTransform;
 };
 
 //! TextTransform is both a useful Text subclass for quick osgPango usage and
