@@ -72,9 +72,9 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 	state->addUniform(pangoTexture);
 	
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);	
-	state->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
+	//state->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
 	state->setAttribute(new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false));
-	
+
 	return true;
 }
 

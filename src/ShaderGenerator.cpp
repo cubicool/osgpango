@@ -47,7 +47,7 @@ std::string create1xLayerShader(unsigned int layer) {
 }
 
 // TODO: Refine this, make it iterate over a uniform.
-std::string create2xLayerShader_new(unsigned int layer0, unsigned int layer1) {
+std::string create2xLayerShader(unsigned int layer0, unsigned int layer1) {
 	std::ostringstream shaderSource;
 
 	shaderSource
@@ -64,7 +64,8 @@ std::string create2xLayerShader_new(unsigned int layer0, unsigned int layer1) {
 	return shaderSource.str();
 }
 
-std::string create2xLayerShader(unsigned int layer0, unsigned int layer1) {
+/*
+std::string create2xLayerShader_old(unsigned int layer0, unsigned int layer1) {
 	std::ostringstream shaderSource;
 
 	shaderSource
@@ -82,6 +83,7 @@ std::string create2xLayerShader(unsigned int layer0, unsigned int layer1) {
 
 	return shaderSource.str();
 }
+*/
 
 const char* getDefaultVertexShader() {
 	return DEFAULT_VERTEX_SHADER;

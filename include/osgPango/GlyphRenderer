@@ -21,7 +21,6 @@ struct OSGPANGO_EXPORT GlyphGeometryState {
 typedef std::pair<osg::Geometry*, GlyphGeometryState> GeometryAndState;
 typedef std::list<GeometryAndState>                   GeometryList;
 
-
 class OSGPANGO_EXPORT GlyphRenderer: public osg::Referenced {
 public:
 

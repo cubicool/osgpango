@@ -19,6 +19,10 @@ namespace osgPango {
 //! color.
 typedef std::pair<osg::Vec3, osg::Vec3> ColorPair;
 
+//! TODO: Talk about how this is different from ColorPair and WHY we can't do 8 colors
+//! from Pango markup.
+typedef std::vector<osg::Vec3> ColorPalette;
+
 //! This class serves as a lightweight wrapper/container around the various options
 //! we can pass to the Pango backend layout manager; things like what effect to use,
 //! how much width should be available, etc. Remember, however, that this class only
@@ -81,7 +85,12 @@ public:
 	typedef std::pair<GlyphCache*, ColorPair>                 GlyphGeometryMapKey;
 	typedef std::map<GlyphGeometryMapKey, GlyphGeometryIndex> GlyphGeometryMap;
 
-	Text();
+	enum ColorMode {
+		COLOR_MODE_MARKUP_OVERWRITE,
+		COLOR_MODE_PALETTE_ONLY
+	};
+
+	Text(ColorMode = COLOR_MODE_MARKUP_OVERWRITE);
 
 	// You cannot instaniante Text directly; you need to derive from it and
 	// override finalize to actually do something with the _ggMap object
@@ -90,9 +99,9 @@ public:
 
 	virtual void clear();
 
-	void drawGlyphs     (PangoFont*, PangoGlyphString*, int, int);
-	void addText        (const std::string&, int, int, const TextOptions& = TextOptions());
-	void writeAllImages (const std::string&);
+	void drawGlyphs      (PangoFont*, PangoGlyphString*, int, int);
+	void addText         (const std::string&, int, int, const TextOptions& = TextOptions());
+	void setColorPalette (const ColorPalette&);
 
 	const osg::Vec2& getSize() {
 		return _size;
@@ -126,6 +135,10 @@ public:
 		return _baseline;
 	}
 
+	ColorMode getColorMode() const {
+		return _colorMode;
+	}
+
 	//! This method differs from getOrigin() in that instead of returning the origin
 	//! in Pango space, it returns a 2D vector that you can translate the entire Text
 	//! object by in order to align it in OpenGL space to the baseline value.
@@ -153,6 +166,8 @@ protected:
 	bool             _newGlyphs;
 	bool             _finalized;
 	std::string      _glyphRenderer;
+	ColorMode        _colorMode;
+	ColorPalette     _palette;
 };
 
 //! This is a wrapper template class that makes deriving from Text much easier.
@@ -162,7 +177,6 @@ protected:
 template<typename T>
 class TextInterface: public Text, public T {
 public:
-
 	//! These are the alignment enums within TextTransformInterface (not Text itself, since
 	//! Text is virtual and has no way of positioning itself) that define how the
 	//! text is arranged RELATIVE TO IT'S POSITION. They're pretty much
@@ -188,9 +202,10 @@ public:
 		AXIS_ALIGN_REVERSED_YZ_PLANE, 
 	};
 	
-	TextInterface():
-		_positionAlignment (POS_ALIGN_TOP_RIGHT),
-		_axisAlignment     (AXIS_ALIGN_XY_PLANE) {
+	TextInterface(ColorMode cm = COLOR_MODE_MARKUP_OVERWRITE):
+	Text               (cm),
+	_positionAlignment (POS_ALIGN_TOP_RIGHT),
+	_axisAlignment     (AXIS_ALIGN_XY_PLANE) {
 		_alignmentTransform = new osg::MatrixTransform();
 		
 		T::addChild(_alignmentTransform);
@@ -287,27 +302,23 @@ protected:
 				
 				
 		if(_axisAlignment == AXIS_ALIGN_XZ_PLANE) axisMatrix = osg::Matrixd(
-			osg::Quat( osg::inDegrees(90.0f), osg::Vec3(1.0f,0.0f,0.0f))
+			osg::Quat( osg::inDegrees(90.0f), osg::Vec3(1.0f, 0.0f, 0.0f))
 		);
 			
 		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XZ_PLANE) axisMatrix = osg::Matrixd(
-			osg::Quat(osg::inDegrees(180.0f), osg::Vec3(0.0f,1.0f,0.0f)) 
-			* 
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(1.0f,0.0f,0.0f))
+			osg::Quat(osg::inDegrees(180.0f), osg::Vec3(0.0f, 1.0f, 0.0f)) * 
+			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(1.0f, 0.0f, 0.0f))
 		); 
 
 		else if(_axisAlignment == AXIS_ALIGN_YZ_PLANE) axisMatrix = osg::Matrixd(
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(1.0f,0.0f,0.0f))
-			* 
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(0.0f,0.0f,1.0f))
+			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(1.0f, 0.0f, 0.0f)) * 
+			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(0.0f, 0.0f, 1.0f))
 		);
 			 
 		else if(_axisAlignment == AXIS_ALIGN_REVERSED_YZ_PLANE) axisMatrix = osg::Matrixd(
-			osg::Quat(osg::inDegrees(180.0f), osg::Vec3(0.0f,1.0f,0.0f))
-			* 
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(1.0f,0.0f,0.0f))
-			* 
-			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(0.0f,0.0f,1.0f))
+			osg::Quat(osg::inDegrees(180.0f), osg::Vec3(0.0f, 1.0f, 0.0f)) * 
+			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(1.0f, 0.0f, 0.0f)) * 
+			osg::Quat(osg::inDegrees(90.0f), osg::Vec3(0.0f, 0.0f, 1.0f))
 		); 
 
 		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XY_PLANE) axisMatrix = osg::Matrixd(
@@ -329,16 +340,22 @@ protected:
 //! power of osg::MatrixTransform. It provides a small API for arranging text
 //! in 3D space, though it is not at all suited for people who want a full range
 //! of transformations (unless they just want to interface with osg::MatrixTransform
-//! directly, which is perfectly fine). 
-class OSGPANGO_EXPORT TextTransform: public TextInterface<osg::MatrixTransform> {
+//! directly, which is perfectly fine).
+typedef TextInterface<osg::MatrixTransform> TextInterfaceMatrixTransform;
+
+class OSGPANGO_EXPORT TextTransform: public TextInterfaceMatrixTransform {
 public:
-	TextTransform();
+	TextTransform(ColorMode cm = COLOR_MODE_MARKUP_OVERWRITE):
+	TextInterfaceMatrixTransform(cm) {
+	}
 };
 
-class OSGPANGO_EXPORT TextAutoTransform: public TextInterface<osg::AutoTransform> {
+/*
+class OSGPANGO_EXPORT TextAutoTransform: public TextInterfaceAutoTransform> {
 public:
-	TextAutoTransform();
+	TextAutoTransform(ColorMode = COLOR_MODE_MARKUP_OVERWRITE);
 };
+*/
 
 }
 

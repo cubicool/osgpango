@@ -156,10 +156,18 @@ int main(int argc, char** argv) {
 	context.addGlyphRenderer("complex", new GlyphRendererComplex());
 	context.addGlyphRenderer("complex-lines", new GlyphRendererComplex(true));
 
-	osgPango::TextTransform* t = new osgPango::TextTransform();
+	osgPango::TextTransform* t = new osgPango::TextTransform(osgPango::Text::COLOR_MODE_PALETTE_ONLY);
+
+	osgPango::ColorPalette cp;
+
+	cp.push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
+	cp.push_back(osg::Vec3(1.0f, 1.0f, 1.0f));
+	cp.push_back(osg::Vec3(0.0f, 0.0f, 1.0f));
+
+	t->setColorPalette(cp);
 
 	t->addText(
-		"<span font='Verdana Bold 40' fgcolor='#000' bgcolor='#fff'>This is a cow.</span>",
+		"<span font='Verdana Bold 40'>This is a cow.</span>",
 		0,
 		0,
 		osgPango::TextOptions("complex")
