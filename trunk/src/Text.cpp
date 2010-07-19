@@ -165,7 +165,9 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 
 		std::string utf8 = text.createUTF8EncodedString();
 
-		pango_layout_set_markup(layout, utf8.c_str(), -1);
+		if(to.markup) pango_layout_set_markup(layout, utf8.c_str(), -1);
+		
+		else pango_layout_set_text(layout, utf8.c_str(), -1);
 	}
 
 	to.setupPangoLayout(layout);

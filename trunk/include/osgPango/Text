@@ -60,14 +60,16 @@ public:
 		int           w = -1,
 		int           h = -1,
 		int           i = -1,
-		int           s = -1
+		int           s = -1,
+		bool          m = true
 	):
 	renderer  (r),
 	alignment (a),
 	width     (w),
 	height    (h),
 	indent    (i),
-	spacing   (s) {
+	spacing   (s),
+	markup    (m) {
 	}
 
 	bool setupPangoLayout(PangoLayout* layout) const;
@@ -78,6 +80,7 @@ public:
 	int           height;
 	int           indent;
 	int           spacing;
+	bool          markup;
 };
 
 class OSGPANGO_EXPORT Text: public osg::Referenced {
