@@ -52,6 +52,7 @@ public:
 	void addLayer     (GlyphLayer*);
 	void removeLayer  (unsigned int);
 	void replaceLayer (unsigned int, GlyphLayer*);
+	void clearLayers();
 
 	virtual unsigned int getNumLayers() const {
 		return _layers.size();

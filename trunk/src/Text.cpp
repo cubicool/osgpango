@@ -39,6 +39,9 @@ _colorMode(cm) {
 	clear();
 }
 
+Text::~Text() {
+}
+
 void Text::clear() {
 	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
 		GlyphGeometryIndex& ggi = g->second;

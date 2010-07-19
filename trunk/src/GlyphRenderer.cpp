@@ -118,6 +118,10 @@ void GlyphRenderer::replaceLayer(unsigned int index, GlyphLayer* layer) {
 	if(index < _layers.size()) _layers[index] = layer;
 }
 
+void GlyphRenderer::clearLayers() {
+	_layers.clear();
+}
+
 bool GlyphRenderer::_setGetFragmentShader(osg::Geode* geode, const std::string& shaderName) {
 	osg::StateSet* state   = geode->getOrCreateStateSet();
 	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
