@@ -6,6 +6,7 @@
 #include <osg/io_utils>
 #include <osg/Math>
 #include <osg/Image>
+#include <osgUtil/TransformAttributeFunctor>		
 #include <osgPango/Context>
 
 namespace osgPango {
@@ -35,7 +36,8 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 }
 
 Text::Text(ColorMode cm):
-_colorMode(cm) {
+_colorMode(cm),
+_lastTransform(osg::Matrixd::identity()) {
 	clear();
 }
 
@@ -57,6 +59,7 @@ void Text::clear() {
 	_init      = false;
 	_newGlyphs = false;
 	_finalized = false;
+	_lastTransform = osg::Matrixd::identity();
 }
 
 GlyphGeometry* createGlyphGeometry() {
@@ -328,5 +331,18 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 	
 	return true;
 }
+
+void Text::_applyTransform(const osg::Matrixd &transform)
+{
+	osgUtil::TransformAttributeFunctor functor(_lastTransform * transform);
+	for(GlyphGeometryMap::const_iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
+		const GlyphGeometryIndex& ggi = g->second;
+		for(GlyphGeometryIndex::const_iterator ct = ggi.begin(); ct != ggi.end(); ++ct) {
+			ct->second->accept(functor);
+		}
+	}
+	_lastTransform = osg::Matrixd::inverse(transform);
+}
+
 
 }
