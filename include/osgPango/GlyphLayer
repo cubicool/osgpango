@@ -12,12 +12,23 @@ namespace osgPango {
 
 class OSGPANGO_EXPORT GlyphLayer: public osg::Referenced {
 public:
-	GlyphLayer();
+	GlyphLayer(cairo_format_t = CAIRO_FORMAT_A8);
 
 	// Render custom shape of glyph.
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 	
 	virtual osg::Vec4 getExtraGlyphExtents() const;
+
+	cairo_format_t getCairoImageFormat() const {
+		return _imageFormat;
+	}
+	
+	void setCairoImageFormat(cairo_format_t format) {
+		_imageFormat = format;
+	}
+		
+protected:
+	cairo_format_t  _imageFormat;
 };
 
 class OSGPANGO_EXPORT GlyphLayerOutline: public GlyphLayer {

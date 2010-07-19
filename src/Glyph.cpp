@@ -189,7 +189,11 @@ bool GlyphCache::_newImageAndTexture() {
 	if(!_layers.size()) _layers.resize(getNumLayers());
 	
 	for(unsigned int i = 0; i < getNumLayers(); ++i) {
-		osgCairo::Image* img = new osgCairo::Image(_imgWidth, _imgHeight, CAIRO_FORMAT_A8);
+		osgCairo::Image* img = new osgCairo::Image(
+			_imgWidth, 
+			_imgHeight, 
+			_renderer->getImageFormatForLayer(i)
+		);
 	
 		if(!img || !img->valid() || !img->createContext()) return false;
 	
