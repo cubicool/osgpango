@@ -7,7 +7,8 @@
 
 namespace osgPango {
 
-GlyphLayer::GlyphLayer() {
+GlyphLayer::GlyphLayer(cairo_format_t format):
+_imageFormat(format) {
 }
 
 bool GlyphLayer::render(
@@ -30,6 +31,10 @@ osg::Vec4 GlyphLayer::getExtraGlyphExtents() const {
 
 GlyphLayerOutline::GlyphLayerOutline(unsigned int outline):
 _outline(outline) {
+#ifdef WIN32
+	// TODO: why need to setup this format on win ?
+	setCairoImageFormat(CAIRO_FORMAT_ARGB32);
+#endif
 }
 
 bool GlyphLayerOutline::render(

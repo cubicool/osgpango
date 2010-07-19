@@ -122,6 +122,13 @@ void GlyphRenderer::clearLayers() {
 	_layers.clear();
 }
 
+cairo_format_t GlyphRenderer::getImageFormatForLayer(unsigned int index) {
+	if(index < _layers.size()) 
+		return _layers[index]->getCairoImageFormat();
+	else
+		return CAIRO_FORMAT_A8;
+}
+
 bool GlyphRenderer::_setGetFragmentShader(osg::Geode* geode, const std::string& shaderName) {
 	osg::StateSet* state   = geode->getOrCreateStateSet();
 	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
