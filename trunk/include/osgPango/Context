@@ -111,6 +111,8 @@ public:
 	//! only used in very low-level rendering code.
 	GlyphCache* getGlyphCache(PangoFont* font, const std::string& renderer = "");
 	
+	void resetGlyphCaches(const std::string& renderer);
+	
 	//! This method will allow you to retrieve a read-only pointer to any custom 
 	//! GlyphRenderer object you may have installed into the Context at a previous
 	//! time. For more about what this  means exactly, take a look at the documentation
