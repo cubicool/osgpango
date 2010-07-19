@@ -83,7 +83,7 @@ public:
 	bool          markup;
 };
 
-class OSGPANGO_EXPORT Text: public osg::Referenced {
+class OSGPANGO_EXPORT Text {
 public:
 	typedef std::pair<GlyphCache*, ColorPair>                 GlyphGeometryMapKey;
 	typedef std::map<GlyphGeometryMapKey, GlyphGeometryIndex> GlyphGeometryMap;
@@ -94,6 +94,7 @@ public:
 	};
 
 	Text(ColorMode = COLOR_MODE_MARKUP_OVERWRITE);
+	virtual ~Text();
 
 	// You cannot instaniante Text directly; you need to derive from it and
 	// override finalize to actually do something with the _ggMap object
