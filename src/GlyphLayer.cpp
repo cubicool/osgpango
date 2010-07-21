@@ -50,10 +50,7 @@ bool GlyphLayerOutline::render(
 	cairo_glyph_path(c, glyph, 1);
 	cairo_stroke_preserve(c);
 	cairo_fill(c);
-	cairo_set_operator(c, CAIRO_OPERATOR_CLEAR);
-
-	GlyphLayer::render(c, glyph, width, height);
-
+	
 	return true;
 }
 
@@ -140,10 +137,6 @@ bool GlyphLayerShadowGaussian::render(
 
 	osgCairo::util::gaussianBlur(tmp, _radius);
 	
-	cairo_set_operator(tc, CAIRO_OPERATOR_CLEAR);
-	
-	GlyphLayer::render(tc, glyph, width, height);
-
 	cairo_set_source_surface(c, tmp, 0, 0);
 	cairo_paint(c);
 

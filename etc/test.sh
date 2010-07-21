@@ -46,6 +46,6 @@ if [ "${1}" = "valgrind" ]; then
 	valgrind --leak-check=full osgpangoviewer "${MARKUP}" 2> valgrind.txt
 
 else
-	osgpangoviewer --width 797 --renderer outline 2 "${MARKUP}" 
+	osgpangoviewer --width 797 --renderer outline 1 "${MARKUP}" 
 	# osgpangoviewer --width 797 --alignment justify "${MARKUP}" 
 fi
