@@ -50,11 +50,10 @@ void Text::clear() {
 
 		ggi.clear();
 	}
+	_ggMap.clear();
 
 	_size      = osg::Vec2();
 	_origin    = osg::Vec2();
-	_lastX     = 0;
-	_lastY     = 0;
 	_baseline  = 0;
 	_init      = false;
 	_newGlyphs = false;
@@ -89,13 +88,7 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 	osg::Vec2 layoutPos(x / PANGO_SCALE, currentY);
 
-	if(static_cast<int>(currentY) == _lastY) layoutPos[0] += _lastX;
-
-	else _lastX = 0.0f;
-
-	// TODO: Enabling optional honoring of extents...
-	// osg::Vec4 extents = gc->getGlyphRenderer()->getExtraGlyphExtents();
-	osg::Vec4 extents = osg::Vec4();
+	osg::Vec4 extents = gc->getGlyphRenderer()->getExtraGlyphExtents();
 
 	ColorPair color = Context::instance().getColorPair();
 	
@@ -138,8 +131,8 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 		if(cg->size.x() > 0.0f && cg->size.y() > 0.0f) {
 			osg::Vec2 pos(
-				(gi->geometry.x_offset / PANGO_SCALE) + extents[0],
-				(gi->geometry.y_offset / PANGO_SCALE) + extents[1]
+				(gi->geometry.x_offset / PANGO_SCALE) - extents[0],
+				(gi->geometry.y_offset / PANGO_SCALE) - extents[1]
 			);
 
 			if(!ggi[cg->img]) ggi[cg->img] = createGlyphGeometry();
@@ -150,11 +143,8 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 			);
 		}
 
-		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE) + extents[0], 0.0f);
-		_lastX    += extents[0];
+		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE), 0.0f);
 	}
-
-	_lastY = currentY;
 
 	// Use the lowest baseline of all the texts that are added.
 	int baseline = y / PANGO_SCALE;
