@@ -130,14 +130,16 @@ FOREACH(INCLUDEFILE ${HEADER_FILES})
 	)
 ENDFOREACH(INCLUDEFILE)
 
-ADD_SUBDIRECTORY(examples/osgpangoupdatecb)
 #ADD_SUBDIRECTORY(examples/osgpangoanimation)
+ADD_SUBDIRECTORY(examples/osgpangocomplexrenderer)
 ADD_SUBDIRECTORY(examples/osgpangocustomrenderer)
 ADD_SUBDIRECTORY(examples/osgpangofonts)
 #ADD_SUBDIRECTORY(examples/osgpangoguiviewer)
+ADD_SUBDIRECTORY(examples/osgpangotest)
 #ADD_SUBDIRECTORY(examples/osgpangothreaded)
+ADD_SUBDIRECTORY(examples/osgpangoupdatecb)
 ADD_SUBDIRECTORY(examples/osgpangoviewer)
-ADD_SUBDIRECTORY(examples/osgpangocomplexrenderer)
+
 
 CONFIGURE_FILE(
 	"${CMAKE_CURRENT_SOURCE_DIR}/etc/uninstall.cmake"

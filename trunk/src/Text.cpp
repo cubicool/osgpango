@@ -163,6 +163,18 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 }
 
 void Text::addText(const std::string& str, int x, int y, const TextOptions& to) {
+	const GlyphRenderer* gr = Context::instance().getGlyphRenderer(to.renderer);
+
+	if(!gr) {
+		osg::notify(osg::WARN)
+			<< "Couldn't find the GlyphRender object '" << to.renderer
+			<< "'; no text will be displayed."
+			<< std::endl
+		;
+
+		return;
+	}
+
 	String       text;
 	PangoLayout* layout = pango_layout_new(Context::instance().getPangoContext());
 
@@ -189,10 +201,6 @@ void Text::addText(const std::string& str, int x, int y, const TextOptions& to) 
 	pango_layout_get_pixel_extents(layout, &rect, 0);
 
 	g_object_unref(layout);
-
-	const GlyphRenderer* gr = Context::instance().getGlyphRenderer(to.renderer);
-
-	if(!gr) return;
 
 	const osg::Vec4& extents = gr->getExtraGlyphExtents();
 
@@ -332,17 +340,18 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 	return true;
 }
 
-void Text::_applyTransform(const osg::Matrixd &transform)
-{
+void Text::_applyTransform(const osg::Matrixd& transform) {
 	osgUtil::TransformAttributeFunctor functor(_lastTransform * transform);
+
 	for(GlyphGeometryMap::const_iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
 		const GlyphGeometryIndex& ggi = g->second;
+		
 		for(GlyphGeometryIndex::const_iterator ct = ggi.begin(); ct != ggi.end(); ++ct) {
 			ct->second->accept(functor);
 		}
 	}
+
 	_lastTransform = osg::Matrixd::inverse(transform);
 }
-
 
 }
