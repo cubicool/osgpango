@@ -164,8 +164,6 @@ protected:
 	GlyphGeometryMap _ggMap;
 	osg::Vec2        _size;
 	osg::Vec2        _origin;
-	int              _lastX;
-	int              _lastY;
 	int              _baseline;
 	bool             _init;
 	bool             _newGlyphs;
