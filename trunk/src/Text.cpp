@@ -237,12 +237,11 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 	RendererGeometry rg;
 
 	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
-		GlyphGeometryIndex& ggi = g->second;
+		GlyphCache*         gc    = g->first.first;
+		ColorPair           color = g->first.second;
+		GlyphGeometryIndex& ggi   = g->second;
 
 		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
-			GlyphCache* gc    = g->first.first;
-			ColorPair   color = g->first.second;
-			
 			for(unsigned int layer = 0; layer < gc->getNumLayers(); ++layer) {
 				osg::Image* texture = gc->getImage(i->first, layer);
 
@@ -302,8 +301,8 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 
 	// Assign renderers to passes.
 	for(RendererGeometry::const_iterator ct = rg.begin(); ct != rg.end(); ++ct) {
-		GlyphRenderer*      renderer  = ct->first;
-		const GeometryList& gl        = ct->second;
+		GlyphRenderer*      renderer = ct->first;
+		const GeometryList& gl       = ct->second;
 
 		for(unsigned int i = 0; i < renderer->getNumPasses(); ++i) {
 			// Each renderer has own geode node with assigned state required for pass.

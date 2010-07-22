@@ -11,15 +11,15 @@
 
 struct GlyphRendererMultiOutline: public osgPango::GlyphRenderer {
 	GlyphRendererMultiOutline(bool useCustomLayer = false) {
-		addLayer(new osgPango::GlyphLayerOutline(6.0f));
 		addLayer(new osgPango::GlyphLayerOutline(4.0f));
-		addLayer(new osgPango::GlyphLayerOutline(2.0f));
+		addLayer(new osgPango::GlyphLayerOutline(3.0f));
+		addLayer(new osgPango::GlyphLayerOutline(1.0f));
 		addLayer(new osgPango::GlyphLayer());
 
 		osgPango::ShaderManager::instance().addShaderFile(
 			"my-shader",
 			osg::Shader::FRAGMENT,
-			"test.glsl"
+			"../examples/osgpangotest/osgpangotest.glsl"
 		);
 	}
 
@@ -74,12 +74,12 @@ int main(int argc, char** argv) {
 
 	cp.push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
 	cp.push_back(osg::Vec3(1.0f, 1.0f, 1.0f));
-	cp.push_back(osg::Vec3(0.0f, 0.0f, 1.0f));
-	cp.push_back(osg::Vec3(1.0f, 0.0f, 1.0f));
+	cp.push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
+	cp.push_back(osg::Vec3(1.0f, 1.0f, 0.0f));
 
 	t->setColorPalette(cp);
 	t->addText(
-		"<span font='Verdana Bold 20'>This is a cow.</span>",
+		"<span font='Verdana Bold 30'>osgPango Multi Effects</span>",
 		0,
 		0,
 		osgPango::TextOptions("multioutline")
