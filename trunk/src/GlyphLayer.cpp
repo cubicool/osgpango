@@ -117,7 +117,7 @@ bool GlyphLayerShadowGaussian::render(
 	double add = _radius * 4.0f;
 	
 	// Create a temporary small surface and then copy that to the bigger one.
-	cairo_surface_t* tmp = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width + add, height + add);
+	cairo_surface_t* tmp = cairo_image_surface_create(CAIRO_FORMAT_A8, width + add, height + add);
 	
 	if(cairo_surface_status(tmp)) return false;
 
