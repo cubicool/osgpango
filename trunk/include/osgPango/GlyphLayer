@@ -80,16 +80,35 @@ private:
 	int _yOffset;
 };
 
-class OSGPANGO_EXPORT GlyphLayerShadowGaussian: public GlyphLayer {
+class OSGPANGO_EXPORT GlyphLayerShadowGaussian: public GlyphLayerShadowOffset {
 public:
-	GlyphLayerShadowGaussian(unsigned int = 1);
+	GlyphLayerShadowGaussian(int = 1, int = 1, unsigned int = 2, unsigned int = 1);
 	
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 	
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 	
+	void setRadius(unsigned int radius) {
+		_radius = radius; 
+	}
+	
+	unsigned int getRadius() const {
+		return _radius; 
+	}
+	
+	void setDeviation(unsigned int deviation) { 
+		_deviation = deviation;
+	}
+	
+	double getDeviation() const {
+		return _deviation;
+	}
+	
 private:
+	unsigned int _getBlurSize() const;
+	
 	unsigned int _radius;	
+	unsigned int _deviation;
 };
 
 }
