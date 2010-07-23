@@ -2,6 +2,7 @@
 // $Id$
 
 #include <cmath>
+#include <limits>
 #include <osgCairo/Util>
 #include <osgPango/GlyphLayer>
 
@@ -31,10 +32,6 @@ osg::Vec4 GlyphLayer::getExtraGlyphExtents() const {
 
 GlyphLayerOutline::GlyphLayerOutline(unsigned int outline):
 _outline(outline) {
-#ifdef WIN32
-	// TODO: why need to setup this format on win ?
-	setCairoImageFormat(CAIRO_FORMAT_ARGB32);
-#endif
 }
 
 bool GlyphLayerOutline::render(
@@ -100,8 +97,13 @@ osg::Vec4 GlyphLayerShadowOffset::getExtraGlyphExtents() const {
 	);
 }
 
-GlyphLayerShadowGaussian::GlyphLayerShadowGaussian(unsigned int radius):
-_radius(radius) {
+GlyphLayerShadowGaussian::GlyphLayerShadowGaussian(int offsetX, 
+                                                   int offsetY, 
+                                                   unsigned int radius, 
+                                                   unsigned int deviation):
+GlyphLayerShadowOffset(offsetX, offsetY),
+_radius(radius),
+_deviation(deviation) {
 }
 	
 bool GlyphLayerShadowGaussian::render(
@@ -112,9 +114,11 @@ bool GlyphLayerShadowGaussian::render(
 ) {
 	if(cairo_status(c) || !glyph) return false;
 	
-	cairo_translate(c, -static_cast<double>(_radius * 2), -static_cast<double>(_radius * 2));
+	unsigned int blurSize = _getBlurSize();
 
-	double add = _radius * 4.0f;
+	cairo_translate(c, -static_cast<double>(blurSize) + getOffsetX(), -static_cast<double>(blurSize) + getOffsetY());
+
+	double add = blurSize * 4.0f;
 	
 	// Create a temporary small surface and then copy that to the bigger one.
 	cairo_surface_t* tmp = cairo_image_surface_create(CAIRO_FORMAT_A8, width + add, height + add);
@@ -129,24 +133,37 @@ bool GlyphLayerShadowGaussian::render(
 
 	cairo_set_scaled_font(tc, sf);
 	cairo_set_line_join(tc, CAIRO_LINE_JOIN_ROUND);
-	cairo_set_line_width(tc, _radius - 0.5f);
-	cairo_translate(tc, _radius * 2, _radius * 2);
+	cairo_set_line_width(tc, static_cast<double>(_radius) - 0.5f);
+	cairo_translate(tc, blurSize * 2, blurSize * 2);
 	cairo_glyph_path(tc, glyph, 1);
 	cairo_stroke_preserve(tc);
 	cairo_fill(tc);
 
-	osgCairo::util::gaussianBlur(tmp, _radius);
+	if(_deviation > std::numeric_limits<double>::epsilon())
+		osgCairo::util::gaussianBlur(tmp, _radius, _deviation);
 	
-	cairo_set_source_surface(c, tmp, 0, 0);
+	cairo_set_source_surface(c, tmp, -static_cast<double>(blurSize), -static_cast<double>(blurSize));
 	cairo_paint(c);
 
 	return true;
 }
 	
 osg::Vec4 GlyphLayerShadowGaussian::getExtraGlyphExtents() const {
-	// TODO: This is TOO LARGE, but it's safe. We need to find out how to REALLY calucuate the right
-	// extents.
-	return osg::Vec4(_radius * 2, _radius * 2, _radius * 4, _radius * 4);
+	double offset   = std::max<double>(std::abs(getOffsetX()), std::abs(getOffsetY()));
+	double blursize = _getBlurSize();
+	
+	return osg::Vec4(
+		blursize + offset, 
+		blursize + offset, 
+		(blursize + offset) * 2.0, 
+		(blursize + offset) * 2.0
+	);
 }
 
+unsigned int GlyphLayerShadowGaussian::_getBlurSize() const {
+	return std::min<double>(
+		std::max<double>(_deviation * 3.0, _radius), 
+		_radius * 2.0
+	);
+}
 }
