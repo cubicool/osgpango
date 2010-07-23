@@ -2,6 +2,7 @@
 // $Id$
 
 #include <cmath>
+#include <cstdlib>
 #include <limits>
 #include <osgCairo/Util>
 #include <osgPango/GlyphLayer>

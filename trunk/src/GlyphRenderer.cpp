@@ -185,7 +185,7 @@ bool GlyphRendererShadowOffset::updateOrCreateState(int pass, osg::Geode* geode)
 
 GlyphRendererShadowGaussian::GlyphRendererShadowGaussian(unsigned int radius) {
 	addLayer(new GlyphLayer());
-	addLayer(new GlyphLayerShadowGaussian(radius, 40.0));
+	addLayer(new GlyphLayerShadowGaussian(0.0f, 0.0f, radius, radius * 0.5f));
 }
 
 bool GlyphRendererShadowGaussian::updateOrCreateState(int pass, osg::Geode* geode) {
