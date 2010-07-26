@@ -107,6 +107,14 @@ public:
 	void addText         (const std::string&, int, int, const TextOptions& = TextOptions());
 	void setColorPalette (const ColorPalette&);
 
+	void setAlpha(float alpha) {
+		_alpha = alpha;
+	}
+
+	float getAlpha() const {
+		return _alpha;
+	}
+
 	const osg::Vec2& getSize() {
 		return _size;
 	}
@@ -165,6 +173,7 @@ protected:
 	osg::Vec2        _size;
 	osg::Vec2        _origin;
 	int              _baseline;
+	float            _alpha;
 	bool             _init;
 	bool             _newGlyphs;
 	bool             _finalized;

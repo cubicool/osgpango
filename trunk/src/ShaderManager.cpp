@@ -82,10 +82,9 @@ osg::Shader* ShaderManager::getShader(const std::string& shader) {
 }
 
 ShaderManager::ShaderManager() {
-	addShaderSource("osgPango-vert", osg::Shader::VERTEX, shadergen::getDefaultVertexShader());
-	addShaderSource("osgPango-frag", osg::Shader::FRAGMENT, shadergen::getDefaultFragmentShader());
-	addShaderSource("osgPango-lib-1xLayer", osg::Shader::FRAGMENT, shadergen::create1xLayerShader(0));
-	addShaderSource("osgPango-lib-2xLayer", osg::Shader::FRAGMENT, shadergen::create2xLayerShader(1, 0));
+	addShaderSource("osgPango-vert", osg::Shader::VERTEX, getDefaultVertexShader());
+	addShaderSource("osgPango-frag1", osg::Shader::FRAGMENT, createBackToFrontShader(1));
+	addShaderSource("osgPango-frag2", osg::Shader::FRAGMENT, createBackToFrontShader(2));
 }
 
 }
