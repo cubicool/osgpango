@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
 	while(args.read("--alpha", alpha)) {
 		float a = std::atof(alpha.c_str());
 
-		// t->setAlpha(a);
+		t->setAlpha(a);
 	}
 
 	while(args.read("--width", width)) to.width = std::atoi(width.c_str());

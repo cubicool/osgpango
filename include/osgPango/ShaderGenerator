@@ -5,18 +5,17 @@
 #define OSGPANGO_SHADER_GENERATOR
 
 #include <string>
+#include <vector>
 #include <osgPango/Export>
 
 namespace osgPango {
-namespace shadergen {
 
-OSGPANGO_EXPORT std::string create1xLayerShader (unsigned int = 0);
-OSGPANGO_EXPORT std::string create2xLayerShader (unsigned int = 0, unsigned int = 1);
+typedef std::vector<unsigned int> LayerIndexVector;
 
-OSGPANGO_EXPORT const char* getDefaultVertexShader();
-OSGPANGO_EXPORT const char* getDefaultFragmentShader();
+OSGPANGO_EXPORT std::string createBackToFrontShader (unsigned int num);
+OSGPANGO_EXPORT std::string createLayerIndexShader  (unsigned int num, const LayerIndexVector&);
+OSGPANGO_EXPORT const char* getDefaultVertexShader  ();
 
-}
 }
 
 #endif

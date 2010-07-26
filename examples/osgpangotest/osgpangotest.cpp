@@ -85,6 +85,7 @@ int main(int argc, char** argv) {
 		osgPango::TextOptions("multioutline")
 	);
 
+
 	t->finalize();
 	t->setMatrix(osg::Matrixd::translate(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f)));
 	t->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER);
@@ -112,7 +113,7 @@ int main(int argc, char** argv) {
 
 	viewer.run();
 
-	osgPango::Context::instance().writeCachesToPNGFiles("osgpangotest");
+	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangotest");
 	
 	return 0;
 }

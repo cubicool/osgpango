@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <sstream>
-#include <osg/AlphaFunc>
 #include <osg/Depth>
 #include <osg/Geode>
 #include <osgCairo/Util>
@@ -46,19 +45,16 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 
 	osg::Program* program = new osg::Program();
 	osg::Shader*  vert    = sm.getShader("osgPango-vert");
-	osg::Shader*  frag    = sm.getShader("osgPango-frag");
 
 	program->setName("pangoRenderer");
-
 	program->addShader(vert);
-	program->addShader(frag);
 
 	osg::StateSet* state = geode->getOrCreateStateSet();
 
 	state->setAttributeAndModes(program);
 	
 	osg::Uniform* pangoTexture = new osg::Uniform(
-		osg::Uniform::INT,
+		osg::Uniform::SAMPLER_2D,
 		"pangoTexture",
 		_layers.size()
 	);
@@ -68,11 +64,10 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 		static_cast<int>(i)
 	);
 
-	state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(1.0f);
+	// state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(1.0f);
 	state->addUniform(pangoTexture);
 	
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);	
-	//state->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 0.01f));
 	state->setAttribute(new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false));
 
 	return true;
@@ -151,7 +146,7 @@ GlyphRendererDefault::GlyphRendererDefault() {
 bool GlyphRendererDefault::updateOrCreateState(int pass, osg::Geode* geode) {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
-	return _setGetFragmentShader(geode, "osgPango-lib-1xLayer");
+	return _setGetFragmentShader(geode, "osgPango-frag1");
 }
 
 GlyphRendererOutline::GlyphRendererOutline(unsigned int outline) {
@@ -162,7 +157,7 @@ GlyphRendererOutline::GlyphRendererOutline(unsigned int outline) {
 bool GlyphRendererOutline::updateOrCreateState(int pass, osg::Geode* geode) {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
-	return _setGetFragmentShader(geode, "osgPango-lib-2xLayer");
+	return _setGetFragmentShader(geode, "osgPango-frag2");
 }
 
 GlyphRendererShadowOffset::GlyphRendererShadowOffset(int offsetX, int offsetY) {
@@ -180,7 +175,7 @@ GlyphRendererShadowOffset::GlyphRendererShadowOffset(int offsetX, int offsetY) {
 bool GlyphRendererShadowOffset::updateOrCreateState(int pass, osg::Geode* geode) {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
-	return _setGetFragmentShader(geode, "osgPango-lib-2xLayer");
+	return _setGetFragmentShader(geode, "osgPango-frag2");
 }
 
 GlyphRendererShadowGaussian::GlyphRendererShadowGaussian(unsigned int radius) {
@@ -191,7 +186,7 @@ GlyphRendererShadowGaussian::GlyphRendererShadowGaussian(unsigned int radius) {
 bool GlyphRendererShadowGaussian::updateOrCreateState(int pass, osg::Geode* geode) {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
-	return _setGetFragmentShader(geode, "osgPango-lib-2xLayer");
+	return _setGetFragmentShader(geode, "osgPango-frag2");
 }
 
 }

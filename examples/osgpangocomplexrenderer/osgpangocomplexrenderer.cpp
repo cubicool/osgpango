@@ -74,18 +74,38 @@ struct GlyphRendererComplex: public osgPango::GlyphRenderer {
 		
 		else addLayer(new osgPango::GlyphLayer());
 
-		osgPango::ShaderManager::instance().addShaderSource(
+		unsigned int liv2[] = {1, 2};
+		unsigned int liv3[] = {2};
+
+		osgPango::ShaderManager& sm = osgPango::ShaderManager::instance();
+
+		sm.addShaderSource(
 			"my-shader-pass-2",
 			osg::Shader::FRAGMENT,
-			osgPango::shadergen::create2xLayerShader(1, 2)
-
+			osgPango::createLayerIndexShader(
+				3,
+				osgPango::LayerIndexVector(liv2, liv2 + 2)
+			)
 		);
 		
-		osgPango::ShaderManager::instance().addShaderSource(
+		sm.addShaderSource(
 			"my-shader-pass-3",
 			osg::Shader::FRAGMENT,
-			osgPango::shadergen::create1xLayerShader(2)
+			osgPango::createLayerIndexShader(
+				3,
+				osgPango::LayerIndexVector(liv3, liv3 + 1)
+			)
 		);
+
+		osg::notify(osg::NOTICE)
+			<< sm.getShader("my-shader-pass-2")->getShaderSource()
+			<< std::endl
+		;
+
+		osg::notify(osg::NOTICE)
+			<< sm.getShader("my-shader-pass-3")->getShaderSource()
+			<< std::endl
+		;
 	}
 
 	virtual unsigned int getNumPasses() const {
@@ -108,7 +128,7 @@ struct GlyphRendererComplex: public osgPango::GlyphRenderer {
 		osg::Shader* frag = 0;
 	
 		// Blurred shadow.
-		if(pass == 0) frag = sm.getShader("osgPango-lib-1xLayer");
+		if(pass == 0) frag = sm.getShader("osgPango-frag1");
 		
 		// Outline + base glyph.
 		else if(pass == 1) frag = sm.getShader("my-shader-pass-2");

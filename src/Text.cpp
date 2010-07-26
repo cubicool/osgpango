@@ -55,6 +55,7 @@ void Text::clear() {
 	_size      = osg::Vec2();
 	_origin    = osg::Vec2();
 	_baseline  = 0;
+	_alpha     = 1.0f;
 	_init      = false;
 	_newGlyphs = false;
 	_finalized = false;
@@ -292,9 +293,11 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 
 	// Create structure for passes.
 	for(unsigned int i = 0; i < maxPasses; ++i) {
-		osg::Group* pass = new osg::Group();
+		osg::Group*    pass  = new osg::Group();
+		osg::StateSet* state = pass->getOrCreateStateSet();
 
-		pass->getOrCreateStateSet()->setRenderBinDetails(i, "RenderBin");
+		state->setRenderBinDetails(i, "RenderBin");
+		state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(_alpha);
 
 		group->addChild(pass);
 	}
