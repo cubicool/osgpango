@@ -56,7 +56,7 @@ void setupArguments(osg::ArgumentParser& args) {
 
 	args.getApplicationUsage()->addCommandLineOption(
 		"--renderer <string> <int>",
-		"The GlyphRenderer object to use (outline, shadowOffset, shadowBlur) and size."
+		"The GlyphRenderer object to use (outline, shadowOffset, shadowBlur, shadowInset) and size."
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
@@ -122,6 +122,11 @@ int main(int argc, char** argv) {
 			new osgPango::GlyphRendererShadowGaussian(s)
 		);
 
+		else if(renderer == "shadowInset") context.addGlyphRenderer(
+			"shadowInset",
+			new osgPango::GlyphRendererShadowInset(s)
+		);
+
 		else continue;
 
 		to.renderer = renderer;
@@ -143,6 +148,7 @@ int main(int argc, char** argv) {
 		else if(alignment == "justify") to.alignment = osgPango::TextOptions::TEXT_ALIGN_JUSTIFY;
 	}
 
+
 	if(args.argc() >= 2) {
 		text = "";
 
@@ -156,6 +162,7 @@ int main(int argc, char** argv) {
 
 	if(!t->finalize()) return 1;
 
+	/*
 	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
@@ -170,9 +177,10 @@ int main(int argc, char** argv) {
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.run();
+	*/
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
-	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
+	osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
 	
 	return 0;
 }

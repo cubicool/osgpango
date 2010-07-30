@@ -65,7 +65,7 @@ public:
 	virtual cairo_format_t getImageFormatForLayer(unsigned int);
 	
 protected:
-	bool _setGetFragmentShader(osg::Geode*, const std::string&);
+	bool _setFragmentShader(osg::Geode*, const std::string&);
 
 	std::string                            _name;
 	std::vector<osg::ref_ptr<GlyphLayer> > _layers;	
@@ -98,6 +98,15 @@ public:
 	
 	virtual bool updateOrCreateState(int pass, osg::Geode*);
 };
+
+class OSGPANGO_EXPORT GlyphRendererShadowInset: public GlyphRenderer {
+public:
+	GlyphRendererShadowInset(unsigned int = 1);
+	
+	virtual bool updateOrCreateState(int pass, osg::Geode*);
+};
+
+
 
 }
 

@@ -104,9 +104,20 @@ public:
 		return _deviation;
 	}
 	
-private:
+protected:
 	unsigned int _getBlurSize() const;
 	
+	unsigned int _radius;	
+	unsigned int _deviation;
+};
+
+class OSGPANGO_EXPORT GlyphLayerShadowInset: public GlyphLayer {
+public:
+	GlyphLayerShadowInset(unsigned int = 2, unsigned int = 1);
+	
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+
+protected:
 	unsigned int _radius;	
 	unsigned int _deviation;
 };
