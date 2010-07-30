@@ -28,7 +28,7 @@ bool GlyphLayer::render(
 }
 
 osg::Vec4 GlyphLayer::getExtraGlyphExtents() const {
-	return osg::Vec4(0.0, 0.0, 0.0, 0.0);
+	return osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 GlyphLayerOutline::GlyphLayerOutline(unsigned int outline):
@@ -48,7 +48,7 @@ bool GlyphLayerOutline::render(
 	cairo_glyph_path(c, glyph, 1);
 	cairo_stroke_preserve(c);
 	cairo_fill(c);
-	
+
 	return true;
 }
 
@@ -57,8 +57,8 @@ osg::Vec4 GlyphLayerOutline::getExtraGlyphExtents() const {
 }
 
 GlyphLayerShadowOffset::GlyphLayerShadowOffset(int offsetX, int offsetY): 
-_xOffset(offsetX),
-_yOffset(offsetY) {
+_xOffset (offsetX),
+_yOffset (offsetY) {
 }
 
 bool GlyphLayerShadowOffset::render(
@@ -98,13 +98,15 @@ osg::Vec4 GlyphLayerShadowOffset::getExtraGlyphExtents() const {
 	);
 }
 
-GlyphLayerShadowGaussian::GlyphLayerShadowGaussian(int offsetX, 
-                                                   int offsetY, 
-                                                   unsigned int radius, 
-                                                   unsigned int deviation):
-GlyphLayerShadowOffset(offsetX, offsetY),
-_radius(radius),
-_deviation(deviation) {
+GlyphLayerShadowGaussian::GlyphLayerShadowGaussian(
+	int          offsetX, 
+	int          offsetY, 
+	unsigned int radius, 
+	unsigned int deviation
+):
+GlyphLayerShadowOffset (offsetX, offsetY),
+_radius                (radius),
+_deviation             (deviation) {
 }
 	
 bool GlyphLayerShadowGaussian::render(
@@ -117,12 +119,20 @@ bool GlyphLayerShadowGaussian::render(
 	
 	unsigned int blurSize = _getBlurSize();
 
-	cairo_translate(c, -static_cast<double>(blurSize) + getOffsetX(), -static_cast<double>(blurSize) + getOffsetY());
+	cairo_translate(
+		c,
+		-static_cast<double>(blurSize) + getOffsetX(),
+		-static_cast<double>(blurSize) + getOffsetY()
+	);
 
 	double add = blurSize * 4.0f;
 	
 	// Create a temporary small surface and then copy that to the bigger one.
-	cairo_surface_t* tmp = cairo_image_surface_create(CAIRO_FORMAT_A8, width + add, height + add);
+	cairo_surface_t* tmp = cairo_image_surface_create(
+		CAIRO_FORMAT_A8,
+		width + add,
+		height + add
+	);
 	
 	if(cairo_surface_status(tmp)) return false;
 
@@ -141,10 +151,17 @@ bool GlyphLayerShadowGaussian::render(
 	cairo_fill(tc);
 
 	if(_deviation > std::numeric_limits<double>::epsilon())
-		osgCairo::util::gaussianBlur(tmp, _radius, _deviation);
+		osgCairo::util::gaussianBlur(tmp, _radius, _deviation)
+	;
 	
-	cairo_set_source_surface(c, tmp, -static_cast<double>(blurSize), -static_cast<double>(blurSize));
+	cairo_set_source_surface(
+		c,
+		tmp,
+		-static_cast<double>(blurSize),
+		-static_cast<double>(blurSize)
+	);
 	cairo_paint(c);
+	cairo_destroy(tc);
 
 	return true;
 }
@@ -167,4 +184,49 @@ unsigned int GlyphLayerShadowGaussian::_getBlurSize() const {
 		_radius * 2.0
 	);
 }
+
+GlyphLayerShadowInset::GlyphLayerShadowInset(unsigned int radius, unsigned int deviation):
+_radius    (radius),
+_deviation (deviation) {
+}
+
+bool GlyphLayerShadowInset::render(
+	cairo_t*       c,
+	cairo_glyph_t* glyph,
+	unsigned int   width,
+	unsigned int   height
+) {
+	if(cairo_status(c) || !glyph) return false;
+	
+	cairo_surface_t* tmp = cairo_image_surface_create(CAIRO_FORMAT_A8, width, height);
+	
+	if(cairo_surface_status(tmp)) return false;
+
+	cairo_t* tc = cairo_create(tmp);
+
+	if(cairo_status(tc)) return false;
+
+	cairo_scaled_font_t* sf = cairo_get_scaled_font(c);
+
+	cairo_set_scaled_font(tc, sf);
+	//cairo_set_line_join(tc, CAIRO_LINE_JOIN_ROUND);
+	//cairo_set_line_width(tc, static_cast<double>(_radius) - 0.5f);
+	cairo_glyph_path(tc, glyph, 1);
+	// cairo_clip(tc);
+	// cairo_glyph_path(tc, glyph, 1);
+	cairo_stroke(tc);
+
+	if(_deviation > std::numeric_limits<double>::epsilon())
+		osgCairo::util::gaussianBlur(tmp, 10.0f, 0.0f) // _radius, _deviation)
+	;
+
+	cairo_surface_write_to_png(tmp, "foo.png");
+
+	cairo_set_source_surface(c, tmp, 0, 0);
+	cairo_paint(c);
+	cairo_destroy(tc);
+
+	return true;
+}
+
 }
