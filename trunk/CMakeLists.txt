@@ -31,8 +31,16 @@ ENDIF(NOT WIN32)
 SET(SRC_FILES
 	src/Context.cpp
 	src/Glyph.cpp
+	src/GlyphLayerInterface.cpp
 	src/GlyphLayer.cpp
 	src/GlyphRenderer.cpp
+	src/layers/Outline.cpp
+	src/layers/ShadowBlur.cpp
+	src/layers/Shadow.cpp
+	src/renderers/Default.cpp
+	src/renderers/Outline.cpp
+	src/renderers/ShadowBlur.cpp
+	src/renderers/Shadow.cpp
 	src/ShaderGenerator.cpp
 	src/ShaderManager.cpp
 	src/Text.cpp
@@ -43,6 +51,7 @@ SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/Context
 	${osgPango_SOURCE_DIR}/include/osgPango/Export
 	${osgPango_SOURCE_DIR}/include/osgPango/Glyph
+	${osgPango_SOURCE_DIR}/include/osgPango/GlyphLayerInterface
 	${osgPango_SOURCE_DIR}/include/osgPango/GlyphLayer
 	${osgPango_SOURCE_DIR}/include/osgPango/GlyphRenderer
 	${osgPango_SOURCE_DIR}/include/osgPango/ShaderGenerator

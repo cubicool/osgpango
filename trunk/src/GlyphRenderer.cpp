@@ -64,7 +64,6 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 		static_cast<int>(i)
 	);
 
-	// state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(1.0f);
 	state->addUniform(pangoTexture);
 	
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);	
@@ -137,67 +136,6 @@ bool GlyphRenderer::_setFragmentShader(osg::Geode* geode, const std::string& sha
 	program->addShader(getFragmentShader);
 
 	return true;
-}
-
-GlyphRendererDefault::GlyphRendererDefault() {
-	addLayer(new GlyphLayer());
-}
-
-bool GlyphRendererDefault::updateOrCreateState(int pass, osg::Geode* geode) {
-	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
-
-	return _setFragmentShader(geode, "osgPango-frag1");
-}
-
-GlyphRendererOutline::GlyphRendererOutline(unsigned int outline) {
-	addLayer(new GlyphLayer());
-	addLayer(new GlyphLayerOutline(outline));
-}
-
-bool GlyphRendererOutline::updateOrCreateState(int pass, osg::Geode* geode) {
-	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
-
-	return _setFragmentShader(geode, "osgPango-frag2");
-}
-
-GlyphRendererShadowOffset::GlyphRendererShadowOffset(int offsetX, int offsetY) {
-	unsigned int xt = 0;
-	unsigned int yt = 0;
-
-	if(offsetX < 0) xt = std::abs(static_cast<double>(offsetX));
-
-	if(offsetY < 0) yt = std::abs(static_cast<double>(offsetY));
-	
-	addLayer(new GlyphLayer());
-	addLayer(new GlyphLayerShadowOffset(offsetX, offsetY));
-}
-
-bool GlyphRendererShadowOffset::updateOrCreateState(int pass, osg::Geode* geode) {
-	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
-
-	return _setFragmentShader(geode, "osgPango-frag2");
-}
-
-GlyphRendererShadowGaussian::GlyphRendererShadowGaussian(unsigned int radius) {
-	addLayer(new GlyphLayer());
-	addLayer(new GlyphLayerShadowGaussian(0.0f, 0.0f, radius, radius * 0.5f));
-}
-
-bool GlyphRendererShadowGaussian::updateOrCreateState(int pass, osg::Geode* geode) {
-	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
-
-	return _setFragmentShader(geode, "osgPango-frag2");
-}
-
-GlyphRendererShadowInset::GlyphRendererShadowInset(unsigned int radius) {
-	addLayer(new GlyphLayerShadowInset(radius, radius));
-	addLayer(new GlyphLayer());
-}
-
-bool GlyphRendererShadowInset::updateOrCreateState(int pass, osg::Geode* geode) {
-	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
-
-	return _setFragmentShader(geode, "osgPango-frag2");
 }
 
 }

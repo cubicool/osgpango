@@ -85,28 +85,19 @@ public:
 	virtual bool updateOrCreateState(int pass, osg::Geode*);
 };
 
-class OSGPANGO_EXPORT GlyphRendererShadowOffset: public GlyphRenderer {
+class OSGPANGO_EXPORT GlyphRendererShadow: public GlyphRenderer {
 public:
-	GlyphRendererShadowOffset(int = 1, int = 1);
+	GlyphRendererShadow(int = 1, int = 1);
 
 	virtual bool updateOrCreateState(int pass, osg::Geode*);
 };
 
-class OSGPANGO_EXPORT GlyphRendererShadowGaussian: public GlyphRenderer {
+class OSGPANGO_EXPORT GlyphRendererShadowBlur: public GlyphRenderer {
 public:
-	GlyphRendererShadowGaussian(unsigned int = 1);
+	GlyphRendererShadowBlur(unsigned int = 1);
 	
 	virtual bool updateOrCreateState(int pass, osg::Geode*);
 };
-
-class OSGPANGO_EXPORT GlyphRendererShadowInset: public GlyphRenderer {
-public:
-	GlyphRendererShadowInset(unsigned int = 1);
-	
-	virtual bool updateOrCreateState(int pass, osg::Geode*);
-};
-
-
 
 }
 

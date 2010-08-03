@@ -1,0 +1,73 @@
+// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_GLYPHLAYERINTERFACE
+#define OSGPANGO_GLYPHLAYERINTERFACE
+
+#include <osgCairo/Image>
+#include <osgPango/Export>
+
+namespace osgPango {
+
+class OSGPANGO_EXPORT GlyphLayerInterfaceOffset {
+public:
+	int getOffsetX() const {
+		return _xOffset; 
+	}
+
+	int getOffsetY() const {
+		return _yOffset; 
+	}
+
+	void setOffsetX(int offset) {
+		_xOffset = offset;
+	}
+	
+	void setOffsetY(int offset) {
+		_yOffset = offset; 
+	}
+	
+protected:
+	GlyphLayerInterfaceOffset(int, int);
+
+	int _xOffset;
+	int _yOffset;
+};
+
+class OSGPANGO_EXPORT GlyphLayerInterfaceBlur {
+public:
+	cairo_surface_t* createBlurredSurface(
+		cairo_format_t,
+		cairo_pattern_t*,
+		unsigned int,
+		unsigned int
+	);
+
+	unsigned int getRadius() const {
+		return _radius; 
+	}
+	
+	double getDeviation() const {
+		return _deviation;
+	}
+
+	void setRadius(unsigned int radius) {
+		_radius = radius; 
+	}
+	
+	void setDeviation(unsigned int deviation) { 
+		_deviation = deviation;
+	}
+	
+protected:
+	GlyphLayerInterfaceBlur(unsigned int, unsigned int);
+	
+	unsigned int _getBlurSize() const;
+	
+	unsigned int _radius;	
+	unsigned int _deviation;
+};
+
+}
+
+#endif
