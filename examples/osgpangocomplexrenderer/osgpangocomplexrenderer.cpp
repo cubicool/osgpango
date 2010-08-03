@@ -67,7 +67,7 @@ struct GlyphLayerLines: public osgPango::GlyphLayer {
 
 struct GlyphRendererComplex: public osgPango::GlyphRenderer {
 	GlyphRendererComplex(bool useCustomLayer = false) {
-		addLayer(new osgPango::GlyphLayerShadowGaussian(0.0f, 0.0f, 10, 5.0));
+		addLayer(new osgPango::GlyphLayerShadowBlur(0.0f, 0.0f, 10, 5.0));
 		addLayer(new osgPango::GlyphLayerOutline(2.0f));
 
 		if(useCustomLayer) addLayer(new GlyphLayerLines());

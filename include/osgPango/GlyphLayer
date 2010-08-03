@@ -6,7 +6,7 @@
 
 #include <osg/Texture>
 #include <osgCairo/Image>
-#include <osgPango/Export>
+#include <osgPango/GlyphLayerInterface>
 
 namespace osgPango {
 
@@ -51,75 +51,26 @@ private:
 	unsigned int _outline;
 };
 
-class OSGPANGO_EXPORT GlyphLayerShadowOffset: public GlyphLayer {
+class OSGPANGO_EXPORT GlyphLayerShadow: public GlyphLayerInterfaceOffset, public GlyphLayer {
 public:
-	GlyphLayerShadowOffset(int = 1, int = 1);
+	GlyphLayerShadow(int = 1, int = 1);
 
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 	
 	virtual osg::Vec4 getExtraGlyphExtents() const;
-	
-	void setOffsetX(int offset) {
-		_xOffset = offset;
-	}
-	
-	int getOffsetX() const {
-		return _xOffset; 
-	}
-	
-	void setOffsetY(int offset) {
-		_yOffset = offset; 
-	}
-	
-	int getOffsetY() const {
-		return _yOffset; 
-	}
-
-private:
-	int _xOffset;
-	int _yOffset;
 };
 
-class OSGPANGO_EXPORT GlyphLayerShadowGaussian: public GlyphLayerShadowOffset {
+class OSGPANGO_EXPORT GlyphLayerShadowBlur:
+	public GlyphLayerInterfaceOffset,
+	public GlyphLayerInterfaceBlur,
+	public GlyphLayer
+{
 public:
-	GlyphLayerShadowGaussian(int = 1, int = 1, unsigned int = 2, unsigned int = 1);
+	GlyphLayerShadowBlur(int = 1, int = 1, unsigned int = 2, unsigned int = 1);
 	
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 	
 	virtual osg::Vec4 getExtraGlyphExtents() const;
-	
-	void setRadius(unsigned int radius) {
-		_radius = radius; 
-	}
-	
-	unsigned int getRadius() const {
-		return _radius; 
-	}
-	
-	void setDeviation(unsigned int deviation) { 
-		_deviation = deviation;
-	}
-	
-	double getDeviation() const {
-		return _deviation;
-	}
-	
-protected:
-	unsigned int _getBlurSize() const;
-	
-	unsigned int _radius;	
-	unsigned int _deviation;
-};
-
-class OSGPANGO_EXPORT GlyphLayerShadowInset: public GlyphLayer {
-public:
-	GlyphLayerShadowInset(unsigned int = 2, unsigned int = 1);
-	
-	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
-
-protected:
-	unsigned int _radius;	
-	unsigned int _deviation;
 };
 
 }

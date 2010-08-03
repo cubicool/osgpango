@@ -56,7 +56,7 @@ void setupArguments(osg::ArgumentParser& args) {
 
 	args.getApplicationUsage()->addCommandLineOption(
 		"--renderer <string> <int>",
-		"The GlyphRenderer object to use (outline, shadowOffset, shadowBlur, shadowInset) and size."
+		"The GlyphRenderer object to use (outline, shadow, shadowBlur) and size."
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
@@ -112,19 +112,14 @@ int main(int argc, char** argv) {
 			new osgPango::GlyphRendererOutline(s)
 		);
 
-		else if(renderer == "shadowOffset") context.addGlyphRenderer(
-			"shadowOffset",
-			new osgPango::GlyphRendererShadowOffset(s, s)
+		else if(renderer == "shadow") context.addGlyphRenderer(
+			"shadow",
+			new osgPango::GlyphRendererShadow(s, s)
 		);
 
 		else if(renderer == "shadowBlur") context.addGlyphRenderer(
 			"shadowBlur",
-			new osgPango::GlyphRendererShadowGaussian(s)
-		);
-
-		else if(renderer == "shadowInset") context.addGlyphRenderer(
-			"shadowInset",
-			new osgPango::GlyphRendererShadowInset(s)
+			new osgPango::GlyphRendererShadowBlur(s)
 		);
 
 		else continue;
