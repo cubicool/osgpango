@@ -100,6 +100,17 @@ bool GlyphRenderer::updateOrCreateState(
 	return true;
 }
 	
+osg::Texture2D* GlyphRenderer::createTexture(osg::Image* img) {
+	osg::Texture2D* texture = new osg::Texture2D();
+
+	texture->setImage(img);
+	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
+	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+	
+	return texture;
+}
+
+	
 void GlyphRenderer::addLayer(GlyphLayer *layer) {
 	_layers.push_back(layer);
 }

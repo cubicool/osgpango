@@ -197,11 +197,7 @@ bool GlyphCache::_newImageAndTexture() {
 	
 		if(!img || !img->valid() || !img->createContext()) return false;
 	
-		osg::Texture2D* texture = new osg::Texture2D();
-
-		texture->setImage(img);
-		texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
-		texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+		osg::Texture2D* texture = getGlyphRenderer()->createTexture(img);
 		
 		_layers[i].push_back(std::make_pair(img, texture));
 	}

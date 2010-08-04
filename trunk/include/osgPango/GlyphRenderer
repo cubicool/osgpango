@@ -5,7 +5,7 @@
 #define OSGPANGO_GLYPHRENDERER
 
 #include <osg/Geometry>
-#include <osg/Texture>
+#include <osg/Texture2D>
 #include <osgCairo/Image>
 #include <osgPango/Export>
 #include <osgPango/GlyphLayer>
@@ -40,6 +40,8 @@ public:
 	
 	virtual bool updateOrCreateState (int pass, osg::Geode*);
 	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
+
+	virtual osg::Texture2D* createTexture(osg::Image*);
 
 	void setName(const std::string& name) {
 		_name = name;

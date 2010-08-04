@@ -37,6 +37,7 @@ SET(SRC_FILES
 	src/layers/Outline.cpp
 	src/layers/ShadowBlur.cpp
 	src/layers/Shadow.cpp
+	src/layers/FaceBitmap.cpp
 	src/renderers/Default.cpp
 	src/renderers/Outline.cpp
 	src/renderers/ShadowBlur.cpp
