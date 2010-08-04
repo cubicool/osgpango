@@ -157,7 +157,6 @@ int main(int argc, char** argv) {
 
 	if(!t->finalize()) return 1;
 
-	/*
 	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
@@ -172,7 +171,6 @@ int main(int argc, char** argv) {
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.run();
-	*/
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
 	osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
