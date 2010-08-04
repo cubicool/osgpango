@@ -34,18 +34,24 @@ SET(SRC_FILES
 	src/GlyphLayerInterface.cpp
 	src/GlyphLayer.cpp
 	src/GlyphRenderer.cpp
-	src/layers/Outline.cpp
-	src/layers/ShadowBlur.cpp
-	src/layers/Shadow.cpp
-	src/layers/FaceBitmap.cpp
-	src/renderers/Default.cpp
-	src/renderers/Outline.cpp
-	src/renderers/ShadowBlur.cpp
-	src/renderers/Shadow.cpp
 	src/ShaderGenerator.cpp
 	src/ShaderManager.cpp
 	src/Text.cpp
 	src/Util.cpp
+)
+
+SET(SRC_LAYER_FILES
+	src/layers/Outline.cpp
+	src/layers/ShadowBlur.cpp
+	src/layers/Shadow.cpp
+	src/layers/FaceBitmap.cpp
+)
+
+SET(SRC_RENDERER_FILES
+	src/renderers/Default.cpp
+	src/renderers/Outline.cpp
+	src/renderers/ShadowBlur.cpp
+	src/renderers/Shadow.cpp
 )
 
 SET(HEADER_FILES
@@ -63,6 +69,9 @@ SET(HEADER_FILES
 )
 
 SOURCE_GROUP("Header Files" FILES ${HEADER_FILES})
+SOURCE_GROUP("Source Files" FILES ${SRC_FILES})
+SOURCE_GROUP("Source Files\Layers" FILES ${SRC_LAYER_FILES})
+SOURCE_GROUP("Source Files\Renderers" FILES ${SRC_RENDERER_FILES})
 
 FIND_PACKAGE(OpenSceneGraph)
 FIND_PACKAGE(OsgCairo)
@@ -91,7 +100,7 @@ LINK_DIRECTORIES(
 	${OSGCAIRO_LIB_DIR}
 )
 
-ADD_LIBRARY(osgPango SHARED ${SRC_FILES} ${HEADER_FILES})
+ADD_LIBRARY(osgPango SHARED ${SRC_FILES} ${SRC_LAYER_FILES} ${SRC_RENDERER_FILES} ${HEADER_FILES})
 
 # Add debug postfix to OSG libraries so we link to the right ones in debug.
 # Cairo, pango, pangocairo and the gtk libs are C-only libraries so the same
