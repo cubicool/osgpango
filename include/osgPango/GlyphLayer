@@ -73,6 +73,43 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 };
 
+class OSGPANGO_EXPORT GlyphLayerFaceBitmap: public GlyphLayer {
+public:
+	GlyphLayerFaceBitmap(const std::string & = std::string());
+	virtual ~GlyphLayerFaceBitmap();
+
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+
+	void setFaceBitmap(const std::string &);
+	
+	const std::string&  getFaceBitmap() const { 
+		return _path; 
+	}
+
+	void setFaceBitmapRepeatX(unsigned int repeat) { 
+		_repeatX = repeat; 
+	}
+	
+	unsigned int getFaceBitmapRepeatX() const { 
+		return _repeatX; 
+	}
+
+	void setFaceBitmapRepeatY(unsigned int repeat) { 
+		_repeatY = repeat; 
+	}
+	
+	unsigned int getFaceBitmapRepeatY() const { 
+		return _repeatY; 
+	}
+
+private:
+	std::string                   _path;
+	unsigned int                  _repeatX;
+	unsigned int                  _repeatY;
+	osg::ref_ptr<osgCairo::Image> _bitmap;
+	cairo_pattern_t*              _pattern;
+};
+
 }
 
 #endif
