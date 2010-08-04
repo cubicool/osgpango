@@ -26,6 +26,8 @@ bool GlyphLayerShadowBlur::render(
 	
 	unsigned int blurSize = _getBlurSize();
 
+	cairo_translate(c, getOffsetX(), getOffsetY());
+	
 	cairo_push_group(c);
 	cairo_set_line_join(c, CAIRO_LINE_JOIN_ROUND);
 	cairo_set_line_width(c, static_cast<double>(_radius) - 0.5f);
@@ -35,13 +37,6 @@ bool GlyphLayerShadowBlur::render(
 
 	cairo_surface_t* tmp = createBlurredSurface(CAIRO_FORMAT_A8, cairo_pop_group(c), width, height);
 
-	/*
-	cairo_translate(
-		c,
-		-static_cast<double>(blurSize) + getOffsetX(),
-		-static_cast<double>(blurSize) + getOffsetY()
-	);
-	*/
 
 	cairo_set_source_surface(
 		c,
