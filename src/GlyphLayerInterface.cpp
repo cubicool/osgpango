@@ -46,16 +46,13 @@ cairo_surface_t* GlyphLayerInterfaceBlur::createBlurredSurface(
 	cairo_destroy(tc);
 
 	osgCairo::util::gaussianBlur(tmp, _radius, _deviation);
-	osgCairo::util::writeToPNG(tmp, "GlyphLayerInterface-tmp.png");
+	//osgCairo::util::writeToPNG(tmp, "GlyphLayerInterface-tmp.png");
 
 	return tmp;
 }
 
 unsigned int GlyphLayerInterfaceBlur::_getBlurSize() const {
-	return std::min<double>(
-		std::max<double>(_deviation * 3.0, _radius), 
-		_radius * 2.0
-	);
+	return std::min(std::max(_deviation * 3, _radius), _radius * 2);
 }
 
 }
