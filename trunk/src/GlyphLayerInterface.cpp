@@ -29,12 +29,8 @@ cairo_surface_t* GlyphLayerInterfaceBlur::createBlurredSurface(
 	// Create a temporary small surface and then copy that to the bigger one.
 	cairo_surface_t* tmp = cairo_image_surface_create(
 		format,
-		width + (blurSize * 2),
-		height + (blurSize * 2)
-		/*
 		width + (blurSize * 4),
 		height + (blurSize * 4)
-		*/
 	);
 	
 	if(cairo_surface_status(tmp)) return 0;
@@ -43,8 +39,7 @@ cairo_surface_t* GlyphLayerInterfaceBlur::createBlurredSurface(
 
 	if(cairo_status(tc)) return 0;
 
-	//cairo_translate(tc, blurSize * 2, blurSize * 2);
-	cairo_translate(tc, blurSize, blurSize);
+	cairo_translate(tc, blurSize * 2, blurSize * 2);
 	cairo_set_source(tc, pattern);
 	cairo_paint(tc);
 
