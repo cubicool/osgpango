@@ -156,17 +156,14 @@ GlyphCache* Context::getGlyphCache(PangoFont* font, const std::string& renderer)
 }
 
 void Context::resetGlyphCaches(const std::string& renderer) {
-	std::vector<GlyphCacheFontMap::iterator> toErase;
+	for(GlyphCacheFontMap::iterator it = _gcfMap.begin(); it != _gcfMap.end(); ) {
+		if(it->first.second == renderer) { 
+			GlyphCacheFontMap::iterator toErase = it++;
 	
-	for(
-		GlyphCacheFontMap::iterator it = _gcfMap.begin(); 
-		it != _gcfMap.end();
-		++it
-	) {
-		if(it->first.second == renderer) toErase.push_back(it);
+			_gcfMap.erase(toErase);
+		}
+		else ++it;
 	}
-	
-	for(unsigned int i = 0; i < toErase.size(); ++i) _gcfMap.erase(toErase[i]);
 }
 
 
