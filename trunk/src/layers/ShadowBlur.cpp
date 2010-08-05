@@ -34,9 +34,9 @@ bool GlyphLayerShadowBlur::render(
 	cairo_glyph_path(c, glyph, 1);
 	cairo_stroke_preserve(c);
 	cairo_fill(c);
+	cairo_pattern_t* pattern = cairo_pop_group(c);
 
-	cairo_surface_t* tmp = createBlurredSurface(CAIRO_FORMAT_A8, cairo_pop_group(c), width, height);
-
+	cairo_surface_t* tmp = createBlurredSurface(CAIRO_FORMAT_A8, pattern, width, height);
 
 	cairo_set_source_surface(
 		c,
@@ -44,8 +44,10 @@ bool GlyphLayerShadowBlur::render(
 		-static_cast<double>(blurSize) * 2,
 		-static_cast<double>(blurSize) * 2
 	);
-
 	cairo_paint(c);
+
+	cairo_surface_destroy(tmp);
+	cairo_pattern_destroy(pattern);
 
 	return true;
 }

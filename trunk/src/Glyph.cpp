@@ -195,7 +195,7 @@ bool GlyphCache::_newImageAndTexture() {
 			_renderer->getImageFormatForLayer(i)
 		);
 	
-		if(!img || !img->valid() || !img->createContext()) return false;
+		if(!img || !img->valid()) return false;
 	
 		osg::Texture2D* texture = getGlyphRenderer()->createTexture(img);
 		
