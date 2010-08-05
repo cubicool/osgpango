@@ -45,13 +45,7 @@ Text::~Text() {
 }
 
 void Text::clear() {
-	for(GlyphGeometryMap::iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
-		GlyphGeometryIndex& ggi = g->second;
-
-		ggi.clear();
-	}
 	_ggMap.clear();
-
 	_size      = osg::Vec2();
 	_origin    = osg::Vec2();
 	_baseline  = 0;
@@ -329,19 +323,42 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 
 	_finalized = true;
 	
+	_ggMap.clear();
+	
 	return true;
 }
 
-void Text::_applyTransform(const osg::Matrixd& transform) {
-	osgUtil::TransformAttributeFunctor functor(_lastTransform * transform);
 
-	for(GlyphGeometryMap::const_iterator g = _ggMap.begin(); g != _ggMap.end(); g++) {
-		const GlyphGeometryIndex& ggi = g->second;
+struct ApplyTransformsVisitor: public osg::NodeVisitor {
 		
-		for(GlyphGeometryIndex::const_iterator ct = ggi.begin(); ct != ggi.end(); ++ct) {
-			ct->second->accept(functor);
+	ApplyTransformsVisitor(const osg::Matrixd &transform):
+	osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
+	_functor(transform) { }
+	
+	virtual void apply(osg::Geode& geode) {
+		for(unsigned int i=0; i<geode.getNumDrawables(); ++i)
+		  _toTransform.insert(geode.getDrawable(i));
 		}
+	
+	void transform() {
+		for(
+			std::set<osg::Drawable*>::const_iterator ct = _toTransform.begin();
+			ct != _toTransform.end();
+			++ct
+		) {
+			(*ct)->accept(_functor);
 	}
+	}
+	
+	osgUtil::TransformAttributeFunctor  _functor;
+	std::set<osg::Drawable*>            _toTransform;
+};
+
+void Text::_applyTransform(osg::Node* node, const osg::Matrixd& transform) {
+	ApplyTransformsVisitor nv(_lastTransform * transform);
+	
+	node->accept(nv);
+	nv.transform();
 
 	_lastTransform = osg::Matrixd::inverse(transform);
 }

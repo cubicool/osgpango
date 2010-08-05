@@ -167,7 +167,7 @@ public:
 
 protected:
 	bool _finalizeGeometry(osg::Group *);
-	void _applyTransform(const osg::Matrixd &);
+	void _applyTransform(osg::Node*, const osg::Matrixd &);
 
 	GlyphGeometryMap _ggMap;
 	osg::Vec2        _size;
@@ -346,7 +346,7 @@ protected:
 			 0.0,  0.0,  0.0, 1.0
 		);
 
-		_applyTransform(osg::Matrix::translate(origin) * axisMatrix);
+		_applyTransform(this, osg::Matrix::translate(origin) * axisMatrix);
 	}
 		
 	PositionAlignment      _positionAlignment;
