@@ -328,17 +328,17 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 	return true;
 }
 
-
 struct ApplyTransformsVisitor: public osg::NodeVisitor {
-		
 	ApplyTransformsVisitor(const osg::Matrixd &transform):
-	osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
-	_functor(transform) { }
+	osg::NodeVisitor (osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
+	_functor         (transform) {
+	}
 	
 	virtual void apply(osg::Geode& geode) {
-		for(unsigned int i=0; i<geode.getNumDrawables(); ++i)
-		  _toTransform.insert(geode.getDrawable(i));
+		for(unsigned int i = 0; i < geode.getNumDrawables(); ++i) {
+			_toTransform.insert(geode.getDrawable(i));
 		}
+	}
 	
 	void transform() {
 		for(
@@ -347,17 +347,18 @@ struct ApplyTransformsVisitor: public osg::NodeVisitor {
 			++ct
 		) {
 			(*ct)->accept(_functor);
-	}
+		}
 	}
 	
-	osgUtil::TransformAttributeFunctor  _functor;
-	std::set<osg::Drawable*>            _toTransform;
+	osgUtil::TransformAttributeFunctor _functor;
+	std::set<osg::Drawable*>           _toTransform;
 };
 
 void Text::_applyTransform(osg::Node* node, const osg::Matrixd& transform) {
 	ApplyTransformsVisitor nv(_lastTransform * transform);
 	
 	node->accept(nv);
+
 	nv.transform();
 
 	_lastTransform = osg::Matrixd::inverse(transform);

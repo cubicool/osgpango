@@ -166,15 +166,6 @@ void Context::resetGlyphCaches(const std::string& renderer) {
 	}
 }
 
-
-const GlyphRenderer* Context::getGlyphRenderer(const std::string& renderer) const {
-	const GlyphRendererMap::const_iterator i = _grMap.find(renderer);
-
-	if(i == _grMap.end()) return 0;
-
-	return i->second;
-}
-
 void Context::drawGlyphs(
 	PangoRenderer*    renderer,
 	PangoFont*        font,
@@ -302,6 +293,14 @@ _textureHeight (DEFAULT_CACHE_HEIGHT) {
 	_grMap[""] = new GlyphRendererDefault();
 
 	_grMap[""]->setName("Default");
+}
+
+GlyphRenderer* Context::_getGlyphRenderer(const std::string& renderer) const {
+	const GlyphRendererMap::const_iterator i = _grMap.find(renderer);
+
+	if(i == _grMap.end()) return 0;
+
+	return i->second;
 }
 
 }

@@ -166,8 +166,8 @@ public:
 	osg::Vec2 getOriginTranslated () const;
 
 protected:
-	bool _finalizeGeometry(osg::Group *);
-	void _applyTransform(osg::Node*, const osg::Matrixd &);
+	bool _finalizeGeometry (osg::Group*);
+	void _applyTransform   (osg::Node*, const osg::Matrixd& );
 
 	GlyphGeometryMap _ggMap;
 	osg::Vec2        _size;
