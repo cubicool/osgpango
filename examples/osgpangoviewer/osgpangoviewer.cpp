@@ -60,6 +60,11 @@ void setupArguments(osg::ArgumentParser& args) {
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
+		"--facebitmap <image>",
+		"Use the specified image to fill the glyph face."
+	);
+
+	args.getApplicationUsage()->addCommandLineOption(
 		"--alpha <float>",
 		"The composite alpha for both the font and the effects."
 	);
@@ -94,7 +99,7 @@ int main(int argc, char** argv) {
 	std::string text(LOREM_IPSUM);
 
 	// All of our temporary variables.
-	std::string renderer, rendererSize, alpha, alignment, width;
+	std::string renderer, rendererSize, alpha, alignment, width, image;
 
 	osgPango::Context& context = osgPango::Context::instance();
 
@@ -127,6 +132,8 @@ int main(int argc, char** argv) {
 		to.renderer = renderer;
 	}
 
+	while(args.read("--facebitmap", image));
+
 	while(args.read("--alpha", alpha)) {
 		float a = std::atof(alpha.c_str());
 
@@ -148,6 +155,12 @@ int main(int argc, char** argv) {
 		text = "";
 
 		for(int i = 1; i < args.argc(); i++) text += std::string(args[i]) + " ";
+	}
+
+	if(!image.empty()) {
+		osgPango::GlyphRenderer* r = context.getGlyphRenderer(to.renderer);
+
+		if(r) r->replaceLayer(0, new osgPango::GlyphLayerFaceBitmap(image));
 	}
 
 	// The user didn't set a width, so use our screen size.
@@ -173,7 +186,7 @@ int main(int argc, char** argv) {
 	viewer.run();
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
-	osgPango::Context::instance().writeCachesToPNGFiles("osgpangoviewer");
+	context.writeCachesToPNGFiles("osgpangoviewer");
 	
 	return 0;
 }

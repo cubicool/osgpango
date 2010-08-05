@@ -75,31 +75,32 @@ public:
 
 class OSGPANGO_EXPORT GlyphLayerFaceBitmap: public GlyphLayer {
 public:
-	GlyphLayerFaceBitmap(const std::string & = std::string());
+	GlyphLayerFaceBitmap(const std::string& = "");
+	
 	virtual ~GlyphLayerFaceBitmap();
 
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 
-	void setFaceBitmap(const std::string &);
+	void setBitmap(const std::string&);
 	
-	const std::string&  getFaceBitmap() const { 
+	const std::string&  getBitmap() const { 
 		return _path; 
 	}
 
-	void setFaceBitmapRepeatX(unsigned int repeat) { 
-		_repeatX = repeat; 
-	}
-	
-	unsigned int getFaceBitmapRepeatX() const { 
+	unsigned int getRepeatX() const { 
 		return _repeatX; 
 	}
 
-	void setFaceBitmapRepeatY(unsigned int repeat) { 
-		_repeatY = repeat; 
-	}
-	
-	unsigned int getFaceBitmapRepeatY() const { 
+	unsigned int getRepeatY() const { 
 		return _repeatY; 
+	}
+
+	void setRepeatX(unsigned int repeat) { 
+		_repeatX = repeat; 
+	}
+
+	void setRepeatY(unsigned int repeat) { 
+		_repeatY = repeat; 
 	}
 
 private:

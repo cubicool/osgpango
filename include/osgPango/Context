@@ -112,12 +112,20 @@ public:
 	GlyphCache* getGlyphCache(PangoFont* font, const std::string& renderer = "");
 	
 	void resetGlyphCaches(const std::string& renderer);
-	
+
+	//! This method will allow you to retrieve a read-write pointer any custome
+	//! GlyphRenderer object installed in the Context. USE WITH CAUTION!
+	GlyphRenderer* getGlyphRenderer(const std::string& renderer) {
+		return _getGlyphRenderer(renderer);
+	}
+
 	//! This method will allow you to retrieve a read-only pointer to any custom 
 	//! GlyphRenderer object you may have installed into the Context at a previous
 	//! time. For more about what this  means exactly, take a look at the documentation
 	//! for GlyphRenderer.
-	const GlyphRenderer* getGlyphRenderer(const std::string& renderer) const;
+	const GlyphRenderer* getGlyphRenderer(const std::string& renderer) const {
+		return _getGlyphRenderer(renderer);
+	}
 	
 	//! This is another method that is mostly used internally, due to the fact that
 	//! it requires a PangoLayout pointer which is not an object users generally
@@ -176,6 +184,8 @@ private:
 	typedef std::map<std::string, osg::ref_ptr<GlyphRenderer> >       GlyphRendererMap;
 
 	Context();
+
+	GlyphRenderer* _getGlyphRenderer(const std::string&) const;
 
 	static Context _context;
 	
