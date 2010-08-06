@@ -110,7 +110,6 @@ osg::Texture2D* GlyphRenderer::createTexture(osg::Image* img) {
 	return texture;
 }
 
-	
 void GlyphRenderer::addLayer(GlyphLayer *layer) {
 	_layers.push_back(layer);
 }
@@ -128,10 +127,9 @@ void GlyphRenderer::clearLayers() {
 }
 
 cairo_format_t GlyphRenderer::getImageFormatForLayer(unsigned int index) {
-	if(index < _layers.size()) 
-		return _layers[index]->getCairoImageFormat();
-	else
-		return CAIRO_FORMAT_A8;
+	if(index < _layers.size()) return _layers[index]->getCairoImageFormat();
+	
+	else return CAIRO_FORMAT_A8;
 }
 
 bool GlyphRenderer::_setFragmentShader(osg::Geode* geode, const std::string& shaderName) {

@@ -73,6 +73,13 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 };
 
+class OSGPANGO_EXPORT GlyphLayerShadowInset: public GlyphLayerInterfaceBlur, public GlyphLayer {
+public:
+	GlyphLayerShadowInset(unsigned int = 2, unsigned int = 1);
+	
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+};
+
 class OSGPANGO_EXPORT GlyphLayerFaceBitmap: public GlyphLayer {
 public:
 	GlyphLayerFaceBitmap(const std::string& = "");
