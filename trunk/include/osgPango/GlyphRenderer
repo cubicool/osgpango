@@ -101,6 +101,13 @@ public:
 	virtual bool updateOrCreateState(int pass, osg::Geode*);
 };
 
+class OSGPANGO_EXPORT GlyphRendererShadowInset: public GlyphRenderer {
+public:
+	GlyphRendererShadowInset(unsigned int = 1);
+	
+	virtual bool updateOrCreateState(int pass, osg::Geode*);
+};
+
 }
 
 #endif

@@ -43,6 +43,7 @@ SET(SRC_FILES
 SET(SRC_LAYER_FILES
 	src/layers/Outline.cpp
 	src/layers/ShadowBlur.cpp
+	src/layers/ShadowInset.cpp
 	src/layers/Shadow.cpp
 	src/layers/FaceBitmap.cpp
 )
@@ -51,6 +52,7 @@ SET(SRC_RENDERER_FILES
 	src/renderers/Default.cpp
 	src/renderers/Outline.cpp
 	src/renderers/ShadowBlur.cpp
+	src/renderers/ShadowInset.cpp
 	src/renderers/Shadow.cpp
 )
 
@@ -70,8 +72,8 @@ SET(HEADER_FILES
 
 SOURCE_GROUP("Header Files" FILES ${HEADER_FILES})
 SOURCE_GROUP("Source Files" FILES ${SRC_FILES})
-SOURCE_GROUP("Source Files\Layers" FILES ${SRC_LAYER_FILES})
-SOURCE_GROUP("Source Files\Renderers" FILES ${SRC_RENDERER_FILES})
+SOURCE_GROUP("Source Files\\Layers" FILES ${SRC_LAYER_FILES})
+SOURCE_GROUP("Source Files\\Renderers" FILES ${SRC_RENDERER_FILES})
 
 FIND_PACKAGE(OpenSceneGraph)
 FIND_PACKAGE(OsgCairo)
