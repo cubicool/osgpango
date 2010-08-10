@@ -11,6 +11,7 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgPango/Context>
+#include <osgPango/ShaderManager>
 
 const std::string LOREM_IPSUM(
 	"<span font='Verdana 20'>"
@@ -172,6 +173,7 @@ int main(int argc, char** argv) {
 	if(to.width <= 0) to.width = WINDOW_WIDTH;
 
 	t->addText(text, 0, 0, to);
+	t->setMatrix(osg::Matrix::translate(30.0f, 30.0f, 0.0f));
 
 	if(!t->finalize()) return 1;
 
@@ -192,6 +194,6 @@ int main(int argc, char** argv) {
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
 	context.writeCachesToPNGFiles("osgpangoviewer");
-	
+
 	return 0;
 }
