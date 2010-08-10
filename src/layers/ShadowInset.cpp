@@ -10,7 +10,8 @@ GlyphLayerShadowInset::GlyphLayerShadowInset(
 	unsigned int radius, 
 	unsigned int deviation
 ):
-GlyphLayerInterfaceBlur(radius, deviation) {
+GlyphLayerInterfaceBlur(radius, deviation),
+GlyphLayerInterfaceOffset(0, 0) {
 }
 	
 bool GlyphLayerShadowInset::render(
@@ -21,9 +22,9 @@ bool GlyphLayerShadowInset::render(
 ) {
 	if(cairo_status(c) || !glyph) return false;
 
-	/*
 	// METHOD 1 ===============================================================================
 	cairo_push_group(c);
+	cairo_translate(c, getOffsetX(), getOffsetY());
 	cairo_set_line_join(c, CAIRO_LINE_JOIN_ROUND);
 	cairo_set_line_width(c, static_cast<double>(_radius) - 0.5f);
 	cairo_glyph_path(c, glyph, 1);
@@ -44,8 +45,9 @@ bool GlyphLayerShadowInset::render(
 	cairo_paint(c);
 	cairo_surface_destroy(tmp);
 	cairo_pattern_destroy(pattern);
-	*/
 
+
+#if 0
 	// METHOD 2 ===============================================================================
 	cairo_set_line_join(c, CAIRO_LINE_JOIN_ROUND);
 	cairo_glyph_path(c, glyph, 1);
@@ -56,6 +58,7 @@ bool GlyphLayerShadowInset::render(
 		cairo_set_line_width(c, r * 2);
 		cairo_stroke_preserve(c);
 	}
+#endif
 
 	return true;
 }
