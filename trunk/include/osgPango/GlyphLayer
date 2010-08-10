@@ -73,7 +73,10 @@ public:
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 };
 
-class OSGPANGO_EXPORT GlyphLayerShadowInset: public GlyphLayerInterfaceBlur, public GlyphLayer {
+class OSGPANGO_EXPORT GlyphLayerShadowInset: 
+	public GlyphLayerInterfaceOffset,
+	public GlyphLayerInterfaceBlur, 
+	public GlyphLayer {
 public:
 	GlyphLayerShadowInset(unsigned int = 2, unsigned int = 1);
 	
