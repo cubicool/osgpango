@@ -227,9 +227,9 @@ int main(int argc, char** argv) {
 
 	viewer.run();
 
-	// osgPango::Context::instance().writeCachesToPNGFiles("osgpangocomplexrenderer");
+	// context.writeCachesToPNGFiles("osgpangocomplexrenderer");
 	
-	unsigned long bytes = osgPango::Context::instance().getMemoryUsageInBytes();
+	unsigned long bytes = context.getMemoryUsageInBytes();
 	
 	osg::notify(osg::NOTICE)
 		<< "Used " << (bytes / 1024.0f) / 1024.0f << "MB of Image data internally."

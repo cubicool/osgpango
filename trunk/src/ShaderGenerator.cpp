@@ -20,9 +20,15 @@ std::string baseFragmentHeader(unsigned int num) {
 	source
 		<< "#version 120" << std::endl
 		<< "varying vec4 pangoTexCoord;" << std::endl
-		<< "uniform vec3 pangoColor[" << num << "];" << std::endl
+		<< "uniform vec4 pangoColor[" << num << "];" << std::endl
 		<< "uniform sampler2D pangoTexture[" << num << "];" << std::endl
 		<< "uniform float pangoAlpha;" << std::endl
+		<< "vec4 pangoGetColor(int i) {" << std::endl
+		<< "vec4 c = pangoColor[i];" << std::endl
+		<< "vec4 t = texture2D(pangoTexture[i], pangoTexCoord.st);" << std::endl
+		<< "if(c.a >= 1.0) return vec4(vec3(t.rgb), t.a);" << std::endl
+		<< "else return vec4(c.rgb, t.a);" << std::endl
+		<< "}" << std::endl
 		<< "void main() {" << std::endl
 		<< "vec4 frag = vec4(0.0, 0.0, 0.0, 0.0);" << std::endl
 	;
@@ -34,9 +40,6 @@ std::string baseFragmentFooter() {
 	std::ostringstream source;
 	
 	source
-		<< "if(frag.a == 0.0) frag = vec4(c, a * pangoAlpha);" << std::endl
-		<< "else frag = mix(frag, vec4(c, a), a * pangoAlpha);" << std::endl
-		<< "}" << std::endl
 		<< "gl_FragColor = frag;" << std::endl
 		<< "}" << std::endl
 	;
@@ -50,8 +53,9 @@ std::string createBackToFrontShader(unsigned int num) {
 	shaderSource
 		<< baseFragmentHeader(num)
 		<< "for(int i = " << num - 1 << "; i >= 0; i--) {" << std::endl
-		<< "float a = texture2D(pangoTexture[i], pangoTexCoord.st).a;" << std::endl
-		<< "vec3 c = pangoColor[i];" << std::endl
+		<< "vec4 col = pangoGetColor(i);" << std::endl
+		<< "frag = mix(frag, col, col.a * pangoAlpha);" << std::endl
+		<< "}" << std::endl
 		<< baseFragmentFooter()
 	;
 
@@ -72,9 +76,9 @@ std::string createLayerIndexShader(unsigned int num, const LayerIndexVector& liv
 
 	shaderSource
 		<< "for(int i = 0; i < "<< liv.size() << "; i++) {" << std::endl
-		<< "int index = indices[i];" << std::endl
-		<< "float a = texture2D(pangoTexture[index], pangoTexCoord.st).a;" << std::endl
-		<< "vec3 c = pangoColor[index];" << std::endl
+		<< "vec4 col = pangoGetColor(indices[i]);" << std::endl
+		<< "frag = mix(frag, col, col.a * pangoAlpha);" << std::endl
+		<< "}" << std::endl
 		<< baseFragmentFooter()
 	;
 

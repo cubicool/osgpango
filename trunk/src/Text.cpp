@@ -329,7 +329,7 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 }
 
 struct ApplyTransformsVisitor: public osg::NodeVisitor {
-	ApplyTransformsVisitor(const osg::Matrixd &transform):
+	ApplyTransformsVisitor(const osg::Matrixd& transform):
 	osg::NodeVisitor (osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
 	_functor         (transform) {
 	}

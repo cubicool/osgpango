@@ -11,10 +11,10 @@
 
 struct GlyphRendererMultiOutline: public osgPango::GlyphRenderer {
 	GlyphRendererMultiOutline(bool useCustomLayer = false) {
-		addLayer(new osgPango::GlyphLayerOutline(4.0f));
-		addLayer(new osgPango::GlyphLayerOutline(3.0f));
-		addLayer(new osgPango::GlyphLayerOutline(1.0f));
 		addLayer(new osgPango::GlyphLayer());
+		addLayer(new osgPango::GlyphLayerOutline(1.0f));
+		addLayer(new osgPango::GlyphLayerOutline(3.0f));
+		addLayer(new osgPango::GlyphLayerOutline(4.0f));
 
 		osgPango::ShaderManager::instance().addShaderFile(
 			"my-shader",
@@ -72,14 +72,15 @@ int main(int argc, char** argv) {
 
 	osgPango::ColorPalette cp;
 
+	cp.push_back(osg::Vec3(1.0f, 1.0f, 0.0f));
 	cp.push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
 	cp.push_back(osg::Vec3(1.0f, 1.0f, 1.0f));
 	cp.push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
-	cp.push_back(osg::Vec3(1.0f, 1.0f, 0.0f));
 
+	t->setAlpha(0.8f);
 	t->setColorPalette(cp);
 	t->addText(
-		"<span font='Verdana Bold 30'>osgPango Multi Effects</span>",
+		"<span font='Cheri Liney 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
 		0,
 		0,
 		osgPango::TextOptions("multioutline")

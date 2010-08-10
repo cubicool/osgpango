@@ -13,7 +13,7 @@
 const unsigned int WINDOW_WIDTH  = 800;
 const unsigned int WINDOW_HEIGHT = 600;
 
-#define FONT "<span font='Slider 35' color='black' bgcolor='white'>"
+#define FONT "<span font='Verdana Bold 27' color='black' bgcolor='white'>"
 
 class UpdateCallback: public osg::NodeCallback {
 public:
@@ -144,7 +144,7 @@ int main(int ac, char **av) {
 	osgPango::Context::instance().init();
 	osgPango::Context::instance().addGlyphRenderer(
 		"outline",
-		new osgPango::GlyphRendererOutline(2)
+		new osgPango::GlyphRendererOutline(1)
 	);
 
 	osgPango::TextTransform* textTransform = new osgPango::TextTransform();

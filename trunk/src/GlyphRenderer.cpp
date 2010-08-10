@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <sstream>
+#include <osg/BlendFunc>
 #include <osg/Depth>
 #include <osg/Geode>
 #include <osgCairo/Util>
@@ -82,7 +83,7 @@ bool GlyphRenderer::updateOrCreateState(
 	) return false;
 		
 	osg::Uniform* pangoColor = new osg::Uniform(
-		osg::Uniform::FLOAT_VEC3, 
+		osg::Uniform::FLOAT_VEC4, 
 		"pangoColor", 
 		_layers.size()
 	);
@@ -92,7 +93,16 @@ bool GlyphRenderer::updateOrCreateState(
 	state->addUniform(pangoColor);
 	
 	for(unsigned int i = 0; i < _layers.size(); ++i) {
-		pangoColor->setElement(i, ggs.colors[i]);
+		osg::Vec4 color(ggs.colors[i], 0.0f);
+
+		// We use a dirty trick here; the alpha part of this Vec4 isn't actually
+		// interpreted as alpha! It is used as a boolean to determine whether the
+		// default shader should use the RGB color found in the texture or not.
+		if(_layers[i]->getCairoImageFormat() == CAIRO_FORMAT_RGB24) color[3] = 1.0f;
+		
+		else if(_layers[i]->getCairoImageFormat() == CAIRO_FORMAT_ARGB32) color[3] = 2.0f;
+
+		pangoColor->setElement(i, color); 
 		
 		state->setTextureAttributeAndModes(i, ggs.textures[i], osg::StateAttribute::ON);
 	}
@@ -142,8 +152,12 @@ bool GlyphRenderer::_setFragmentShader(osg::Geode* geode, const std::string& sha
 
 	if(!getFragmentShader) return false;
 
-	program->addShader(getFragmentShader);
+	state->setAttributeAndModes(
+		new osg::BlendFunc(osg::BlendFunc::ONE, osg::BlendFunc::ONE_MINUS_SRC_ALPHA)
+	);
 
+	program->addShader(getFragmentShader);
+	
 	return true;
 }
 
