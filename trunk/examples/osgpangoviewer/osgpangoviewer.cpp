@@ -8,6 +8,7 @@
 #include <osg/MatrixTransform>
 #include <osgGA/StateSetManipulator>
 #include <osgDB/ReadFile>
+#include <osgDB/WriteFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgPango/Context>
@@ -61,7 +62,7 @@ void setupArguments(osg::ArgumentParser& args) {
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
-		"--facebitmap <image>",
+		"--bitmap <image>",
 		"Use the specified image to fill the glyph face."
 	);
 
@@ -138,7 +139,7 @@ int main(int argc, char** argv) {
 		to.renderer = renderer;
 	}
 
-	while(args.read("--facebitmap", image));
+	while(args.read("--bitmap", image));
 
 	while(args.read("--alpha", alpha)) {
 		float a = std::atof(alpha.c_str());
@@ -166,7 +167,7 @@ int main(int argc, char** argv) {
 	if(!image.empty()) {
 		osgPango::GlyphRenderer* r = context.getGlyphRenderer(to.renderer);
 
-		if(r) r->replaceLayer(0, new osgPango::GlyphLayerFaceBitmap(image));
+		if(r) r->replaceLayer(0, new osgPango::GlyphLayerBitmap(image));
 	}
 
 	// The user didn't set a width, so use our screen size.
@@ -191,6 +192,8 @@ int main(int argc, char** argv) {
 		viewer.getCamera()->getOrCreateStateSet()
 	));
 
+	// osgDB::writeNodeFile(*t, "foo.osg");
+
 	camera->addChild(t);
 
 	viewer.setSceneData(camera);
@@ -207,7 +210,7 @@ int main(int argc, char** argv) {
 	viewer.run();
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
-	context.writeCachesToPNGFiles("osgpangoviewer");
+	// context.writeCachesToPNGFiles("osgpangoviewer");
 
 	return 0;
 }

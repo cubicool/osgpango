@@ -7,7 +7,7 @@
 
 namespace osgPango {
 
-GlyphLayerFaceBitmap::GlyphLayerFaceBitmap(const std::string& path):
+GlyphLayerBitmap::GlyphLayerBitmap(const std::string& path):
 GlyphLayer (CAIRO_FORMAT_ARGB32),
 _repeatX   (1), 
 _repeatY   (1),
@@ -15,11 +15,11 @@ _pattern   (0) {
 	setBitmap(path);
 }
 
-GlyphLayerFaceBitmap::~GlyphLayerFaceBitmap() {
+GlyphLayerBitmap::~GlyphLayerBitmap() {
 	cairo_pattern_destroy(_pattern);
 }
 
-bool GlyphLayerFaceBitmap::render(
+bool GlyphLayerBitmap::render(
 	cairo_t*       c,
 	cairo_glyph_t* glyph,
 	unsigned int   width,
@@ -34,10 +34,10 @@ bool GlyphLayerFaceBitmap::render(
 	
 	else cairo_pattern_set_extend(_pattern, CAIRO_EXTEND_PAD);
 	
-	cairo_matrix_t scale_matrix;
+	cairo_matrix_t matrix;
 
-	cairo_matrix_init_scale(&scale_matrix, bw / width * _repeatX, bh / height * _repeatY);
-	cairo_pattern_set_matrix(_pattern, &scale_matrix);
+	cairo_matrix_init_scale(&matrix, bw / width * _repeatX, bh / height * _repeatY);
+	cairo_pattern_set_matrix(_pattern, &matrix);
 
 	cairo_set_source(c, _pattern);
 
@@ -47,7 +47,7 @@ bool GlyphLayerFaceBitmap::render(
 	return true;
 }
 	
-void GlyphLayerFaceBitmap::setBitmap(const std::string& path) {
+void GlyphLayerBitmap::setBitmap(const std::string& path) {
 	if(_path == path || path.empty()) return;
 
 	_path   = path;
@@ -55,7 +55,7 @@ void GlyphLayerFaceBitmap::setBitmap(const std::string& path) {
 
 	if(!_bitmap || !_bitmap->valid())  {
 		OSG_WARN
-			<< "osgPango::GlyphLayerFaceBitmap::setBitmap: Can't load image: "
+			<< "osgPango::GlyphLayerBitmap::setBitmap: Can't load image: "
 			<< _path
 			<< std::endl
 		; 
