@@ -18,7 +18,7 @@ bool GlyphLayerShadow::render(
 ) {
 	if(cairo_status(c) || !glyph) return false;
 
-	cairo_save(c);
+	// cairo_save(c);
 
 	if(_xOffset > 0) cairo_translate(c, _xOffset, 0.0f);
 
@@ -26,6 +26,7 @@ bool GlyphLayerShadow::render(
 
 	GlyphLayer::render(c, glyph, width, height);
 
+	/*
 	cairo_restore(c);
 	cairo_set_operator(c, CAIRO_OPERATOR_CLEAR);
 
@@ -34,6 +35,7 @@ bool GlyphLayerShadow::render(
 	if(_yOffset < 0) cairo_translate(c, 0.0f, std::abs(static_cast<double>(_yOffset)));
 
 	GlyphLayer::render(c, glyph, width, height);
+	*/
 
 	return true;
 }

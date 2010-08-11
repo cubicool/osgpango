@@ -80,21 +80,21 @@ public:
 		//! <a href="http://www.cairographics.org/manual/cairo-context.html#cairo-antialias-t">
 		//! this Cairo API reference link</a> for more information on what each
 		//! possible value means. The osgPango Context default is CAIRO_ANTIALIAS_SUBPIXEL.
-		cairo_antialias_t aa = CAIRO_ANTIALIAS_NONE,
+		cairo_antialias_t aa = CAIRO_ANTIALIAS_SUBPIXEL,
 
 		//! This osgCairo::CairoHintStyle enum defines what kind of
 		//! hinting style should be used by the rendering backend. Please see
 		//! <a href="http://www.cairographics.org/manual/cairo-font-options.html#cairo-hint-style-t">
 		//! this Cairo API reference link</a> for more information on what each
 		//! possible value means. The osgPango Context default is CAIRO_HINT_STYLE_FULL.
-		cairo_hint_style_t hs = CAIRO_HINT_STYLE_DEFAULT,
+		cairo_hint_style_t hs = CAIRO_HINT_STYLE_FULL,
 
 		//! This osgCairo::CairoSubpixelOrder enum defines what kind of
 		//! subpixel ordering style should be used by the rendering backend
 		//! If CAIRO_ANTIALIAS_SUBPIXEL is set. Please see
 		//! <a href="http://www.cairographics.org/manual/cairo-font-options.html#cairo-subpixel-order-t">
 		//! this Cairo API reference link</a> for more information on what each
-		//! possible value means. The osgPango Context default is CAIRO_SUBPIXEL_ORDER_RGB.
+		//! possible value means. The osgPango Context default is CAIRO_SUBPIXEL_ORDER_DEFAULT.
 		cairo_subpixel_order_t spo = CAIRO_SUBPIXEL_ORDER_DEFAULT
 	);
 

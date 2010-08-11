@@ -173,7 +173,13 @@ int main(int argc, char** argv) {
 	if(to.width <= 0) to.width = WINDOW_WIDTH;
 
 	t->addText(text, 0, 0, to);
-	t->setMatrix(osg::Matrix::translate(30.0f, 30.0f, 0.0f));
+
+	// TODO: DIRTY HACK! Why isn't our origin taking this into account?
+	if(!rendererSize.empty()) {
+		int s = std::atoi(rendererSize.c_str());
+
+		t->setMatrix(osg::Matrix::translate(s * 2.0f, s * 2.0f, 0.0f));
+	}
 
 	if(!t->finalize()) return 1;
 
@@ -190,6 +196,14 @@ int main(int argc, char** argv) {
 	viewer.setSceneData(camera);
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
+	// Set the window name.
+	osgViewer::Viewer::Windows windows;
+	
+	viewer.getWindows(windows);
+
+	windows[0]->setWindowName("osgpangoviewer");
+
+	// Run the viewer until ESC is pressed.
 	viewer.run();
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
