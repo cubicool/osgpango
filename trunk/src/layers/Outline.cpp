@@ -23,6 +23,12 @@ bool GlyphLayerOutline::render(
 	cairo_stroke_preserve(c);
 	cairo_fill(c);
 
+	/*
+	cairo_set_operator(c, CAIRO_OPERATOR_CLEAR);
+	cairo_glyph_path(c, glyph, 1);
+	cairo_fill(c);
+	*/
+
 	return true;
 }
 

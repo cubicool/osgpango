@@ -12,9 +12,11 @@ namespace osgPango {
 
 typedef std::vector<unsigned int> LayerIndexVector;
 
-OSGPANGO_EXPORT std::string createBackToFrontShader (unsigned int num);
-OSGPANGO_EXPORT std::string createLayerIndexShader  (unsigned int num, const LayerIndexVector&);
-OSGPANGO_EXPORT const char* getDefaultVertexShader  ();
+OSGPANGO_EXPORT std::string defaultVertexShader     ();
+OSGPANGO_EXPORT std::string baseFragmentHeader      (unsigned int);
+OSGPANGO_EXPORT std::string baseFragmentFooter      ();
+OSGPANGO_EXPORT std::string createBackToFrontShader (unsigned int);
+OSGPANGO_EXPORT std::string createLayerIndexShader  (unsigned int, const LayerIndexVector&);
 
 }
 

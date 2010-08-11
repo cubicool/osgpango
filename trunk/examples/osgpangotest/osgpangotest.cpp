@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 	cp.push_back(osg::Vec3(1.0f, 1.0f, 1.0f));
 	cp.push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
 
-	t->setAlpha(0.8f);
+	t->setAlpha(1.0f);
 	t->setColorPalette(cp);
 	t->addText(
 		"<span font='Cheri Liney 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
 	group->addChild(camera);
 
 	viewer.setSceneData(group);
-	viewer.getCamera()->setClearColor(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
+	viewer.getCamera()->setClearColor(osg::Vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.run();

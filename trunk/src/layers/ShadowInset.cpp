@@ -10,8 +10,8 @@ GlyphLayerShadowInset::GlyphLayerShadowInset(
 	unsigned int radius, 
 	unsigned int deviation
 ):
-GlyphLayerInterfaceBlur(radius, deviation),
-GlyphLayerInterfaceOffset(0, 0) {
+GlyphLayerInterfaceOffset (0, 0),
+GlyphLayerInterfaceBlur   (radius, deviation) {
 }
 	
 bool GlyphLayerShadowInset::render(
