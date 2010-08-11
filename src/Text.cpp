@@ -6,6 +6,7 @@
 #include <osg/io_utils>
 #include <osg/Math>
 #include <osg/Image>
+#include <osg/Geode>
 #include <osgUtil/TransformAttributeFunctor>		
 #include <osgPango/Context>
 

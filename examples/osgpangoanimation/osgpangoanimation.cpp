@@ -142,7 +142,14 @@ int main(int argc, char** argv) {
 	t->finalize();
 	
 	// TODO: OMG, this is horrible. :)
-	t->getGeode()->getDrawable(0)->setUpdateCallback(new GlyphSampler());
+	osg::Group* group = dynamic_cast<osg::Group*>(t->getChild(0));
+	
+	if(group) {
+		osg::Geode* geode = dynamic_cast<osg::Geode*>(group->getChild(0)); 
+
+	
+		if(geode) geode->getDrawable(0)->setUpdateCallback(new GlyphSampler());
+	}
 
 	osgViewer::Viewer viewer;
 
@@ -150,8 +157,8 @@ int main(int argc, char** argv) {
 	
 	const osg::Vec2& size = t->getSize();
 
-	t->setPosition(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f));
-	t->setAlignment(osgPango::TextTransform::POS_ALIGN_CENTER);
+	// t->setPosition(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f));
+	// t->setAlignment(osgPango::TextTransform::POS_ALIGN_CENTER);
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
 	viewer.addEventHandler(new osgViewer::WindowSizeHandler());

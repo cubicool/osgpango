@@ -83,11 +83,11 @@ public:
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 };
 
-class OSGPANGO_EXPORT GlyphLayerFaceBitmap: public GlyphLayer {
+class OSGPANGO_EXPORT GlyphLayerBitmap: public GlyphLayer {
 public:
-	GlyphLayerFaceBitmap(const std::string& = "");
+	GlyphLayerBitmap(const std::string& = "");
 	
-	virtual ~GlyphLayerFaceBitmap();
+	virtual ~GlyphLayerBitmap();
 
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 

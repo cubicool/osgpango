@@ -37,7 +37,7 @@ rm -f screenshots/*.png
 DoExample basic.png --alignment justify
 DoExample small.png "${TEXT3}"
 DoExample basic-shadow.png --renderer shadow 1
-DoExample facebitmap-rgb24-and-outline.png --facebitmap facebitmap-rgb24.png --renderer outline 2 "${TEXT1}"
-DoExample facebitmap-argb32-and-outline.png --facebitmap facebitmap-argb32.png --renderer outline 4 "${TEXT1}"
+DoExample bitmap-rgb24-and-outline.png --bitmap bitmap-rgb24.png --renderer outline 2 "${TEXT1}"
+DoExample bitmap-argb32-and-outline.png --bitmap bitmap-argb32.png --renderer outline 4 "${TEXT1}"
 DoExample multispan-shadow.png --renderer shadowBlur 8 "${TEXT2}"
 

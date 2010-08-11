@@ -45,7 +45,7 @@ SET(SRC_LAYER_FILES
 	src/layers/ShadowBlur.cpp
 	src/layers/ShadowInset.cpp
 	src/layers/Shadow.cpp
-	src/layers/FaceBitmap.cpp
+	src/layers/Bitmap.cpp
 )
 
 SET(SRC_RENDERER_FILES
@@ -151,7 +151,7 @@ FOREACH(INCLUDEFILE ${HEADER_FILES})
 	)
 ENDFOREACH(INCLUDEFILE)
 
-#ADD_SUBDIRECTORY(examples/osgpangoanimation)
+ADD_SUBDIRECTORY(examples/osgpangoanimation)
 ADD_SUBDIRECTORY(examples/osgpangocomplexrenderer)
 ADD_SUBDIRECTORY(examples/osgpangocustomrenderer)
 ADD_SUBDIRECTORY(examples/osgpangofonts)
