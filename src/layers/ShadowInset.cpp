@@ -8,11 +8,12 @@
 namespace osgPango {
 
 GlyphLayerShadowInset::GlyphLayerShadowInset(
+	int          xOffset,
+	int          yOffset,
 	unsigned int radius, 
 	unsigned int deviation
 ):
-// TODO: This is temporary, just for testing! (THE BUILTIN OFFSET)
-GlyphLayerInterfaceOffset (-3, -3),
+GlyphLayerInterfaceOffset (xOffset, yOffset),
 GlyphLayerInterfaceBlur   (radius, deviation) {
 }
 	
@@ -24,9 +25,10 @@ bool GlyphLayerShadowInset::render(
 ) {
 	if(cairo_status(c) || !glyph) return false;
 	
-	/*
 	// METHOD 1 ===============================================================================
 	cairo_push_group(c);
+	cairo_glyph_path(c, glyph, 1);
+	cairo_clip(c);
 	cairo_translate(c, getOffsetX(), getOffsetY());
 	cairo_set_line_join(c, CAIRO_LINE_JOIN_ROUND);
 	cairo_set_line_width(c, static_cast<double>(_radius) - 0.5f);
@@ -42,13 +44,13 @@ bool GlyphLayerShadowInset::render(
 		-static_cast<double>(_getBlurSize()) * 2,
 		-static_cast<double>(_getBlurSize()) * 2
 	);
-
+	
 	cairo_glyph_path(c, glyph, 1);
 	cairo_clip(c);
 	cairo_paint(c);
+
 	cairo_surface_destroy(tmp);
 	cairo_pattern_destroy(pattern);
-	*/
 
 	/*
 	// METHOD 2 ===============================================================================
@@ -63,11 +65,12 @@ bool GlyphLayerShadowInset::render(
 	}
 	*/
 
+	/*
 	// METHOD 3 ===============================================================================
 	// This method isn't quite there YET, but we're getting close.
 	cairo_push_group(c);
 	cairo_glyph_path(c, glyph, 1);
-	cairo_set_line_width(c, _radius);
+	cairo_set_line_width(c, 1.0f);
 	cairo_stroke(c);
 
 	cairo_pattern_t* blur = osgCairo::util::displacedBlur(c, cairo_pop_group(c), _radius);
@@ -82,19 +85,20 @@ bool GlyphLayerShadowInset::render(
 
 	cairo_get_matrix(c, &matrix);
 
-	cairo_matrix_translate(
-		&matrix,
-		(_radius / 2.0f) - getOffsetX(),
-		(_radius / 2.0f) - getOffsetY()
-	);
-	
-	cairo_pattern_set_matrix(blur, &matrix);
+	// cairo_matrix_translate(&matrix,);
+
+	// cairo_pattern_set_matrix(blur, &matrix);
+	// cairo_pattern_set_matrix(mask, &matrix);
 
 	cairo_set_source(c, blur);
-	cairo_mask(c, mask);
-	
+	// cairo_mask(c, mask);
+	cairo_paint(c);
+
 	cairo_pattern_destroy(blur);
 	cairo_pattern_destroy(mask);
+
+	return true;
+	*/
 
 	return true;
 }

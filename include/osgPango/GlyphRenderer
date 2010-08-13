@@ -96,14 +96,14 @@ public:
 
 class OSGPANGO_EXPORT GlyphRendererShadowBlur: public GlyphRenderer {
 public:
-	GlyphRendererShadowBlur(unsigned int = 1);
+	GlyphRendererShadowBlur(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
 	
 	virtual bool updateOrCreateState(int pass, osg::Geode*);
 };
 
 class OSGPANGO_EXPORT GlyphRendererShadowInset: public GlyphRenderer {
 public:
-	GlyphRendererShadowInset(unsigned int = 1);
+	GlyphRendererShadowInset(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
 	
 	virtual bool updateOrCreateState(int pass, osg::Geode*);
 };
