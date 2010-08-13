@@ -78,7 +78,7 @@ class OSGPANGO_EXPORT GlyphLayerShadowInset:
 	public GlyphLayerInterfaceBlur, 
 	public GlyphLayer {
 public:
-	GlyphLayerShadowInset(unsigned int = 2, unsigned int = 1);
+	GlyphLayerShadowInset(int = 0, int = 0, unsigned int = 2, unsigned int = 1);
 	
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 };

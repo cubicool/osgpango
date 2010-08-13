@@ -5,9 +5,16 @@
 
 namespace osgPango {
 
-GlyphRendererShadowBlur::GlyphRendererShadowBlur(unsigned int radius) {
+GlyphRendererShadowBlur::GlyphRendererShadowBlur(
+	int          xOffset,
+	int          yOffset,
+	unsigned int radius,
+	unsigned int deviation
+) {
+	if(!deviation) deviation = radius / 2;
+
 	addLayer(new GlyphLayer());
-	addLayer(new GlyphLayerShadowBlur(0.0f, 0.0f, radius, radius * 0.5f));
+	addLayer(new GlyphLayerShadowBlur(xOffset, yOffset, radius, deviation));
 }
 
 bool GlyphRendererShadowBlur::updateOrCreateState(int pass, osg::Geode* geode) {

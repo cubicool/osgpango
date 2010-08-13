@@ -5,8 +5,15 @@
 
 namespace osgPango {
 
-GlyphRendererShadowInset::GlyphRendererShadowInset(unsigned int radius) {
-	addLayer(new GlyphLayerShadowInset(radius, radius * 0.5f));
+GlyphRendererShadowInset::GlyphRendererShadowInset(
+	int          xOffset,
+	int          yOffset,
+	unsigned int radius,
+	unsigned int deviation
+) {
+	if(!deviation) deviation = radius / 2;
+
+	addLayer(new GlyphLayerShadowInset(xOffset, yOffset, radius, deviation));
 	addLayer(new GlyphLayer());
 }
 

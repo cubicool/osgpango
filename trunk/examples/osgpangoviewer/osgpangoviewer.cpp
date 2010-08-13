@@ -1,14 +1,13 @@
 // -*-c++-*- Copyright (C) 2010 osgPango Development Team
 // $Id$
 
-#include <iostream>
+#include <sstream>
 #include <osg/io_utils>
 #include <osg/ArgumentParser>
 #include <osg/Texture2D>
 #include <osg/MatrixTransform>
 #include <osgGA/StateSetManipulator>
 #include <osgDB/ReadFile>
-#include <osgDB/WriteFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgPango/Context>
@@ -57,8 +56,9 @@ void setupArguments(osg::ArgumentParser& args) {
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
-		"--renderer <string> <int>",
-		"The GlyphRenderer object to use (outline, shadow, shadowBlur, shadowInset) and size."
+		"--renderer <string> <int,int,int,int>",
+		"The GlyphRenderer object to use (outline, shadow, shadowBlur, shadowInset) and sizes. "
+		"Note that not all renderers need--or require--four arguments."
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
@@ -77,8 +77,13 @@ void setupArguments(osg::ArgumentParser& args) {
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
-		"--alignment",
+		"--alignment <alignment>",
 		"The Pango alignment; one of left, right, center, or justify."
+	);
+
+	args.getApplicationUsage()->addCommandLineOption(
+		"--perspective",
+		"Put the text into a 3D scene, instead of a 2D Ortho 'HUD' camera."
 	);
 }
 
@@ -103,6 +108,8 @@ int main(int argc, char** argv) {
 	// All of our temporary variables.
 	std::string renderer, rendererSize, alpha, alignment, width, image;
 
+	bool perspective = false;
+
 	osgPango::Context& context = osgPango::Context::instance();
 
 	context.init();
@@ -112,26 +119,29 @@ int main(int argc, char** argv) {
 	osgPango::TextOptions to;
 
 	while(args.read("--renderer", renderer, rendererSize)) {
-		int s = std::atoi(rendererSize.c_str());
+		int          arg1, arg2 = 0;
+		unsigned int arg3, arg4 = 0;
+
+		std::sscanf(rendererSize.c_str(), "%i,%i,%u,%u", &arg1, &arg2, &arg3, &arg4);
 
 		if(renderer == "outline") context.addGlyphRenderer(
 			"outline",
-			new osgPango::GlyphRendererOutline(s)
+			new osgPango::GlyphRendererOutline(arg1)
 		);
 
 		else if(renderer == "shadow") context.addGlyphRenderer(
 			"shadow",
-			new osgPango::GlyphRendererShadow(s, s)
+			new osgPango::GlyphRendererShadow(arg1, arg2)
 		);
 
 		else if(renderer == "shadowBlur") context.addGlyphRenderer(
 			"shadowBlur",
-			new osgPango::GlyphRendererShadowBlur(s)
+			new osgPango::GlyphRendererShadowBlur(arg1, arg2, arg3, arg4)
 		);
 
 		else if(renderer == "shadowInset") context.addGlyphRenderer(
 			"shadowInset",
-			new osgPango::GlyphRendererShadowInset(s)
+			new osgPango::GlyphRendererShadowInset(arg1, arg2, arg3, arg4)
 		);
 
 		else continue;
@@ -140,6 +150,8 @@ int main(int argc, char** argv) {
 	}
 
 	while(args.read("--bitmap", image));
+	
+	while(args.read("--perspective")) perspective = true;
 
 	while(args.read("--alpha", alpha)) {
 		float a = std::atof(alpha.c_str());
@@ -156,7 +168,6 @@ int main(int argc, char** argv) {
 		
 		else if(alignment == "justify") to.alignment = osgPango::TextOptions::TEXT_ALIGN_JUSTIFY;
 	}
-
 
 	if(args.argc() >= 2) {
 		text = "";
@@ -175,16 +186,16 @@ int main(int argc, char** argv) {
 
 	t->addText(text, 0, 0, to);
 
+	/*
 	// TODO: DIRTY HACK! Why isn't our origin taking this into account?
 	if(!rendererSize.empty()) {
 		int s = std::atoi(rendererSize.c_str());
 
 		t->setMatrix(osg::Matrix::translate(s * 2.0f, s * 2.0f, 0.0f));
 	}
+	*/
 
 	if(!t->finalize()) return 1;
-
-	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
 	viewer.addEventHandler(new osgViewer::WindowSizeHandler());
@@ -192,11 +203,33 @@ int main(int argc, char** argv) {
 		viewer.getCamera()->getOrCreateStateSet()
 	));
 
-	// osgDB::writeNodeFile(*t, "foo.osg");
+	if(!perspective) {
+		osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-	camera->addChild(t);
+		camera->addChild(t);
 
-	viewer.setSceneData(camera);
+		viewer.setSceneData(camera);
+	}
+
+	else {
+		// TODO: Change coordinate system to Y-up here.
+
+		/*
+		const osg::BoundingSphere& bs  = t->getBound();
+		const osg::Vec3&           c   = bs.center();
+		const osg::Vec3&           eye = osg::Vec3(c.x(), c.y(), bs.radius() * 2.0f);
+
+		viewer.getCamera()->setViewMatrixAsLookAt(eye, bs.center(), osg::Vec3(0.0f, 1.0f, 0.0f));
+		*/
+
+		t->setMatrix(osg::Matrix::rotate(
+			osg::DegreesToRadians(90.0f),
+			osg::Vec3(1.0f, 0.0f, 0.0f)
+		));
+
+		viewer.setSceneData(t);
+	}
+
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	// Set the window name.
@@ -210,7 +243,7 @@ int main(int argc, char** argv) {
 	viewer.run();
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
-	// context.writeCachesToPNGFiles("osgpangoviewer");
+	context.writeCachesToPNGFiles("osgpangoviewer");
 
 	return 0;
 }
