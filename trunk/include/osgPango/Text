@@ -93,6 +93,7 @@ public:
 	};
 
 	Text(ColorMode = COLOR_MODE_MARKUP_OVERWRITE);
+
 	virtual ~Text();
 
 	// You cannot instaniante Text directly; you need to derive from it and
@@ -103,8 +104,16 @@ public:
 	virtual void clear();
 
 	void drawGlyphs      (PangoFont*, PangoGlyphString*, int, int);
-	void addText         (const std::string&, int, int, const TextOptions& = TextOptions());
 	void setColorPalette (const ColorPalette&);
+	
+	//! This version of addText uses the encoding defined by OSGPANGO_ENCODING in the
+	//! osgPango/Export header.
+	void addText(const std::string&, int, int, const TextOptions& = TextOptions());
+	
+	//! Here you can specify the encoding as the first argument. We do it this way rather
+	//! than adding it on as a final option because having to always specify a default
+	//! TextOptions() is unwieldy and doesn't always make for the most readable code.
+	void addText(String::Encoding, const std::string&, int, int, const TextOptions& = TextOptions());
 
 	void setAlpha(float alpha) {
 		_alpha = alpha;
@@ -203,6 +212,9 @@ public:
 		POS_ALIGN_CENTER_TOP,
 		POS_ALIGN_CENTER_CENTER,
 		POS_ALIGN_CENTER_BOTTOM,
+		POS_ALIGN_LEFT_BASE_LINE,
+		POS_ALIGN_CENTER_BASE_LINE,
+		POS_ALIGN_RIGHT_BASE_LINE
 	};
 
 	enum AxisAlignment { 
@@ -288,7 +300,7 @@ protected:
 
 		else if(_positionAlignment == POS_ALIGN_RIGHT_TOP)
 			origin -= size
-			;
+		;
 
 		else if(_positionAlignment == POS_ALIGN_CENTER_TOP) origin -= osg::Vec3(
 			osg::round(size.x() / 2.0f),
@@ -310,6 +322,27 @@ protected:
 			0.0f
 		);
 
+		// TODO: We call origin.set here, but we modify the exisiting origin in
+		// the previous calls; why?
+		else if(_positionAlignment == POS_ALIGN_LEFT_BASE_LINE) origin.set(
+			getOriginBaseline().x(),
+			getOriginBaseline().y(),
+			0.0f
+		);
+
+		else if(_positionAlignment == POS_ALIGN_CENTER_BASE_LINE) origin.set(
+			getOriginBaseline().x() - osg::round(size.x() / 2.0f),
+			getOriginBaseline().y(),
+			0.0f
+		);
+
+		else if(_positionAlignment == POS_ALIGN_RIGHT_BASE_LINE) origin.set(
+			getOriginBaseline().x() - osg::round(size.x()),
+			getOriginBaseline().y(),
+			0.0f
+		);
+ 
+		// Handle _axisAlignment...
 		if(_axisAlignment == AXIS_ALIGN_XZ_PLANE) axisMatrix = osg::Matrixd(
 			 1.0,  0.0,  0.0,  0.0,
 			 0.0,  0.0,  1.0,  0.0,
@@ -353,14 +386,12 @@ protected:
 };
 
 //! TextTransform is both a useful Text subclass for quick osgPango usage and
-//! a small demonstration of how to use Text (or technically, TextGeodeInterface,
-//! but as we mentioned before it is nothing but a small wrapper class) by gluing
+//! a small demonstration of how to use TextInterface by gluing
 //! the Geometry provided by our parent class with the natural positioning 
 //! power of osg::MatrixTransform. It provides a small API for arranging text
 //! in 3D space, though it is not at all suited for people who want a full range
 //! of transformations (unless they just want to interface with osg::MatrixTransform
 //! directly, which is perfectly fine).
-// typedef TextInterface<osg::MatrixTransform> TextInterfaceMatrixTransform;
 typedef TextInterface<osg::MatrixTransform> TextTransform;
 
 }
