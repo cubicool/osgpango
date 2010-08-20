@@ -17,7 +17,7 @@ osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {
 		
 	osg::Vec4 result = _layers[0]->getExtraGlyphExtents();
 	
-	for(unsigned int i = 1; i < _layers.size(); ++i) {
+	for(unsigned int i = 1; i < _layers.size(); i++) {
 		osg::Vec4 extents = _layers[i]->getExtraGlyphExtents();
 
 		result[0] = std::max(result[0], extents[0]);
@@ -60,7 +60,7 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 		_layers.size()
 	);
 
-	for(unsigned int i = 0; i < _layers.size(); ++i) pangoTexture->setElement(
+	for(unsigned int i = 0; i < _layers.size(); i++) pangoTexture->setElement(
 		i,
 		static_cast<int>(i)
 	);
@@ -92,7 +92,7 @@ bool GlyphRenderer::updateOrCreateState(
 	
 	state->addUniform(pangoColor);
 	
-	for(unsigned int i = 0; i < _layers.size(); ++i) {
+	for(unsigned int i = 0; i < _layers.size(); i++) {
 		osg::Vec4 color(ggs.colors[i], 0.0f);
 
 		// We use a dirty trick here; the alpha part of this Vec4 isn't actually
