@@ -149,6 +149,16 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 }
 
 void Text::addText(const std::string& str, int x, int y, const TextOptions& to) {
+	addText(OSGPANGO_ENCODING, str, x, y, to);
+}
+
+void Text::addText(
+	String::Encoding   encoding,
+	const std::string& str,
+	int                x,
+	int                y,
+	const TextOptions& to
+) {	
 	const GlyphRenderer* gr = Context::instance().getGlyphRenderer(to.renderer);
 
 	if(!gr) {
