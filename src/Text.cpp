@@ -297,7 +297,7 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 	}
 
 	// Create structure for passes.
-	for(unsigned int i = 0; i < maxPasses; ++i) {
+	for(unsigned int i = 0; i < maxPasses; i++) {
 		osg::Group*    pass  = new osg::Group();
 		osg::StateSet* state = pass->getOrCreateStateSet();
 
@@ -312,7 +312,7 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 		GlyphRenderer*      renderer = ct->first;
 		const GeometryList& gl       = ct->second;
 
-		for(unsigned int i = 0; i < renderer->getNumPasses(); ++i) {
+		for(unsigned int i = 0; i < renderer->getNumPasses(); i++) {
 			// Each renderer has own geode node with assigned state required for pass.
 			osg::Geode* pass = new osg::Geode();
 
@@ -340,13 +340,13 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 }
 
 struct ApplyTransformsVisitor: public osg::NodeVisitor {
-	ApplyTransformsVisitor(const osg::Matrixd& transform):
-	osg::NodeVisitor (osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
-	_functor         (transform) {
+	ApplyTransformsVisitor (const osg::Matrixd& transform):
+	osg::NodeVisitor       (osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
+	_functor               (transform) {
 	}
 	
 	virtual void apply(osg::Geode& geode) {
-		for(unsigned int i = 0; i < geode.getNumDrawables(); ++i) {
+		for(unsigned int i = 0; i < geode.getNumDrawables(); i++) {
 			_toTransform.insert(geode.getDrawable(i));
 		}
 	}
