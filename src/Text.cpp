@@ -175,7 +175,7 @@ void Text::addText(
 	PangoLayout* layout = pango_layout_new(Context::instance().getPangoContext());
 
 	if(str.size()) {
-		text.set(str, OSGPANGO_ENCODING);
+		text.set(str, encoding);
 
 		std::string utf8 = text.createUTF8EncodedString();
 
@@ -285,7 +285,7 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 
 	// First create/update geometry states which are common for each pass. During iteration update maximum
 	// number of passes.
-	for(RendererGeometry::const_iterator ct = rg.begin(); ct != rg.end(); ++ct) {
+	for(RendererGeometry::const_iterator ct = rg.begin(); ct != rg.end(); ct++) {
 		GlyphRenderer*      renderer = ct->first;
 		const GeometryList& gl       = ct->second;
 
@@ -308,7 +308,7 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 	}
 
 	// Assign renderers to passes.
-	for(RendererGeometry::const_iterator ct = rg.begin(); ct != rg.end(); ++ct) {
+	for(RendererGeometry::const_iterator ct = rg.begin(); ct != rg.end(); ct++) {
 		GlyphRenderer*      renderer = ct->first;
 		const GeometryList& gl       = ct->second;
 
@@ -355,7 +355,7 @@ struct ApplyTransformsVisitor: public osg::NodeVisitor {
 		for(
 			std::set<osg::Drawable*>::const_iterator ct = _toTransform.begin();
 			ct != _toTransform.end();
-			++ct
+			ct++
 		) {
 			(*ct)->accept(_functor);
 		}

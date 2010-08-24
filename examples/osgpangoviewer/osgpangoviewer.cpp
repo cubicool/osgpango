@@ -1,6 +1,7 @@
 // -*-c++-*- Copyright (C) 2010 osgPango Development Team
 // $Id$
 
+#include <iostream>
 #include <sstream>
 #include <osg/io_utils>
 #include <osg/ArgumentParser>
