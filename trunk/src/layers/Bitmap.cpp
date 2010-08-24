@@ -54,7 +54,7 @@ void GlyphLayerBitmap::setBitmap(const std::string& path) {
 	_bitmap = osgCairo::readImageFile(_path);
 
 	if(!_bitmap || !_bitmap->valid())  {
-		OSG_WARN
+		osg::notify(osg::WARN)
 			<< "osgPango::GlyphLayerBitmap::setBitmap: Can't load image: "
 			<< _path
 			<< std::endl
