@@ -8,6 +8,7 @@
 #include <osg/Texture2D>
 #include <osg/MatrixTransform>
 #include <osgGA/StateSetManipulator>
+#include <osgDB/FileUtils>
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
@@ -86,6 +87,11 @@ void setupArguments(osg::ArgumentParser& args) {
 		"--perspective",
 		"Put the text into a 3D scene, instead of a 2D Ortho 'HUD' camera."
 	);
+
+	args.getApplicationUsage()->addCommandLineOption(
+		"--ati",
+		"DEBUG: Use the custom ATI shaders; this is TEMPORARY!"
+	);
 }
 
 int main(int argc, char** argv) {
@@ -150,7 +156,7 @@ int main(int argc, char** argv) {
 		to.renderer = renderer;
 	}
 
-	while(args.read("--bitmap", image));
+	while(args.read("--bitmap", image)) {}
 	
 	while(args.read("--perspective")) perspective = true;
 
@@ -168,6 +174,22 @@ int main(int argc, char** argv) {
 		else if(alignment == "right") to.alignment = osgPango::TextOptions::TEXT_ALIGN_RIGHT;
 		
 		else if(alignment == "justify") to.alignment = osgPango::TextOptions::TEXT_ALIGN_JUSTIFY;
+	}
+
+	while(args.read("--ati")) {
+		osgDB::FilePathList& paths = osgDB::getDataFilePathList();
+	
+		paths.push_back("../examples/osgpangoviewer/");
+		paths.push_back("examples/osgpangoviewer/");
+		paths.push_back(".");
+		
+		osgPango::ShaderManager& sm = osgPango::ShaderManager::instance();
+
+		// Overwrite the NVIDIA-centric shaders with shaders that are customized
+		// for ATI cards. THIS IS TEMPORARY! A dual-card generated shader is going
+		// to be required...
+		sm.addShaderFile("osgPango-frag1", osg::Shader::FRAGMENT, "osgPango-frag1-ATI.glsl");
+		sm.addShaderFile("osgPango-frag2", osg::Shader::FRAGMENT, "osgPango-frag2-ATI.glsl");
 	}
 
 	if(args.argc() >= 2) {
