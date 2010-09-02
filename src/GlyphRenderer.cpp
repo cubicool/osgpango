@@ -12,6 +12,10 @@
 
 namespace osgPango {
 
+GlyphRenderer::GlyphRenderer():
+_resolution(2) {
+}
+
 osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {
 	if(!_layers.size()) return osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		

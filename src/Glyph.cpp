@@ -30,21 +30,21 @@ ur     (_ur),
 ul     (_ul) {
 }
 
-const float GlyphCache::DEFAULT_BASE_X = 1.0f;
-const float GlyphCache::DEFAULT_BASE_Y = 1.0f;
-const float GlyphCache::DEFAULT_BASE_H = 0.0f;
-
 GlyphCache::GlyphCache(
 	GlyphRenderer* renderer,
 	unsigned int   width,
 	unsigned int   height
 ):
 _renderer   (renderer),
-_x          (DEFAULT_BASE_X),
-_y          (DEFAULT_BASE_Y),
-_h          (DEFAULT_BASE_H),
+_x          (0.0f),
+_y          (0.0f),
+_h          (0.0f),
 _imgWidth   (width),
 _imgHeight  (height) {
+	if(_renderer) {
+		_x = _renderer->getResolution();
+		_y = _renderer->getResolution();
+	}
 }
 
 const CachedGlyph* GlyphCache::getCachedGlyph(unsigned int i) {
@@ -74,10 +74,14 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		return const_cast<const CachedGlyph*>(&_glyphs[glyph]);
 	}
 
-	osg::Vec4 extents = _renderer->getExtraGlyphExtents();
+	osg::Vec4    extents    = _renderer->getExtraGlyphExtents();
+	unsigned int resolution = _renderer->getResolution();
 
-	double addw = extents[2] + 1.0f;
-	double addh = extents[3] + 1.0f;
+	w *= resolution;
+	h *= resolution;
+
+	double addw = extents[2]; // + 1.0f;
+	double addh = extents[3]; // + 1.0f;
 
 	if(w + addw >= _imgWidth || h + addh >= _imgHeight) {
 		osg::notify(osg::WARN)
@@ -92,7 +96,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	// If our remaining space isn't enough to accomodate another glyph, jump to another "row."
 	if(_x + w + addw >= _imgWidth) {
-		_x  = DEFAULT_BASE_X;
+		_x  = resolution;
 		_y += _h + addh;
 	}
 
@@ -115,6 +119,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		// Each GlyphLayer can assume that writes on right position if don't apply any effect.
 		cairo_translate(c, _x + extents[0], _y + extents[1]);
 		cairo_save(c);
+		cairo_scale(c, resolution, resolution);
 
 		if(!_renderer->renderLayer(layerIndex, c, &g, w, h)) osg::notify(osg::WARN) 
 			<< "The GlyphRenderer object '" << _renderer->getName() << "' failed to render "
@@ -158,7 +163,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		osg::Vec2(tx, th)
 	);
 	
-	_x += w + addw;
+	_x += w + addw + (resolution * 2);
 	
 	return const_cast<const CachedGlyph*>(&_glyphs[glyph]);
 }
@@ -205,9 +210,9 @@ bool GlyphCache::_newImageAndTexture() {
 	// Whenever a new image is created we reset our _x, _y, and _h values.
 	// It's important that you do not create a new image unless you understand that this
 	// will happen and how it will affect everything.
-	_x = DEFAULT_BASE_X;
-	_y = DEFAULT_BASE_Y;
-	_h = DEFAULT_BASE_H;
+	_x = _renderer->getResolution();
+	_y = _renderer->getResolution();
+	_h = 0.0f;
 
 	return true;
 }
