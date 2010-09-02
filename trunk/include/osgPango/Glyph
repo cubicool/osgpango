@@ -133,10 +133,6 @@ private:
 	double       _h;
 	unsigned int _imgWidth;
 	unsigned int _imgHeight;
-	
-	static const float DEFAULT_BASE_X;
-	static const float DEFAULT_BASE_Y;
-	static const float DEFAULT_BASE_H;
 };
 
 class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
