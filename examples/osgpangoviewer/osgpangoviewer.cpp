@@ -263,7 +263,7 @@ int main(int argc, char** argv) {
 	windows[0]->setWindowName("osgpangoviewer");
 
 	// Run the viewer until ESC is pressed.
-	viewer.run();
+	// viewer.run();
 
 	// TODO: Uncomment to see all the intermediate textures created internally.
 	context.writeCachesToPNGFiles("osgpangoviewer");

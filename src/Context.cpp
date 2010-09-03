@@ -250,7 +250,7 @@ void Context::writeCachesToPNGFiles(const std::string& path) const {
 			<< "_"
 		;
 
-		osg::notify(osg::NOTICE) << "Writing font file: " << os.str() << std::endl;
+		// osg::notify(osg::NOTICE) << "Writing font file: " << os.str() << std::endl;
 
 		// TODO: Sometimes, we'll have a font in our map from Pango that was never
 		// actually USED, so it has nothing in it's cache! This is usually the "default"
