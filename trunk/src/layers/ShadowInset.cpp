@@ -24,7 +24,7 @@ bool GlyphLayerShadowInset::render(
 	unsigned int   height
 ) {
 	if(cairo_status(c) || !glyph) return false;
-	
+
 	// METHOD 1 ===============================================================================
 	cairo_push_group(c);
 	cairo_glyph_path(c, glyph, 1);

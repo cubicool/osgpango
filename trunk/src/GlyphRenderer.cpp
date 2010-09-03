@@ -13,7 +13,7 @@
 namespace osgPango {
 
 GlyphRenderer::GlyphRenderer():
-_resolution(2) {
+_resolution(1) {
 }
 
 osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {

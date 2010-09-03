@@ -41,10 +41,6 @@ _y          (0.0f),
 _h          (0.0f),
 _imgWidth   (width),
 _imgHeight  (height) {
-	if(_renderer) {
-		_x = _renderer->getResolution();
-		_y = _renderer->getResolution();
-	}
 }
 
 const CachedGlyph* GlyphCache::getCachedGlyph(unsigned int i) {
@@ -63,10 +59,11 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	pango_font_get_glyph_extents(font, glyph, &r, 0);
 	pango_extents_to_pixels(&r, 0);
 
-	cairo_glyph_t g = { glyph, -r.x, -r.y };
+	unsigned int resolution = 1; // _renderer->getResolution();
+	osg::Vec4    extents    = _renderer->getExtraGlyphExtents() * resolution;
 
-	double w = r.width;
-	double h = r.height;
+	double w = r.width * resolution;
+	double h = r.height * resolution;
 
 	if(w <= 0.0f && h <= 0.0f) {
 		_glyphs[glyph] = CachedGlyph();
@@ -74,14 +71,10 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		return const_cast<const CachedGlyph*>(&_glyphs[glyph]);
 	}
 
-	osg::Vec4    extents    = _renderer->getExtraGlyphExtents();
-	unsigned int resolution = _renderer->getResolution();
-
-	w *= resolution;
-	h *= resolution;
-
-	double addw = extents[2]; // + 1.0f;
-	double addh = extents[3]; // + 1.0f;
+	// We add 1 pixel of additional extent here to acount for the pixel of spacing we'll
+	// need later.
+	double addw = extents[2] + 1.0f;
+	double addh = extents[3] + 1.0f;
 
 	if(w + addw >= _imgWidth || h + addh >= _imgHeight) {
 		osg::notify(osg::WARN)
@@ -94,16 +87,18 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		return 0;
 	}
 
-	// If our remaining space isn't enough to accomodate another glyph, jump to another "row."
+	// If our remaining space isn't enough to acomodate another glyph, jump to another "row."
 	if(_x + w + addw >= _imgWidth) {
-		_x  = resolution;
-		_y += _h + addh;
+		_x  = 1.0f;
+		_y += _h + addh + resolution;
 	}
 
 	// Make sure we have enough vertical space, too.
 	if(_y + h + addh >= _imgHeight || !_layers.size()) _newImageAndTexture();
 	
 	cairo_scaled_font_t* sf  = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
+
+	cairo_glyph_t g = { glyph, -r.x, -r.y };
 
 	// Render glyph to layers.
 	for(unsigned int layerIndex = 0; layerIndex < getNumLayers(); layerIndex++) {
@@ -117,9 +112,14 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 		// Set position in image and then move write position to origin of glyph. 
 		// Each GlyphLayer can assume that writes on right position if don't apply any effect.
-		cairo_translate(c, _x + extents[0], _y + extents[1]);
+		cairo_translate(c, _x, _y);		
+		
+		// cairo_rectangle(c, 0.0f, 0.0f, w + extents[2], h + extents[3]);
+		// cairo_clip(c);
+
 		cairo_save(c);
 		cairo_scale(c, resolution, resolution);
+		cairo_translate(c, extents[0], extents[1]);
 
 		if(!_renderer->renderLayer(layerIndex, c, &g, w, h)) osg::notify(osg::WARN) 
 			<< "The GlyphRenderer object '" << _renderer->getName() << "' failed to render "
@@ -130,6 +130,46 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		cairo_restore(c);
 		cairo_destroy(c);
 	}
+
+	// DEBUG ------------------------------------------------------------------------------------------
+	cairo_surface_t* debug = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w + 10, h + 10);
+	cairo_t*         c     = cairo_create(debug);
+	
+	cairo_translate(c, 5, 5);
+
+	cairo_save(c);
+	cairo_set_source_rgb(c, 0.0f, 0.0f, 0.0f);
+	cairo_paint(c);
+	cairo_rectangle(c, 0.0f, 0.0f, w, h);
+	cairo_set_source_rgb(c, 1.0f, 0.0f, 0.0f);
+	cairo_fill(c);
+	cairo_restore(c);
+
+	cairo_set_source_rgba(c, 1.0f, 1.0f, 1.0f, 0.66f);
+	cairo_set_scaled_font(c, sf);
+	
+	cairo_scale(c, resolution, resolution);
+
+	/*
+	cairo_matrix_t cfm;
+
+	cairo_get_font_matrix(c, &cfm);
+	cairo_matrix_scale(&cfm, resolution, resolution);
+	cairo_set_font_matrix(c, &cfm);
+	*/
+
+	cairo_glyph_path(c, &g, 1);
+	cairo_fill(c);
+
+	std::ostringstream ss;
+
+	ss << "debug/" << g.index << ".png";
+
+	cairo_surface_write_to_png(debug, ss.str().c_str());
+
+	cairo_destroy(c);
+	cairo_surface_destroy(debug);
+	// DEBUG ------------------------------------------------------------------------------------------
 
 	// TODO: Why can't I destroy this here? Is it because the 'font' object has it locked up?
 	// cairo_scaled_font_destroy(sf);
@@ -163,7 +203,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		osg::Vec2(tx, th)
 	);
 	
-	_x += w + addw + (resolution * 2);
+	_x += w + addw;
 	
 	return const_cast<const CachedGlyph*>(&_glyphs[glyph]);
 }
@@ -210,8 +250,8 @@ bool GlyphCache::_newImageAndTexture() {
 	// Whenever a new image is created we reset our _x, _y, and _h values.
 	// It's important that you do not create a new image unless you understand that this
 	// will happen and how it will affect everything.
-	_x = _renderer->getResolution();
-	_y = _renderer->getResolution();
+	_x = 1.0f;
+	_y = 1.0f;
 	_h = 0.0f;
 
 	return true;
