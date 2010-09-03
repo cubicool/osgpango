@@ -80,13 +80,10 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 	if(!gc) return;
 
-	osg::Vec2::value_type currentY = -(y / PANGO_SCALE);
-
-	osg::Vec2 layoutPos(x / PANGO_SCALE, currentY);
+	osg::Vec2 layoutPos(x / PANGO_SCALE, -(y / PANGO_SCALE));
 
 	osg::Vec4 extents = gc->getGlyphRenderer()->getExtraGlyphExtents();
-
-	ColorPair color = Context::instance().getColorPair();
+	ColorPair color   = Context::instance().getColorPair();
 	
 	if(_colorMode == COLOR_MODE_PALETTE_ONLY) {
 		if(_palette.size() >= 2) {
@@ -106,9 +103,11 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 		PangoGlyphInfo* gi = glyphs->glyphs + i;
 
 		if((gi->glyph & PANGO_GLYPH_UNKNOWN_FLAG)) {
-			PangoFontMetrics* metrics = pango_font_get_metrics(font, 0);
-
-			pango_font_metrics_unref(metrics);
+			// TODO: This is, I think, where we'd generate just a block
+			// or something indicating our glyph is invalid in some way.
+			//
+			// PangoFontMetrics* metrics = pango_font_get_metrics(font, 0);
+			// pango_font_metrics_unref(metrics);
 
 			continue;
 		}
@@ -139,7 +138,7 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 			);
 		}
 
-		layoutPos += osg::Vec2((gi->geometry.width / PANGO_SCALE), 0.0f);
+		layoutPos += osg::Vec2(gi->geometry.width / PANGO_SCALE, 0.0f);
 	}
 
 	// Use the lowest baseline of all the texts that are added.
@@ -148,13 +147,14 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	if(!_init || baseline > _baseline) _baseline = baseline;
 }
 
-void Text::addText(const std::string& str, int x, int y, const TextOptions& to) {
-	addText(OSGPANGO_ENCODING, str, x, y, to);
+void Text::setColorPalette(const ColorPalette& cp) {
+	_palette = cp;
 }
 
 void Text::addText(
 	String::Encoding   encoding,
 	const std::string& str,
+	const std::string& descr,
 	int                x,
 	int                y,
 	const TextOptions& to
@@ -179,9 +179,16 @@ void Text::addText(
 
 		std::string utf8 = text.createUTF8EncodedString();
 
-		if(to.markup) pango_layout_set_markup(layout, utf8.c_str(), -1);
-		
-		else pango_layout_set_text(layout, utf8.c_str(), -1);
+		if(descr.empty()) pango_layout_set_markup(layout, utf8.c_str(), -1);
+
+		else {
+			pango_layout_set_font_description(
+				layout,
+				pango_font_description_from_string(descr.c_str())
+			);
+
+			pango_layout_set_text(layout, utf8.c_str(), -1);
+		}
 	}
 
 	to.setupPangoLayout(layout);
@@ -223,10 +230,6 @@ void Text::addText(
 	// We've run ONCE, so we're initialized to some state. Everything else from
 	// here is based on this position, greater or lower.
 	_init = true;
-}
-
-void Text::setColorPalette(const ColorPalette& cp) {
-	_palette = cp;
 }
 
 osg::Vec2 Text::getOriginBaseline() const {

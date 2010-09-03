@@ -59,11 +59,10 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	pango_font_get_glyph_extents(font, glyph, &r, 0);
 	pango_extents_to_pixels(&r, 0);
 
-	unsigned int resolution = 1; // _renderer->getResolution();
-	osg::Vec4    extents    = _renderer->getExtraGlyphExtents() * resolution;
+	osg::Vec4 extents = _renderer->getExtraGlyphExtents();
 
-	double w = r.width * resolution;
-	double h = r.height * resolution;
+	double w = r.width;
+	double h = r.height;
 
 	if(w <= 0.0f && h <= 0.0f) {
 		_glyphs[glyph] = CachedGlyph();
@@ -90,7 +89,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	// If our remaining space isn't enough to acomodate another glyph, jump to another "row."
 	if(_x + w + addw >= _imgWidth) {
 		_x  = 1.0f;
-		_y += _h + addh + resolution;
+		_y += _h + addh;
 	}
 
 	// Make sure we have enough vertical space, too.
@@ -113,12 +112,10 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		// Set position in image and then move write position to origin of glyph. 
 		// Each GlyphLayer can assume that writes on right position if don't apply any effect.
 		cairo_translate(c, _x, _y);		
-		
-		// cairo_rectangle(c, 0.0f, 0.0f, w + extents[2], h + extents[3]);
-		// cairo_clip(c);
+		cairo_rectangle(c, 0.0f, 0.0f, w + extents[2], h + extents[3]);
+		cairo_clip(c);
 
 		cairo_save(c);
-		cairo_scale(c, resolution, resolution);
 		cairo_translate(c, extents[0], extents[1]);
 
 		if(!_renderer->renderLayer(layerIndex, c, &g, w, h)) osg::notify(osg::WARN) 
@@ -130,46 +127,6 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		cairo_restore(c);
 		cairo_destroy(c);
 	}
-
-	// DEBUG ------------------------------------------------------------------------------------------
-	cairo_surface_t* debug = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w + 10, h + 10);
-	cairo_t*         c     = cairo_create(debug);
-	
-	cairo_translate(c, 5, 5);
-
-	cairo_save(c);
-	cairo_set_source_rgb(c, 0.0f, 0.0f, 0.0f);
-	cairo_paint(c);
-	cairo_rectangle(c, 0.0f, 0.0f, w, h);
-	cairo_set_source_rgb(c, 1.0f, 0.0f, 0.0f);
-	cairo_fill(c);
-	cairo_restore(c);
-
-	cairo_set_source_rgba(c, 1.0f, 1.0f, 1.0f, 0.66f);
-	cairo_set_scaled_font(c, sf);
-	
-	cairo_scale(c, resolution, resolution);
-
-	/*
-	cairo_matrix_t cfm;
-
-	cairo_get_font_matrix(c, &cfm);
-	cairo_matrix_scale(&cfm, resolution, resolution);
-	cairo_set_font_matrix(c, &cfm);
-	*/
-
-	cairo_glyph_path(c, &g, 1);
-	cairo_fill(c);
-
-	std::ostringstream ss;
-
-	ss << "debug/" << g.index << ".png";
-
-	cairo_surface_write_to_png(debug, ss.str().c_str());
-
-	cairo_destroy(c);
-	cairo_surface_destroy(debug);
-	// DEBUG ------------------------------------------------------------------------------------------
 
 	// TODO: Why can't I destroy this here? Is it because the 'font' object has it locked up?
 	// cairo_scaled_font_destroy(sf);

@@ -59,16 +59,14 @@ public:
 		int           w = -1,
 		int           h = -1,
 		int           i = -1,
-		int           s = -1,
-		bool          m = true
+		int           s = -1
 	):
 	renderer  (r),
 	alignment (a),
 	width     (w),
 	height    (h),
 	indent    (i),
-	spacing   (s),
-	markup    (m) {
+	spacing   (s) {
 	}
 
 	bool setupPangoLayout(PangoLayout* layout) const;
@@ -79,7 +77,6 @@ public:
 	int           height;
 	int           indent;
 	int           spacing;
-	bool          markup;
 };
 
 class OSGPANGO_EXPORT Text {
@@ -105,16 +102,54 @@ public:
 
 	void drawGlyphs      (PangoFont*, PangoGlyphString*, int, int);
 	void setColorPalette (const ColorPalette&);
-	
-	//! This version of addText uses the encoding defined by OSGPANGO_ENCODING in the
-	//! osgPango/Export header.
-	void addText(const std::string&, int, int, const TextOptions& = TextOptions());
-	
+
+	//! This version of addText assumes you are using PangoMarkup and does not require
+	//! that you pass in a font description. It uses the encoding defined by
+	//! OSGPANGO_ENCODING in the osgPango/Export header.
+	inline void addText(const std::string& str, int x, int y, const TextOptions& to) {
+		addText(OSGPANGO_ENCODING, str, "", x, y, to);
+	}
+
+	//! This version of addText does not allow PangoMarkup, and instead requires that
+	//! you pass an additional font description string (something like "verdana 100px").
+	//! It uses the encoding defined by OSGPANGO_ENCODING.
+	inline void addText(
+		const std::string& str,
+		const std::string& descr,
+		int                x,
+		int                y,
+		const TextOptions& to
+	) {
+		addText(OSGPANGO_ENCODING, str, descr, x, y, to);
+	}
+
 	//! Here you can specify the encoding as the first argument. We do it this way rather
 	//! than adding it on as a final option because having to always specify a default
 	//! TextOptions() is unwieldy and doesn't always make for the most readable code.
-	void addText(String::Encoding, const std::string&, int, int, const TextOptions& = TextOptions());
+	//! PangoMarkup usage is turned on.
+	inline void addText(
+		String::Encoding   encoding,
+		const std::string& str,
+		int                x,
+		int                y,
+		const TextOptions& to
+	) {
+		addText(encoding, str, "", x, y, to);
+	}
 
+	//! This is our fourth addText method which turns off PangoMarkup and requires that
+	//! you specify a font description string, in addition to the encoding. This is the
+	//! "master" addText method which all others directly call. However, it's argument
+	//! list can be unwieldy, so we provide the easier-to-use wrappers above.
+	void addText(
+		String::Encoding,
+		const std::string&,
+		const std::string&,
+		int,
+		int,
+		const TextOptions& = TextOptions()
+	);
+	
 	void setAlpha(float alpha) {
 		_alpha = alpha;
 	}
