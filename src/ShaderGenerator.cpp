@@ -26,6 +26,9 @@ std::string baseFragmentHeader(unsigned int num) {
 	source
 		<< "#version 120" << std::endl
 		<< "#define NUMLAYERS " << num << std::endl
+		<< "#define CAIRO_FORMAT_A8 0.0" << std::endl
+		<< "#define CAIRO_FORMAT_RGB24 1.0" << std::endl
+		<< "#define CAIRO_FORMAT_ARGB32 2.0" << std::endl
 		<< "varying vec4 pangoTexCoord;" << std::endl
 		<< "uniform vec4 pangoColor[NUMLAYERS];" << std::endl
 		<< "uniform sampler2D pangoTexture[NUMLAYERS];" << std::endl
@@ -33,8 +36,8 @@ std::string baseFragmentHeader(unsigned int num) {
 		<< "vec4 pangoGetColor(int i) {" << std::endl
 		<< "vec4 c = pangoColor[i];" << std::endl
 		<< "vec4 t = texture2D(pangoTexture[i], pangoTexCoord.st);" << std::endl
-		<< "if(c.a == 1.0) return vec4(t.rgb, 1.0);" << std::endl
-		<< "else if(c.a == 2.0) return vec4(t.rgb, t.a);" << std::endl
+		<< "if(c.a == CAIRO_FORMAT_RGB24) return vec4(t.rgb, 1.0);" << std::endl
+		<< "else if(c.a == CAIRO_FORMAT_ARGB32) return vec4(t.rgb, t.a);" << std::endl
 		<< "else return vec4(c.rgb * t.a, t.a);" << std::endl
 		<< "}" << std::endl
 		<< "void main() {" << std::endl

@@ -6,26 +6,18 @@ uniform vec4      pangoColor[NUMLAYERS];
 uniform sampler2D pangoTexture[NUMLAYERS];
 uniform float     pangoAlpha;
 
-vec4 pangoHandleColor(vec4 c, vec4 t) {
-	if(c.a == 1.0) return vec4(t.rgb, 1.0);
-	
-	else if(c.a == 2.0) return vec4(t.rgb, t.a);
-
-	else return vec4(c.rgb * t.a, t.a);
-}
-
 vec4 pangoGetColor0() {
 	vec4 c = pangoColor[0];
 	vec4 t = texture2D(pangoTexture[0], pangoTexCoord.st);
 	
-	return pangoHandleColor(c, t);
+	return vec4(c.rgb * t.a, t.a);
 }
 
 vec4 pangoGetColor1() {
 	vec4 c = pangoColor[1];
 	vec4 t = texture2D(pangoTexture[1], pangoTexCoord.st);
 	
-	return pangoHandleColor(c, t);
+	return vec4(c.rgb * t.a, t.a);
 }
 
 void main() {
