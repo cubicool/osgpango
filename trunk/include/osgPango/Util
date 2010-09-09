@@ -5,11 +5,13 @@
 #define OSGPANGO_UTIL
 
 #include <string>
+#include <osg/Vec3>
 #include <osgPango/Export>
 
 namespace osgPango {
 
-OSGPANGO_EXPORT std::string getFilePath(const std::string&);
+OSGPANGO_EXPORT std::string getFilePath (const std::string&);
+OSGPANGO_EXPORT void        roundVec3   (osg::Vec3&);
 
 }
 

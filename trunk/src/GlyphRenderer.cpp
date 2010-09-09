@@ -6,6 +6,7 @@
 #include <osg/BlendFunc>
 #include <osg/Depth>
 #include <osg/Geode>
+#include <osg/TexEnvCombine>
 #include <osgCairo/Util>
 #include <osgPango/ShaderManager>
 #include <osgPango/GlyphRenderer>
@@ -40,8 +41,15 @@ bool GlyphRenderer::renderLayer(
 	
 	else return false;
 }
-	
+
 bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
+	osg::StateSet* state = geode->getOrCreateStateSet();
+
+	state->setMode(GL_BLEND, osg::StateAttribute::ON);	
+	state->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+	state->setAttribute(new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false));
+	// state->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+
 	ShaderManager& sm = ShaderManager::instance();
 
 	osg::Program* program = new osg::Program();
@@ -49,8 +57,6 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 
 	program->setName("pangoRenderer");
 	program->addShader(vert);
-
-	osg::StateSet* state = geode->getOrCreateStateSet();
 
 	state->setAttributeAndModes(program);
 	
@@ -67,9 +73,6 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 
 	state->addUniform(pangoTexture);
 	
-	state->setMode(GL_BLEND, osg::StateAttribute::ON);	
-	state->setAttribute(new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false));
-
 	return true;
 }
 
@@ -81,7 +84,7 @@ bool GlyphRenderer::updateOrCreateState(
 		ggs.textures.size() != _layers.size() ||
 		ggs.colors.size() != _layers.size()
 	) return false;
-		
+	
 	osg::Uniform* pangoColor = new osg::Uniform(
 		osg::Uniform::FLOAT_VEC4, 
 		"pangoColor", 
