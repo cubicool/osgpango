@@ -10,6 +10,7 @@
 #include <osg/MatrixTransform>
 #include <osgPango/String>
 #include <osgPango/Glyph>
+#include <osgPango/Util>
 
 namespace osgPango {
 
@@ -150,6 +151,10 @@ public:
 		const TextOptions& = TextOptions()
 	);
 	
+	void setScale(unsigned int scale) {
+		_scale = scale;
+	}
+
 	void setAlpha(float alpha) {
 		_alpha = alpha;
 	}
@@ -181,6 +186,10 @@ public:
 		return _origin;
 	}
 
+	unsigned int getScale() const {
+		return _scale;
+	}
+
 	//! The baseline of a Text object is the bottom-most "line" that text is rendered
 	//! on using Pango internally. Similar to getOrigin(), the value returned by
 	//! getBaseline() is based on the value derived while interfacing with Pango, and
@@ -206,15 +215,16 @@ public:
 	//! In those cases, a user should use getOriginBaseline(), so that the
 	//! glyphs with parts that render "under" the baseline do not modify the
 	//! placement of the Text object too drastically.
-	osg::Vec2 getOriginTranslated () const;
+	osg::Vec2 getOriginTranslated() const;
 
 protected:
 	bool _finalizeGeometry (osg::Group*);
-	void _applyTransform   (osg::Node*, const osg::Matrixd& );
+	void _applyTransform   (osg::Node*, const osg::Matrix&);
 
 	GlyphGeometryMap _ggMap;
 	osg::Vec2        _size;
 	osg::Vec2        _origin;
+	unsigned int     _scale;
 	int              _baseline;
 	float            _alpha;
 	bool             _init;
@@ -223,7 +233,7 @@ protected:
 	std::string      _glyphRenderer;
 	ColorMode        _colorMode;
 	ColorPalette     _palette;
-	osg::Matrixd     _lastTransform;
+	osg::Matrix      _lastTransform;
 };
 
 //! This is a wrapper template class that makes deriving from Text much easier.
@@ -315,9 +325,18 @@ public:
 
 protected:
 	void  _calculatePosition() {
-		osg::Vec3 origin(getOriginTranslated(), 0.0f);
-		osg::Vec3 size(_size, 0.0f);
-		osg::Matrixd axisMatrix(osg::Matrix::identity());
+		osg::Vec3::value_type s = 1.0f / static_cast<osg::Vec3::value_type>(_scale);
+
+		osg::Vec3   origin(getOriginTranslated(), 0.0f);
+		osg::Vec3   size(_size, 0.0f);
+		osg::Matrix axisMatrix(osg::Matrix::identity());
+		osg::Matrix scaleMatrix(osg::Matrix::scale(osg::Vec3(s, s, 1.0f)));
+
+		origin *= s;
+		size   *= s;
+
+		roundVec3(origin);
+		roundVec3(size);
 
 		if(_positionAlignment == POS_ALIGN_CENTER_BOTTOM) 
 			origin.x() -= osg::round(size.x() / 2.0f)
@@ -378,42 +397,42 @@ protected:
 		);
  
 		// Handle _axisAlignment...
-		if(_axisAlignment == AXIS_ALIGN_XZ_PLANE) axisMatrix = osg::Matrixd(
+		if(_axisAlignment == AXIS_ALIGN_XZ_PLANE) axisMatrix = osg::Matrix(
 			 1.0,  0.0,  0.0,  0.0,
 			 0.0,  0.0,  1.0,  0.0,
 			 0.0,  1.0,  0.0,  0.0,
 			 0.0,  0.0,  0.0,  1.0
 		);
 
-		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XZ_PLANE) axisMatrix = osg::Matrixd(
+		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XZ_PLANE) axisMatrix = osg::Matrix(
 			-1.0,  0.0,  0.0,  0.0,
 			 0.0,  0.0,  1.0,  0.0,
 			 0.0,  1.0,  0.0,  0.0,
 			 0.0,  0.0,  0.0,  1.0
 		); 
 
-		else if(_axisAlignment == AXIS_ALIGN_YZ_PLANE) axisMatrix = osg::Matrixd(
+		else if(_axisAlignment == AXIS_ALIGN_YZ_PLANE) axisMatrix = osg::Matrix(
 			 0.0,  1.0,  0.0, 0.0,
 			 0.0,  0.0,  1.0, 0.0,
 			 1.0,  0.0,  0.0, 0.0,
 			 0.0,  0.0,  0.0, 1.0
 		);
 
-		else if(_axisAlignment == AXIS_ALIGN_REVERSED_YZ_PLANE) axisMatrix = osg::Matrixd(
+		else if(_axisAlignment == AXIS_ALIGN_REVERSED_YZ_PLANE) axisMatrix = osg::Matrix(
 			 0.0, -1.0,  0.0, 0.0,
 			 0.0,  0.0,  1.0, 0.0,
 			 1.0,  0.0,  0.0, 0.0,
 			 0.0,  0.0,  0.0, 1.0
 		); 
 
-		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XY_PLANE) axisMatrix = osg::Matrixd(
+		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XY_PLANE) axisMatrix = osg::Matrix(
 			-1.0,  0.0,  0.0, 0.0,
 			 0.0,  1.0,  0.0, 0.0,
 			 0.0,  0.0,  1.0, 0.0,
 			 0.0,  0.0,  0.0, 1.0
 		);
 
-		_applyTransform(this, osg::Matrix::translate(origin) * axisMatrix);
+		_applyTransform(this, (scaleMatrix * axisMatrix) * osg::Matrix::translate(origin));
 	}
 		
 	PositionAlignment _positionAlignment;

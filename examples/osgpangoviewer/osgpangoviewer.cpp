@@ -92,6 +92,11 @@ void setupArguments(osg::ArgumentParser& args) {
 		"--ati",
 		"DEBUG: Use the custom ATI shaders; this is TEMPORARY!"
 	);
+
+	args.getApplicationUsage()->addCommandLineOption(
+		"--dump-textures",
+		"Dump all of the GlyphLayer textures used for every font created."
+	);
 }
 
 int main(int argc, char** argv) {
@@ -115,7 +120,8 @@ int main(int argc, char** argv) {
 	// All of our temporary variables.
 	std::string renderer, rendererSize, alpha, alignment, width, image;
 
-	bool perspective = false;
+	bool perspective  = false;
+	bool dumpTextures = false;
 
 	osgPango::Context& context = osgPango::Context::instance();
 
@@ -131,34 +137,40 @@ int main(int argc, char** argv) {
 
 		std::sscanf(rendererSize.c_str(), "%i,%i,%u,%u", &arg1, &arg2, &arg3, &arg4);
 
-		if(renderer == "outline") context.addGlyphRenderer(
-			"outline",
-			new osgPango::GlyphRendererOutline(arg1)
+		osgPango::GlyphRenderer* r = 0;
+		
+		if(renderer == "outline") r = new osgPango::GlyphRendererOutline(arg1);
+
+		else if(renderer == "shadow") r = new osgPango::GlyphRendererShadow(arg1, arg2);
+
+		else if(renderer == "shadowBlur") r = new osgPango::GlyphRendererShadowBlur(
+			arg1,
+			arg2,
+			arg3,
+			arg4
 		);
 
-		else if(renderer == "shadow") context.addGlyphRenderer(
-			"shadow",
-			new osgPango::GlyphRendererShadow(arg1, arg2)
-		);
-
-		else if(renderer == "shadowBlur") context.addGlyphRenderer(
-			"shadowBlur",
-			new osgPango::GlyphRendererShadowBlur(arg1, arg2, arg3, arg4)
-		);
-
-		else if(renderer == "shadowInset") context.addGlyphRenderer(
-			"shadowInset",
-			new osgPango::GlyphRendererShadowInset(arg1, arg2, arg3, arg4)
+		else if(renderer == "shadowInset") r = new osgPango::GlyphRendererShadowInset(
+			arg1,
+			arg2,
+			arg3,
+			arg4
 		);
 
 		else continue;
 
-		to.renderer = renderer;
+		if(r) {
+			context.addGlyphRenderer(renderer, r);
+
+			to.renderer = renderer;
+		}
 	}
 
 	while(args.read("--bitmap", image)) {}
 	
 	while(args.read("--perspective")) perspective = true;
+	
+	while(args.read("--dump-textures")) dumpTextures = true;
 
 	while(args.read("--alpha", alpha)) {
 		float a = std::atof(alpha.c_str());
@@ -195,12 +207,16 @@ int main(int argc, char** argv) {
 	if(args.argc() >= 2) {
 		text = "";
 
-		for(int i = 1; i < args.argc(); i++) text += std::string(args[i]) + " ";
+		for(int i = 1; i < args.argc(); i++) {
+			text += std::string(args[i]);
+			
+			if(i != args.argc()) text += " ";
+		}
 	}
 
 	if(!image.empty()) {
 		osgPango::GlyphRenderer* r = context.getGlyphRenderer(to.renderer);
-
+		
 		if(r) r->replaceLayer(0, new osgPango::GlyphLayerBitmap(image));
 	}
 
@@ -208,15 +224,9 @@ int main(int argc, char** argv) {
 	if(to.width <= 0) to.width = WINDOW_WIDTH;
 
 	t->addText(text, 0, 0, to);
-
-	/*
-	// TODO: DIRTY HACK! Why isn't our origin taking this into account?
-	if(!rendererSize.empty()) {
-		int s = std::atoi(rendererSize.c_str());
-
-		t->setMatrix(osg::Matrix::translate(s * 2.0f, s * 2.0f, 0.0f));
-	}
-	*/
+	
+	// TODO: Continue working on this API. :)
+	// t->setScale(2);
 
 	if(!t->finalize()) return 1;
 
@@ -235,20 +245,7 @@ int main(int argc, char** argv) {
 	}
 
 	else {
-		// TODO: Change coordinate system to Y-up here.
-
-		/*
-		const osg::BoundingSphere& bs  = t->getBound();
-		const osg::Vec3&           c   = bs.center();
-		const osg::Vec3&           eye = osg::Vec3(c.x(), c.y(), bs.radius() * 2.0f);
-
-		viewer.getCamera()->setViewMatrixAsLookAt(eye, bs.center(), osg::Vec3(0.0f, 1.0f, 0.0f));
-		*/
-
-		t->setMatrix(osg::Matrix::rotate(
-			osg::DegreesToRadians(90.0f),
-			osg::Vec3(1.0f, 0.0f, 0.0f)
-		));
+		t->setAxisAlignment(osgPango::TextTransform::AXIS_ALIGN_XZ_PLANE);
 
 		viewer.setSceneData(t);
 	}
@@ -265,8 +262,7 @@ int main(int argc, char** argv) {
 	// Run the viewer until ESC is pressed.
 	viewer.run();
 
-	// TODO: Uncomment to see all the intermediate textures created internally.
-	// context.writeCachesToPNGFiles("osgpangoviewer");
+	if(dumpTextures) context.writeCachesToPNGFiles("osgpangoviewer");
 
 	return 0;
 }

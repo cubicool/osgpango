@@ -113,7 +113,7 @@ public:
 	
 	void resetGlyphCaches(const std::string& renderer);
 
-	//! This method will allow you to retrieve a read-write pointer any custome
+	//! This method will allow you to retrieve a read-write pointer any custom
 	//! GlyphRenderer object installed in the Context. USE WITH CAUTION!
 	GlyphRenderer* getGlyphRenderer(const std::string& renderer) {
 		return _getGlyphRenderer(renderer);

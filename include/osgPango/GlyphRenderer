@@ -40,6 +40,7 @@ public:
 	virtual bool updateOrCreateState (int pass, osg::Geode*);
 	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
 
+	// You can override this method to enable mipmapping, if you like.
 	virtual osg::Texture2D* createTexture(osg::Image*);
 
 	void setName(const std::string& name) {
@@ -62,14 +63,14 @@ public:
 	virtual unsigned int getNumPasses() const { 
 		return 1;
 	}
-	
+
 	virtual cairo_format_t getImageFormatForLayer(unsigned int);
-	
+
 protected:
-	bool _setFragmentShader(osg::Geode*, const std::string&);
+	bool _setFragmentShader (osg::Geode*, const std::string&);
 
 	std::string                            _name;
-	std::vector<osg::ref_ptr<GlyphLayer> > _layers;	
+	std::vector<osg::ref_ptr<GlyphLayer> > _layers;
 };
 
 class OSGPANGO_EXPORT GlyphRendererDefault: public GlyphRenderer {
