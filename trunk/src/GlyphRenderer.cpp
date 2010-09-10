@@ -13,6 +13,11 @@
 
 namespace osgPango {
 
+GlyphRenderer::GlyphRenderer():
+_pixelSpacing (1.0f),
+_minFilter    (osg::Texture::LINEAR) {
+}
+
 osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {
 	if(!_layers.size()) return osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		
@@ -117,9 +122,9 @@ osg::Texture2D* GlyphRenderer::createTexture(osg::Image* img) {
 	osg::Texture2D* texture = new osg::Texture2D();
 
 	texture->setImage(img);
-	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
+	texture->setFilter(osg::Texture::MIN_FILTER, _minFilter);
 	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
-	
+
 	return texture;
 }
 

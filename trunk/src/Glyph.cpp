@@ -72,8 +72,8 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	// We add 1 pixel of additional extent here to acount for the pixel of spacing we'll
 	// need later.
-	double addw = extents[2] + 1.0f;
-	double addh = extents[3] + 1.0f;
+	double addw = extents[2] + _renderer->getPixelSpacing();
+	double addh = extents[3] + _renderer->getPixelSpacing();
 
 	if(w + addw >= _imgWidth || h + addh >= _imgHeight) {
 		osg::notify(osg::WARN)
@@ -88,7 +88,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	// If our remaining space isn't enough to acomodate another glyph, jump to another "row."
 	if(_x + w + addw >= _imgWidth) {
-		_x  = 1.0f;
+		_x  = _renderer->getPixelSpacing();
 		_y += _h + addh;
 	}
 
@@ -207,8 +207,8 @@ bool GlyphCache::_newImageAndTexture() {
 	// Whenever a new image is created we reset our _x, _y, and _h values.
 	// It's important that you do not create a new image unless you understand that this
 	// will happen and how it will affect everything.
-	_x = 1.0f;
-	_y = 1.0f;
+	_x = _renderer->getPixelSpacing();
+	_y = _renderer->getPixelSpacing();
 	_h = 0.0f;
 
 	return true;
