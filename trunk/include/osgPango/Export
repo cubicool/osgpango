@@ -4,8 +4,8 @@
 //! \file
 //! \brief Main doxygen docs; also defines compiler signature exports.
 
-#ifndef __OSGPANGO_EXPORT_H
-#define __OSGPANGO_EXPORT_H
+#ifndef OSGPANGO_EXPORT
+#define OSGPANGO_EXPORT
 
 //! \mainpage osgPango NodeKit Documentation
 //!
@@ -77,9 +77,9 @@
 
 #if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__) || defined( __BCPLUSPLUS__)  || defined( __MWERKS__)
     #if defined( osgPango_EXPORTS )
-    #	define OSGPANGO_EXPORT   __declspec(dllexport)
+    #	define OSGPANGO_EXPORT __declspec(dllexport)
     #else
-    #	define OSGPANGO_EXPORT   __declspec(dllimport)
+    #	define OSGPANGO_EXPORT __declspec(dllimport)
     #endif
     #define OSGPANGO_ENCODING osgText::String::ENCODING_UTF16
 #else
@@ -87,4 +87,4 @@
     #define OSGPANGO_ENCODING osgText::String::ENCODING_UTF8
 #endif  
 
-#endif  // OSGCAIRO_EXPORT
+#endif
