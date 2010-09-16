@@ -46,7 +46,6 @@ cairo_surface_t* GlyphLayerInterfaceBlur::createBlurredSurface(
 	cairo_destroy(tc);
 
 	osgCairo::util::gaussianBlur(tmp, _radius, _deviation);
-	//osgCairo::util::writeToPNG(tmp, "GlyphLayerInterface-tmp.png");
 
 	return tmp;
 }
