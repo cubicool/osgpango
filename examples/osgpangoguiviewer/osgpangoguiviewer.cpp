@@ -9,8 +9,8 @@
 #include <osgWidget/Frame>
 #include <osgPango/Label>
 
-const unsigned int SCREEN_WIDTH  = 1280;
-const unsigned int SCREEN_HEIGHT = 1024;
+const unsigned int SCREEN_WIDTH  = 1600;
+const unsigned int SCREEN_HEIGHT = 1200;
 
 const std::string LOREM_IPSUM(
 	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "
