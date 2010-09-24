@@ -90,6 +90,12 @@ public:
 		COLOR_MODE_PALETTE_ONLY
 	};
 
+	enum CoordinateAlign {
+		COORDINATE_ALIGN_AUTO,
+		COORDINATE_ALIGN_NONE,
+		COORDINATE_ALIGN_ALWAYS
+	};
+
 	Text(ColorMode = COLOR_MODE_MARKUP_OVERWRITE);
 
 	virtual ~Text();
@@ -159,6 +165,10 @@ public:
 		_alpha = alpha;
 	}
 
+	void setCoordinateAlign(CoordinateAlign align) {
+		_coordinateAlign = align;
+	}
+	
 	float getAlpha() const {
 		return _alpha;
 	}
@@ -233,6 +243,7 @@ protected:
 	std::string      _glyphRenderer;
 	ColorMode        _colorMode;
 	ColorPalette     _palette;
+	CoordinateAlign  _coordinateAlign;
 	osg::Matrix      _lastTransform;
 };
 
@@ -432,7 +443,7 @@ protected:
 			 0.0,  0.0,  0.0, 1.0
 		);
 
-		_applyTransform(this, (scaleMatrix * axisMatrix) * osg::Matrix::translate(origin));
+		_applyTransform(this, scaleMatrix * osg::Matrix::translate(origin) * axisMatrix);
 	}
 		
 	PositionAlignment _positionAlignment;

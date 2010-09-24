@@ -111,20 +111,27 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 		// Set position in image and then move write position to origin of glyph. 
 		// Each GlyphLayer can assume that writes on right position if don't apply any effect.
+		cairo_translate(c, _x + extents[0], _y + extents[1]);
+
+		// TODO: THIS IS WHAT THE ABOVE CODE SHOULD BE! For some reason, it had to be
+		// commented out to work on Windows, but I don't believe that should be the
+		// case. Perhaps it was a bug in different code.
+		
+		/*
 		cairo_translate(c, _x, _y);		
 		cairo_rectangle(c, 0.0f, 0.0f, w + extents[2], h + extents[3]);
 		cairo_clip(c);
-
 		cairo_save(c);
 		cairo_translate(c, extents[0], extents[1]);
+		cairo_restore(c);
+		*/
 
 		if(!_renderer->renderLayer(layerIndex, c, &g, w, h)) osg::notify(osg::WARN) 
 			<< "The GlyphRenderer object '" << _renderer->getName() << "' failed to render "
 			<< "a glyph to the internal surface."
 			<< std::endl
 		;
-
-		cairo_restore(c);
+		
 		cairo_destroy(c);
 	}
 

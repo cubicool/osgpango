@@ -39,6 +39,7 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 
 Text::Text(ColorMode cm):
 _colorMode(cm),
+_coordinateAlign(COORDINATE_ALIGN_AUTO),
 _lastTransform(osg::Matrix::identity()) {
 	clear();
 }
@@ -404,7 +405,13 @@ void Text::_applyTransform(osg::Node* node, const osg::Matrix& transform) {
 	
 	node->accept(nv);
 
-	nv.transform(_scale != 1);
+	bool align = false;
+
+	if(_coordinateAlign == COORDINATE_ALIGN_AUTO) align = _scale != 1;
+
+	else if(_coordinateAlign == COORDINATE_ALIGN_ALWAYS) align = true;
+
+	nv.transform(align);
 
 	_lastTransform = osg::Matrix::inverse(transform);
 }

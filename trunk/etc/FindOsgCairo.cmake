@@ -5,7 +5,7 @@
 #
 
 
-FIND_PATH(OSGCAIRO_INCLUDE_DIR osgCairo/Surface
+FIND_PATH(OSGCAIRO_INCLUDE_DIR osgCairo/Canvas
     $ENV{OSGCAIRODIR}/include
     $ENV{OSGCAIRODIR}
     ~/Library/Frameworks
