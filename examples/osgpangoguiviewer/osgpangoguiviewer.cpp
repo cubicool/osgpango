@@ -7,7 +7,8 @@
 #include <osgWidget/WindowManager>
 #include <osgWidget/Util>
 #include <osgWidget/Frame>
-#include <osgPango/Label>
+
+// #include <osgPango/Label>
 
 const unsigned int SCREEN_WIDTH  = 1600;
 const unsigned int SCREEN_HEIGHT = 1200;
@@ -346,8 +347,6 @@ public:
 int main(int argc, char** argv) {
 	osgViewer::Viewer viewer;
 
-	osgPango::Font::init();
-
 	/*
 	std::string font("Sans 10");
 	std::string text(LOREM_IPSUM);
@@ -426,9 +425,6 @@ int main(int argc, char** argv) {
 	mt->addChild(t);
 	*/
 
-	osgPango::Font::cleanup();
-	osgPango::Text::cleanup();
-	
 	viewer.getCamera()->setClearColor(osg::Vec4(0.7f, 0.7f, 0.7f, 1.0f));
 
 	return osgWidget::createExample(viewer, wm);
