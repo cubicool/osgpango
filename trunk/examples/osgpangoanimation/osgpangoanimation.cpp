@@ -51,14 +51,14 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 		if(!_originals.valid()) {
 			_originals = new osg::Vec3Array(*verts);
 
-			_motions.resize(_originals->size()/4);
+			_motions.resize(_originals->size() / 4);
 			
 			for (unsigned int i = 0; i < _motions.size(); i++) {
 				float duration = 1;
 				
-				_motions[i] = MyMotion(0, duration, 3.14, osgAnimation::Motion::LOOP);
+				_motions[i] = MyMotion(0, duration, 3.14f, osgAnimation::Motion::LOOP);
 				
-				float offset = (rand() * 1.0 / (1.0 * RAND_MAX)) * duration;
+				float offset = (rand() * 1.0f / (1.0f * RAND_MAX)) * duration;
 				
 				_motions[i].setTime(offset);
 			}

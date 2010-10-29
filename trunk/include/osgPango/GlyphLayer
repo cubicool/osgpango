@@ -66,7 +66,7 @@ class OSGPANGO_EXPORT GlyphLayerShadowBlur:
 	public GlyphLayer
 {
 public:
-	GlyphLayerShadowBlur(int = 1, int = 1, unsigned int = 2, unsigned int = 1);
+	GlyphLayerShadowBlur(int = 1, int = 1, unsigned int = 2, unsigned int = 0);
 	
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 	
@@ -78,7 +78,7 @@ class OSGPANGO_EXPORT GlyphLayerShadowInset:
 	public GlyphLayerInterfaceBlur, 
 	public GlyphLayer {
 public:
-	GlyphLayerShadowInset(int = 0, int = 0, unsigned int = 2, unsigned int = 1);
+	GlyphLayerShadowInset(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
 	
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 };
@@ -119,6 +119,17 @@ private:
 	unsigned int                  _repeatY;
 	osg::ref_ptr<osgCairo::Image> _bitmap;
 	cairo_pattern_t*              _pattern;
+};
+
+class OSGPANGO_EXPORT GlyphLayerEmboss: public GlyphLayer {
+public:
+	GlyphLayerEmboss(double, double);
+	
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+
+private:
+	double _azimuth;
+	double _elevation;
 };
 
 }

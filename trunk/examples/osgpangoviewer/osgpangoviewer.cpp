@@ -59,7 +59,7 @@ void setupArguments(osg::ArgumentParser& args) {
 
 	args.getApplicationUsage()->addCommandLineOption(
 		"--renderer <string> <int,int,int,int>",
-		"The GlyphRenderer object to use (outline, shadow, shadowBlur, shadowInset) and sizes. "
+		"The GlyphRenderer object to use (outline, shadow, shadowBlur, shadowInset, emboss) and sizes. "
 		"Note that not all renderers need--or require--four arguments."
 	);
 
@@ -156,6 +156,8 @@ int main(int argc, char** argv) {
 			arg3,
 			arg4
 		);
+
+		else if(renderer == "emboss") r = new osgPango::GlyphRendererEmboss(arg1, arg2);
 
 		else continue;
 

@@ -41,15 +41,17 @@ SET(SRC_FILES
 )
 
 SET(SRC_LAYER_FILES
+	src/layers/Bitmap.cpp
+	src/layers/Emboss.cpp
 	src/layers/Outline.cpp
 	src/layers/ShadowBlur.cpp
 	src/layers/ShadowInset.cpp
 	src/layers/Shadow.cpp
-	src/layers/Bitmap.cpp
 )
 
 SET(SRC_RENDERER_FILES
 	src/renderers/Default.cpp
+	src/renderers/Emboss.cpp
 	src/renderers/Outline.cpp
 	src/renderers/ShadowBlur.cpp
 	src/renderers/ShadowInset.cpp

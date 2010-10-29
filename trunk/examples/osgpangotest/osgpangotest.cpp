@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
 	group->addChild(camera);
 
 	viewer.setSceneData(group);
-	viewer.getCamera()->setClearColor(osg::Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	viewer.getCamera()->setClearColor(osg::Vec4(0.5f, 0.5f, 0.5f, 1.0f));
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	viewer.run();
