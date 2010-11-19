@@ -6,8 +6,8 @@
 namespace osgPango {
 
 GlyphRendererEmboss::GlyphRendererEmboss(double azimuth, double elevation) {
-	addLayer(new GlyphLayerEmboss(azimuth, elevation));
 	addLayer(new GlyphLayer());
+	addLayer(new GlyphLayerEmboss(azimuth, elevation));
 }
 
 bool GlyphRendererEmboss::updateOrCreateState(int pass, osg::Geode* geode) {

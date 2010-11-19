@@ -2,6 +2,7 @@
 // $Id$
 
 #include <algorithm>
+#include <osg/Notify>
 #include <osgCairo/Util>
 #include <osgPango/GlyphLayerInterface>
 
@@ -11,7 +12,6 @@ GlyphLayerInterfaceOffset::GlyphLayerInterfaceOffset(int xOffset, int yOffset):
 _xOffset (xOffset),
 _yOffset (yOffset) {
 }
-
 
 GlyphLayerInterfaceBlur::GlyphLayerInterfaceBlur(unsigned int radius, unsigned int deviation):
 _radius    (radius),
@@ -52,6 +52,21 @@ cairo_surface_t* GlyphLayerInterfaceBlur::createBlurredSurface(
 
 unsigned int GlyphLayerInterfaceBlur::_getBlurSize() const {
 	return std::min(std::max(_deviation * 3, _radius), _radius * 2);
+}
+
+GlyphLayerInterfaceEmboss::GlyphLayerInterfaceEmboss(double azimuth, double elevation):
+_azimuth   (azimuth),
+_elevation (elevation) {
+}
+
+cairo_surface_t* GlyphLayerInterfaceEmboss::createEmbossedSurface(
+	cairo_surface_t* surface,
+	unsigned int     width,
+	unsigned int     height
+) {
+	osg::notify(osg::WARN) << "Not yet implemented." << std::endl;
+
+	return 0;
 }
 
 }

@@ -28,7 +28,7 @@ public:
 	}
 		
 protected:
-	cairo_format_t  _imageFormat;
+	cairo_format_t _imageFormat;
 };
 
 class OSGPANGO_EXPORT GlyphLayerOutline: public GlyphLayer {
@@ -126,6 +126,8 @@ public:
 	GlyphLayerEmboss(double, double);
 	
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+
+	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 private:
 	double _azimuth;

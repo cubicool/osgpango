@@ -20,6 +20,7 @@ vec4 pangoGetColor1() {
 	return vec4(c.rgb * t.a, t.a);
 }
 
+/*
 void main() {
 	vec4 frag = vec4(0.0, 0.0, 0.0, 0.0);
 	vec4 col  = pangoGetColor1();
@@ -27,6 +28,17 @@ void main() {
 	frag = (col + (1.0 - col.a) * frag) * pangoAlpha;
 	col  = pangoGetColor0();
 	
+	gl_FragColor = (col + (1.0 - col.a) * frag) * pangoAlpha;
+}
+*/
+
+void main() {
+	vec4  frag = vec4(0.0, 0.0, 0.0, 0.0);
+	float a    = texture2D(pangoTexture[1], pangoTexCoord.st).a;
+	vec4  col  = pangoGetColor0();
+	
+	col = vec4(col.rgb * a, col.a);
+
 	gl_FragColor = (col + (1.0 - col.a) * frag) * pangoAlpha;
 }
 
