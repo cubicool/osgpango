@@ -68,6 +68,38 @@ protected:
 	unsigned int _deviation;
 };
 
+class OSGPANGO_EXPORT GlyphLayerInterfaceEmboss {
+public:
+	cairo_surface_t* createEmbossedSurface(
+		cairo_surface_t*,
+		unsigned int,
+		unsigned int
+	);
+
+	double getAzimuth() const {
+		return _azimuth;
+	}
+	
+	double getElevation() const {
+		return _elevation;
+	}
+
+	void setAzimuth(double azimuth) {
+		_azimuth = azimuth; 
+	}
+	
+	void setElevation(double elevation) { 
+		_elevation = elevation;
+	}
+	
+protected:
+	GlyphLayerInterfaceEmboss(double, double);
+	
+	double _azimuth;
+	double _elevation;
+};
+
+
 }
 
 #endif

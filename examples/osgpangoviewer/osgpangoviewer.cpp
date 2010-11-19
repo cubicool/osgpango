@@ -157,7 +157,10 @@ int main(int argc, char** argv) {
 			arg4
 		);
 
-		else if(renderer == "emboss") r = new osgPango::GlyphRendererEmboss(arg1, arg2);
+		else if(renderer == "emboss") r = new osgPango::GlyphRendererEmboss(
+			osg::DegreesToRadians(static_cast<double>(arg1)),
+			osg::DegreesToRadians(static_cast<double>(arg2))
+		);
 
 		else continue;
 

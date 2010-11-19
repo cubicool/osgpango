@@ -109,8 +109,8 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		cairo_set_scaled_font(c, sf);
 		cairo_identity_matrix(c);
 
-		// Set position in image and then move write position to origin of glyph. 
-		// Each GlyphLayer can assume that writes on right position if don't apply any effect.
+		// Modify the current default position by the cumulative X/Y extent modification
+		// values.
 		cairo_translate(c, _x + extents[0], _y + extents[1]);
 
 		// TODO: THIS IS WHAT THE ABOVE CODE SHOULD BE! For some reason, it had to be
