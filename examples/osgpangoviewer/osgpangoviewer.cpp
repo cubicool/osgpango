@@ -59,13 +59,18 @@ void setupArguments(osg::ArgumentParser& args) {
 
 	args.getApplicationUsage()->addCommandLineOption(
 		"--renderer <string> <int,int,int,int>",
-		"The GlyphRenderer object to use (outline, shadow, shadowBlur, shadowInset, emboss) and sizes. "
+		"The GlyphRenderer object to use (outline, shadow, shadowBlur, shadowInset) and sizes. "
 		"Note that not all renderers need--or require--four arguments."
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
 		"--bitmap <image>",
 		"Use the specified image to fill the glyph face."
+	);
+
+	args.getApplicationUsage()->addCommandLineOption(
+		"--bevel",
+		"Apply a simple bevel (TESTING!)"
 	);
 
 	args.getApplicationUsage()->addCommandLineOption(
@@ -122,6 +127,7 @@ int main(int argc, char** argv) {
 
 	bool perspective  = false;
 	bool dumpTextures = false;
+	bool bevel        = false;
 
 	osgPango::Context& context = osgPango::Context::instance();
 
@@ -157,11 +163,6 @@ int main(int argc, char** argv) {
 			arg4
 		);
 
-		else if(renderer == "emboss") r = new osgPango::GlyphRendererEmboss(
-			osg::DegreesToRadians(static_cast<double>(arg1)),
-			osg::DegreesToRadians(static_cast<double>(arg2))
-		);
-
 		else continue;
 
 		if(r) {
@@ -173,6 +174,8 @@ int main(int argc, char** argv) {
 
 	while(args.read("--bitmap", image)) {}
 	
+	while(args.read("--bevel")) bevel = true;
+
 	while(args.read("--perspective")) perspective = true;
 	
 	while(args.read("--dump-textures")) dumpTextures = true;
@@ -219,10 +222,23 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	if(!image.empty()) {
+	if(!image.empty() || bevel) {
 		osgPango::GlyphRenderer* r = context.getGlyphRenderer(to.renderer);
-		
-		if(r) r->replaceLayer(0, new osgPango::GlyphLayerBitmap(image));
+		osgPango::GlyphLayer*    l = 0;
+
+		if(!bevel) l = new osgPango::GlyphLayerBitmap(image);
+
+		else l = new osgPango::GlyphLayerBevel(
+			10.0f,
+			0.5f,
+			osg::DegreesToRadians(35.0f),
+			osg::DegreesToRadians(35.0f),
+			10.0f,
+			0.1f,
+			0.9f
+		);
+
+		if(r) r->replaceLayer(0, l);
 	}
 
 	// The user didn't set a width, so use our screen size.

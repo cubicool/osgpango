@@ -93,7 +93,7 @@ public:
 
 	void setBitmap(const std::string&);
 	
-	const std::string&  getBitmap() const { 
+	const std::string& getBitmap() const { 
 		return _path; 
 	}
 
@@ -121,17 +121,76 @@ private:
 	cairo_pattern_t*              _pattern;
 };
 
-class OSGPANGO_EXPORT GlyphLayerEmboss: public GlyphLayer {
+class OSGPANGO_EXPORT GlyphLayerBevel: public GlyphLayer {
 public:
-	GlyphLayerEmboss(double, double);
+	GlyphLayerBevel(double, double, double, double, double, double, double);
 	
 	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
 
-	virtual osg::Vec4 getExtraGlyphExtents() const;
+	double getBevelWidth() const {
+		return _bevelWidth;
+	}
+
+	double getBevelStep() const {
+		return _bevelStep;
+	}
+
+	double getAzimuth() const {
+		return _azimuth;
+	}
+
+	double getElevation() const {
+		return _elevation;
+	}
+
+	double getHeight() const {
+		return _height;
+	}
+
+	double getAmbient() const {
+		return _ambient;
+	}
+
+	double getDiffuse() const {
+		return _diffuse;
+	}
+
+	void setBevelWidth(double bevelWidth) {
+		_bevelWidth = bevelWidth;
+	}
+
+	void setBevelStep(double bevelStep) {
+		_bevelStep = _bevelStep;
+	}
+
+	void setAzimuth(double azimuth) {
+		_azimuth = azimuth;
+	}
+
+	void setElevation(double elevation) {
+		_elevation = elevation;
+	}
+
+	void setHeight(double height) {
+		_height = height;
+	}
+
+	void setAmbient(double ambient) {
+		_ambient = ambient;
+	}
+
+	void setDiffuse(double diffuse) {
+		_diffuse = diffuse;
+	}
 
 private:
+	double _bevelWidth;
+	double _bevelStep;
 	double _azimuth;
 	double _elevation;
+	double _height;
+	double _ambient;
+	double _diffuse;
 };
 
 }
