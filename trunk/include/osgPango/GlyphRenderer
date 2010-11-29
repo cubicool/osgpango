@@ -128,13 +128,6 @@ public:
 	virtual bool updateOrCreateState(int pass, osg::Geode*);
 };
 
-class OSGPANGO_EXPORT GlyphRendererEmboss: public GlyphRenderer {
-public:
-	GlyphRendererEmboss(double, double);
-	
-	virtual bool updateOrCreateState(int pass, osg::Geode*);
-};
-
 }
 
 #endif
