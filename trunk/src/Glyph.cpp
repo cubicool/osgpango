@@ -127,8 +127,10 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		*/
 
 		if(!_renderer->renderLayer(layerIndex, c, &g, w, h)) osg::notify(osg::WARN) 
-			<< "The GlyphRenderer object '" << _renderer->getName() << "' failed to render "
-			<< "a glyph to the internal surface."
+			<< "The GlyphRenderer object '" << _renderer->getName()
+			<< "' failed to render glyph " << g.index
+			<< " on layer index " << layerIndex
+			<< " to the internal surface."
 			<< std::endl
 		;
 		
