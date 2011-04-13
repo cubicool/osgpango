@@ -4,8 +4,6 @@
 #ifndef OSGPANGO_UTIL
 #define OSGPANGO_UTIL
 
-#include <fontconfig/fontconfig.h>
-
 #include <vector>
 #include <string>
 #include <osg/Vec3>

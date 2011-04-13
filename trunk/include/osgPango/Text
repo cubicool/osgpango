@@ -163,6 +163,8 @@ public:
 
 	void setAlpha(float alpha) {
 		_alpha = alpha;
+		
+		if(_alphaUniform) _alphaUniform->set(_alpha);
 	}
 
 	void setCoordinateAlign(CoordinateAlign align) {
@@ -231,20 +233,21 @@ protected:
 	bool _finalizeGeometry (osg::Group*);
 	void _applyTransform   (osg::Node*, const osg::Matrix&);
 
-	GlyphGeometryMap _ggMap;
-	osg::Vec2        _size;
-	osg::Vec2        _origin;
-	unsigned int     _scale;
-	int              _baseline;
-	float            _alpha;
-	bool             _init;
-	bool             _newGlyphs;
-	bool             _finalized;
-	std::string      _glyphRenderer;
-	ColorMode        _colorMode;
-	ColorPalette     _palette;
-	CoordinateAlign  _coordinateAlign;
-	osg::Matrix      _lastTransform;
+	GlyphGeometryMap           _ggMap;
+	osg::Vec2                  _size;
+	osg::Vec2                  _origin;
+	unsigned int               _scale;
+	int                        _baseline;
+	float                      _alpha;
+	bool                       _init;
+	bool                       _newGlyphs;
+	bool                       _finalized;
+	std::string                _glyphRenderer;
+	ColorMode                  _colorMode;
+	ColorPalette               _palette;
+	CoordinateAlign            _coordinateAlign;
+	osg::Matrix                _lastTransform;
+	osg::ref_ptr<osg::Uniform> _alphaUniform;
 };
 
 //! This is a wrapper template class that makes deriving from Text much easier.

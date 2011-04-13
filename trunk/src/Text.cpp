@@ -302,13 +302,19 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 		}
 	}
 
+	if(!_alphaUniform.valid()) _alphaUniform = group->getOrCreateStateSet()->getOrCreateUniform(
+		"pangoAlpha",
+		osg::Uniform::FLOAT
+	);
+	
+	_alphaUniform->set(_alpha);
+
 	// Create structure for passes.
 	for(unsigned int i = 0; i < maxPasses; i++) {
 		osg::Group*    pass  = new osg::Group();
 		osg::StateSet* state = pass->getOrCreateStateSet();
 
 		state->setRenderBinDetails(i, "RenderBin");
-		state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(_alpha);
 
 		group->addChild(pass);
 	}

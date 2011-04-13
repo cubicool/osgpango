@@ -84,6 +84,7 @@ INCLUDE_DIRECTORIES(include
 	${PANGOCAIRO_INCLUDE_DIRS}
 	${GLIB_INCLUDE_DIRS}
 	${GLIBCONFIG_INCLUDE_DIRS}
+	${FONTCONFIG_INCLUDE_DIRS}
 )
 
 LINK_DIRECTORIES(
@@ -122,6 +123,8 @@ TARGET_LINK_LIBRARIES(osgPango
 	optimized gobject-2.0
 	debug     glib-2.0
 	optimized glib-2.0
+	debug     fontconfig
+	optimized fontconfig
 )
 
 # The archive/runtime part is so that the lib/dll pair goes into lib and bin
