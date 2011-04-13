@@ -1,6 +1,8 @@
 // -*-c++-*- Copyright (C) 2010 osgPango Development Team
 // $Id$
 
+#include <fontconfig/fontconfig.h>
+
 #include <osg/Math>
 #include <osgDB/FileUtils>
 #include <osgPango/Util>
