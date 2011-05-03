@@ -146,8 +146,8 @@ private:
 	static osg::ref_ptr<osg::Vec3Array> _norms;
 	static osg::ref_ptr<osg::Vec4Array> _cols;
 
-	unsigned int _numQuads,
-	             _numTextureCoords;
+	unsigned int _numQuads;
+	unsigned int _numTextureCoords;
 };
 
 // We don't use an osg::ref_ptr here becase the Geometry will actually only be temporary.
