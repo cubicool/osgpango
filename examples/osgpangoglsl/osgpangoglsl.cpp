@@ -19,7 +19,7 @@ struct GlyphRendererMultiOutline: public osgPango::GlyphRenderer {
 		osgPango::ShaderManager::instance().addShaderFile(
 			"my-shader",
 			osg::Shader::FRAGMENT,
-			"../examples/osgpangotest/osgpangotest.glsl"
+			"../examples/osgpangoglsl/osgpangoglsl.glsl"
 		);
 	}
 
