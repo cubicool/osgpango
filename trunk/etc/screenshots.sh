@@ -21,13 +21,19 @@ function DoExample() {
 	done
 
 	while true; do
-		if ! xwininfo -name osgpangoviewer >/dev/null 2>&1; then
-			break
+		WID="$(ps axf | grep [o]sgpangoviewer | cut -f 1 -d ' ')"
 
+		if [ -n "${WID}" ]; then
+			kill "${WID}"
+
+			break
+		
 		else
 			sleep 0.2
 		fi
 	done
+
+	sleep 2
 }
 
 [ ! -d screenshots ] && mkdir screenshots
@@ -37,7 +43,7 @@ rm -f screenshots/*.png
 DoExample basic.png --alignment justify
 DoExample small.png "${TEXT3}"
 DoExample basic-shadow.png --renderer shadow 1
-DoExample bitmap-rgb24-and-outline.png --bitmap bitmap-rgb24.png --renderer outline 2 "${TEXT1}"
-DoExample bitmap-argb32-and-outline.png --bitmap bitmap-argb32.png --renderer outline 4 "${TEXT1}"
+DoExample bitmap-rgb24-and-outline.png --bitmap ../etc/bitmap-rgb24.png --renderer outline 2 "${TEXT1}"
+DoExample bitmap-argb32-and-outline.png --bitmap ../etc/bitmap-argb32.png --renderer outline 4 "${TEXT1}"
 DoExample multispan-shadow.png --renderer shadowBlur 8 "${TEXT2}"
 

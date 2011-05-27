@@ -1,4 +1,4 @@
-PROJECT(osgpangotest)
+PROJECT(osgpangosimplerenderer)
 
 # osgPango gets the proper debug postfix automatically since it's part of the
 # current project, but we need to add the postfix for the other libs.
@@ -10,7 +10,7 @@ LINK_LIBRARIES(osgPango
                debug     osgDB${CMAKE_DEBUG_POSTFIX}
                optimized osgDB)
 
-ADD_EXECUTABLE(osgpangotest osgpangotest.cpp)
+ADD_EXECUTABLE(osgpangosimplerenderer osgpangosimplerenderer.cpp)
 
-INSTALL(TARGETS osgpangotest DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenSceneGraph/bin)
-SET_TARGET_PROPERTIES(osgpangotest PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+INSTALL(TARGETS osgpangosimplerenderer DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenSceneGraph/bin)
+SET_TARGET_PROPERTIES(osgpangosimplerenderer PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
