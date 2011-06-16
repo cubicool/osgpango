@@ -40,11 +40,11 @@ public:
 		TEXT_ALIGN_LEFT,
 		
 		//! Align all text by putting each row in the center of
-		//! it's permissable width.
+		//! its permissable width.
 		TEXT_ALIGN_CENTER,
 		
 		//! Align all text by forcing each row to push as far as
-		//! is permissable with it's allocated width.
+		//! is permissable with its allocated width.
 		TEXT_ALIGN_RIGHT,
 		
 		//! Align each row of text such that the first and last words
@@ -146,7 +146,7 @@ public:
 
 	//! This is our fourth addText method which turns off PangoMarkup and requires that
 	//! you specify a font description string, in addition to the encoding. This is the
-	//! "master" addText method which all others directly call. However, it's argument
+	//! "master" addText method which all others directly call. However, its argument
 	//! list can be unwieldy, so we provide the easier-to-use wrappers above.
 	void addText(
 		String::Encoding,
@@ -183,7 +183,7 @@ public:
 		return _size;
 	}
 
-	//! The origin of a Text object is actually it's upper-left corner; this happens
+	//! The origin of a Text object is actually its upper-left corner; this happens
 	//! due to the way osgPango interfaces with Pango and how Pango renders text from
 	//! top-to-bottom and lef-to-right (remember that OpenGL people are the
 	//! "oddities" in that we expect origins to be, and align with, the bottom left of
@@ -257,7 +257,7 @@ protected:
 template<typename T>
 class TextInterface: public Text, public T {
 public:
-	//! These are the alignment enums within TextTransformInterface (not Text itself, since
+	//! These are the alignment enums within TextInterface (not Text itself, since
 	//! Text is virtual and has no way of positioning itself) that define how the
 	//! text is arranged RELATIVE TO IT'S POSITION. They're pretty much
 	//! self-explanatory so I won't document each one individually.
@@ -291,7 +291,7 @@ public:
 	_axisAlignment     (AXIS_ALIGN_XY_PLANE) {
 	}
 
-	//! Necessary override required by Text; it's purpose is to commit
+	//! Necessary override required by Text; its purpose is to commit
 	//! any and all text changes internally and ready the object for display.
 	//! If you call addText() dynamically, you will need to also call
 	//! finalize() to refresh your changes. This is not true, however,
@@ -321,7 +321,7 @@ public:
 	}
 	
 	//! Sets the PositionAlignment enum to use for modifying the position of
-	//! the Text, modifying it's absolute placement. The default PositionAlignment
+	//! the Text, modifying its absolute placement. The default PositionAlignment
 	//! of POS_ALIGN_LEFT_BOTTOM however is a no-op, since it corresponds to how
 	//! Pango arranges the layout by default. The recalculate argument is the
 	//! same as for setPosition().
