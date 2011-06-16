@@ -23,9 +23,8 @@ public:
 	
 	typedef std::list<PositionAlignmentPair> PositionAlignmentList;
 
-	UpdateCallback() :
-	_time(new osg::Timer) {
-		_elapsed = _time->time_s();
+	UpdateCallback() {
+		_elapsed = _time.time_s();
 
 		_list.push_back(PositionAlignmentPair(
 			osgPango::TextTransform::POS_ALIGN_LEFT_BOTTOM, 
@@ -78,8 +77,8 @@ public:
 		
 		if(!camera) return;
 
-		else if(_time->time_s() - _elapsed > 2.0f) {
-			_elapsed = _time->time_s();
+		else if(_time.time_s() - _elapsed > 2.0f) {
+			_elapsed = _time.time_s();
 
 			osgPango::TextTransform* oldTransform = dynamic_cast<osgPango::TextTransform*>(
 				camera->getChild(0)
@@ -108,7 +107,7 @@ public:
 	}
 
 private:
-	osg::Timer*           _time;
+	osg::Timer            _time;
 	double                _elapsed;
 	PositionAlignmentList _list;
 		

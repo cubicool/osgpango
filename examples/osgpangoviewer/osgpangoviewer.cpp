@@ -163,7 +163,11 @@ int main(int argc, char** argv) {
 			arg4
 		);
 
-		else continue;
+		else {
+			OSG_NOTICE << "Bad renderer: " << renderer << std::endl;
+
+			continue;
+		}
 
 		if(r) {
 			context.addGlyphRenderer(renderer, r);
