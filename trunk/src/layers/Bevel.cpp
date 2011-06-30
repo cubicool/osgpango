@@ -15,7 +15,7 @@ GlyphLayerBevel::GlyphLayerBevel(
 	double ambient,
 	double diffuse
 ):
-GlyphLayer (),
+GlyphLayer  (),
 _bevelWidth (bevelWidth),
 _bevelStep  (bevelStep),
 _azimuth    (azimuth),
