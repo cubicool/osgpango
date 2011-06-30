@@ -15,7 +15,7 @@ GlyphLayerBevel::GlyphLayerBevel(
 	double ambient,
 	double diffuse
 ):
-GlyphLayer (CAIRO_FORMAT_ARGB32),
+GlyphLayer (),
 _bevelWidth (bevelWidth),
 _bevelStep  (bevelStep),
 _azimuth    (azimuth),
@@ -37,15 +37,31 @@ bool GlyphLayerBevel::render(
 	cairo_t*         cr      = cairo_create(bumpmap);
 
 	cairo_set_scaled_font(cr, cairo_get_scaled_font(c));
-	cairo_glyph_path(cr, glyph, 1);
 	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+	cairo_glyph_path(cr, glyph, 1);
+
+	cairo_antialias_t antialias = cairo_get_antialias(cr);
+	cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+	cairo_clip_preserve(cr);
+	
+	cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0);
+	cairo_fill_preserve(cr);
+	
+	cairo_set_antialias(cr, antialias);
 
 	for(double l = _bevelWidth; l > 0.0f; l -= _bevelStep) {
-		cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f - (l / _bevelWidth));
+		cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, l / _bevelWidth);
 		cairo_set_line_width(cr, l);
 		cairo_stroke_preserve(cr);
 	}
 
+	//for(double l = _bevelWidth; l > 0.0f; l -= _bevelStep) {
+	//	cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f - (l / _bevelWidth));
+	//	cairo_set_line_width(cr, l);
+	//	cairo_stroke_preserve(cr);
+	//}
+	//cairo_fill_preserve(cr);
+	
 	cairo_destroy(cr);
 
 	cairo_surface_t* lightmap = osgCairo::util::createEmbossedSurface(
@@ -63,16 +79,8 @@ bool GlyphLayerBevel::render(
 	cairo_set_operator(c, CAIRO_OPERATOR_SOURCE);
 	cairo_set_source_surface(c, lightmap, 0, 0);
 	cairo_paint(c);
-	cairo_set_operator(c, CAIRO_OPERATOR_SATURATE);
-	cairo_set_source_rgba(c, 1.0f, 1.0f, 1.0f, 1.0f);
-	cairo_paint(c);
 	cairo_restore(c);
 	
-	// TODO: This is a hack! Figure out why the border is poor quality...
-	cairo_set_line_width(c, 4.0);
-	cairo_set_operator(c, CAIRO_OPERATOR_CLEAR);
-	cairo_stroke(c);
-
 	// cairo_surface_write_to_png(bumpmap, "bumpmap.png");
 	// cairo_surface_write_to_png(lightmap, "lightmap.png");
 
