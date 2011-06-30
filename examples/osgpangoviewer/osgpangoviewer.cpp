@@ -104,6 +104,40 @@ void setupArguments(osg::ArgumentParser& args) {
 	);
 }
 
+std::string boringStringParsing(osg::ArgumentParser& args) {
+	std::string str(LOREM_IPSUM);
+
+	// Construct our string to display.
+	if(args.argc() >= 2) {
+		str = "";
+
+		for(int i = 1; i < args.argc(); i++) {
+			str += std::string(args[i]);
+			
+			if(i != args.argc()) str += " ";
+		}
+	}
+
+	size_t             pos = 0;
+	std::ostringstream os;
+
+	while(true) {
+		size_t p = str.find("\\n", pos);
+
+		if(p == std::string::npos) {
+			os << str.substr(pos, std::string::npos);
+
+			break;
+		}
+
+		os << str.substr(pos, p - pos) << std::endl;
+
+		pos = p + 2;
+	}
+
+	return os.str();
+}
+
 int main(int argc, char** argv) {
 	osg::ArgumentParser args(&argc, argv);
 
@@ -119,8 +153,6 @@ int main(int argc, char** argv) {
 
 		return 0;
 	}
-
-	std::string text(LOREM_IPSUM);
 
 	// All of our temporary variables.
 	std::string renderer, rendererSize, alpha, alignment, width, image;
@@ -216,15 +248,7 @@ int main(int argc, char** argv) {
 		sm.addShaderFile("osgPango-frag2", osg::Shader::FRAGMENT, "osgPango-frag2-ATI.glsl");
 	}
 
-	if(args.argc() >= 2) {
-		text = "";
-
-		for(int i = 1; i < args.argc(); i++) {
-			text += std::string(args[i]);
-			
-			if(i != args.argc()) text += " ";
-		}
-	}
+	std::string text = boringStringParsing(args);
 
 	if(!image.empty() || bevel) {
 		osgPango::GlyphRenderer* r = context.getGlyphRenderer(to.renderer);
@@ -233,16 +257,18 @@ int main(int argc, char** argv) {
 		if(!bevel) l = new osgPango::GlyphLayerBitmap(image);
 
 		else l = new osgPango::GlyphLayerBevel(
-			10.0f,
-			0.5f,
+			15.0f,
+			1.0f,
 			osg::DegreesToRadians(35.0f),
 			osg::DegreesToRadians(35.0f),
-			10.0f,
+			90.0f,
 			0.1f,
 			0.9f
 		);
 
 		if(r) r->replaceLayer(0, l);
+
+		text = "<span font='Sans Bold 150px'>Bevel\nExample</span>";
 	}
 
 	// The user didn't set a width, so use our screen size.
