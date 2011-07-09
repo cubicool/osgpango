@@ -45,5 +45,6 @@ DoExample small.png "${TEXT3}"
 DoExample basic-shadow.png --renderer shadow 1
 DoExample bitmap-rgb24-and-outline.png --bitmap ../etc/bitmap-rgb24.png --renderer outline 2 "${TEXT1}"
 DoExample bitmap-argb32-and-outline.png --bitmap ../etc/bitmap-argb32.png --renderer outline 4 "${TEXT1}"
-DoExample multispan-shadow.png --renderer shadowBlur 8 "${TEXT2}"
+DoExample multispan-shadow.png --renderer shadowBlur 0,0,8,8 "${TEXT2}"
+DoExample bevel.png --bevel
 

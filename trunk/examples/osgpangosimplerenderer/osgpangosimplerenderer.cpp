@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 	osgViewer::Viewer viewer;
 
 	osg::Group*  group  = new osg::Group();
-	osg::Camera* camera = createOrthoCamera(1280, 1024);
+	osg::Camera* camera = createOrthoCamera(800, 600);
 	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
 	
         viewer.addEventHandler(new osgViewer::StatsHandler());
@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
 
 	viewer.setSceneData(group);
 	viewer.getCamera()->setClearColor(osg::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
-	viewer.setUpViewInWindow(50, 50, 1280, 1024);
+	viewer.setUpViewInWindow(50, 50, 800, 600);
 
 	viewer.run();
 
