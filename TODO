@@ -8,3 +8,4 @@
 
 - Investigate manually creating a GlyphCache using a Pango font
   description and using that in addText.
+
