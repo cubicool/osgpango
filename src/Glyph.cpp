@@ -9,6 +9,7 @@
 #include <osgDB/ReadFile>
 #include <osgCairo/Util>
 #include <osgPango/Context>
+#include <osgPango/GlyphRenderer>
 
 namespace osgPango {
 
@@ -100,41 +101,27 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	cairo_glyph_t g = { glyph, -r.x, -r.y };
 
 	// Render glyph to layers.
-	for(unsigned int layerIndex = 0; layerIndex < getNumLayers(); layerIndex++) {
-		osgCairo::Image* img = _layers[layerIndex].back().first.get();
-		cairo_t*         c   = img->createContext();
+	for(unsigned int layerIndex = 0; layerIndex < _renderer->getNumLayers(); layerIndex++) {
+		osgCairo::Image*  img = _layers[layerIndex].back().first.get();
+		cairo_t*          c   = img->createContext();
 
 		if(cairo_status(c)) continue;
 
 		cairo_set_scaled_font(c, sf);
 		cairo_identity_matrix(c);
 
-		// Modify the current default position by the cumulative X/Y extent modification
-		// values.
+		// Set position in image and then move write position to origin of glyph. 
+		// Each GlyphLayer can assume that writes on right position if don't apply any effect.
 		cairo_translate(c, _x + extents[0], _y + extents[1]);
 
-		// TODO: THIS IS WHAT THE ABOVE CODE SHOULD BE! For some reason, it had to be
-		// commented out to work on Windows, but I don't believe that should be the
-		// case. Perhaps it was a bug in different code.
-		
-		/*
-		cairo_translate(c, _x, _y);		
-		cairo_rectangle(c, 0.0f, 0.0f, w + extents[2], h + extents[3]);
-		cairo_clip(c);
-		cairo_save(c);
-		cairo_translate(c, extents[0], extents[1]);
-		cairo_restore(c);
-		*/
-
 		if(!_renderer->renderLayer(layerIndex, c, &g, w, h)) osg::notify(osg::WARN) 
-			<< "The GlyphRenderer object '" << _renderer->getName()
-			<< "' failed to render glyph " << g.index
-			<< " on layer index " << layerIndex
-			<< " to the internal surface."
+			<< "The GlyphRenderer object '" /* << renderer->getName() << */ "' failed to render "
+			<< "a glyph to the internal surface."
 			<< std::endl
 		;
-		
 		cairo_destroy(c);
+		
+		img->dirty();
 	}
 
 	// TODO: Why can't I destroy this here? Is it because the 'font' object has it locked up?
@@ -175,7 +162,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 }
 
 void GlyphCache::writeImagesAsFiles(const std::string& prefix) const {
-	for(unsigned int i = 0; i < getNumLayers(); i++) {
+	for(unsigned int i = 0; i < _layers.size(); i++) {
 		std::ostringstream str;
 
 		str << i;
@@ -197,9 +184,9 @@ unsigned long GlyphCache::getMemoryUsageInBytes() const {
 }
 
 bool GlyphCache::_newImageAndTexture() {
-	if(!_layers.size()) _layers.resize(getNumLayers());
+	if(!_layers.size()) _layers.resize(_renderer->getNumLayers());
 	
-	for(unsigned int i = 0; i < getNumLayers(); i++) {
+	for(unsigned int i = 0; i < _layers.size(); i++) {
 		osgCairo::Image* img = new osgCairo::Image(
 			_imgWidth, 
 			_imgHeight, 
@@ -208,7 +195,7 @@ bool GlyphCache::_newImageAndTexture() {
 	
 		if(!img || !img->valid()) return false;
 	
-		osg::Texture2D* texture = getGlyphRenderer()->createTexture(img);
+		osg::Texture2D* texture = _renderer->createTexture(img);
 		
 		_layers[i].push_back(std::make_pair(img, texture));
 	}
@@ -268,31 +255,21 @@ osg::Texture* GlyphCache::_getTexture(unsigned int index, unsigned int layerInde
 	else return 0;
 }
 
-osg::ref_ptr<osg::Vec3Array> GlyphGeometry::_norms;
-osg::ref_ptr<osg::Vec4Array> GlyphGeometry::_cols;
-
 GlyphGeometry::GlyphGeometry():
 _numQuads(0) {
-	if(!_norms.valid()) {
-		_norms = new osg::Vec3Array(1);
-
-		(*_norms)[0].set(0.0f, 0.0f, 1.0f);
-		(*_norms)[0].normalize();
-	}
-
-	if(!_cols.valid()) {
-		_cols = new osg::Vec4Array(1);
-
-		(*_cols)[0].set(1.0f, 1.0f, 1.0f, 1.0f);
-	}
-
-	setVertexArray(new osg::Vec3Array());
-	setTexCoordArray(0, new osg::Vec2Array());
+	osg::Vec3Array* norms = new osg::Vec3Array(1);
+	osg::Vec4Array* cols  = new osg::Vec4Array(1);
 	
-	setColorArray(_cols.get());
-	setNormalArray(_norms.get());
+	(*norms)[0].set(0.0f, 0.0f, 1.0f);
+
+	(*cols)[0].set(1.0f, 1.0f, 1.0f, 1.0f);
+
+	setNormalArray(norms);
+	setColorArray(cols);
 	setNormalBinding(osg::Geometry::BIND_OVERALL);
 	setColorBinding(osg::Geometry::BIND_OVERALL);
+	setVertexArray(new osg::Vec3Array());
+	setTexCoordArray(0, new osg::Vec2Array());
 }
 
 bool GlyphGeometry::finalize() {
@@ -316,9 +293,11 @@ bool GlyphGeometry::pushCachedGlyphAt(
 	const osg::Vec2&   pos
 ) {
 	static float z = 0.0f;
+
 	static const osg::Matrix m(
 		osg::Matrix::translate(0.0f, -1.0, 0.0f) *
-		osg::Matrix::scale(1.0f, -1.0f, 1.0f));
+		osg::Matrix::scale(1.0f, -1.0f, 1.0f)
+	);
 
 	osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(getVertexArray());
 	osg::Vec2Array* texs  = dynamic_cast<osg::Vec2Array*>(getTexCoordArray(0));

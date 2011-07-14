@@ -10,7 +10,7 @@ GlyphRendererOutline::GlyphRendererOutline(unsigned int outline) {
 	addLayer(new GlyphLayerOutline(outline));
 }
 
-bool GlyphRendererOutline::updateOrCreateState(int pass, osg::Geode* geode) {
+bool GlyphRendererOutline::updateOrCreateState(int pass, osg::Geode* geode) const {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
 	return _setFragmentShader(geode, "osgPango-frag2");

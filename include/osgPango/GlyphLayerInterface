@@ -43,7 +43,7 @@ public:
 		unsigned int
 	);
 
-	unsigned int getRadius() const {
+	double getRadius() const {
 		return _radius; 
 	}
 	
@@ -51,21 +51,21 @@ public:
 		return _deviation;
 	}
 
-	void setRadius(unsigned int radius) {
+	void setRadius(double radius) {
 		_radius = radius; 
 	}
 	
-	void setDeviation(unsigned int deviation) { 
+	void setDeviation(double deviation) { 
 		_deviation = deviation;
 	}
 	
 protected:
-	GlyphLayerInterfaceBlur(unsigned int, unsigned int);
+	GlyphLayerInterfaceBlur(double, double);
 	
 	unsigned int _getBlurSize() const;
 	
-	unsigned int _radius;	
-	unsigned int _deviation;
+	double _radius;	
+	double _deviation;
 };
 
 class OSGPANGO_EXPORT GlyphLayerInterfaceEmboss {

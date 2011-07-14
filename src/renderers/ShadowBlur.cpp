@@ -17,7 +17,7 @@ GlyphRendererShadowBlur::GlyphRendererShadowBlur(
 	addLayer(new GlyphLayerShadowBlur(xOffset, yOffset, radius, deviation));
 }
 
-bool GlyphRendererShadowBlur::updateOrCreateState(int pass, osg::Geode* geode) {
+bool GlyphRendererShadowBlur::updateOrCreateState(int pass, osg::Geode* geode) const {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
 	return _setFragmentShader(geode, "osgPango-frag2");

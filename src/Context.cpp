@@ -82,7 +82,7 @@ bool Context::init(
 	_renderer = static_cast<Renderer*>(g_object_new(TYPE_RENDERER, 0));
 
 	// Add our custom attribute types here.
-	pango_attr_type_register("cache");
+	// pango_attr_type_register("cache");
 
 	return true;
 }
@@ -129,44 +129,6 @@ unsigned int Context::getFontList(FontList& fl, bool faces) {
 	return static_cast<unsigned int>(num);
 }
 
-GlyphCache* Context::getGlyphCache(PangoFont* font, const std::string& renderer) {
-	static unsigned int cacheId = 0;
-
-	GlyphCacheFontMapKey key(font, renderer);
-
-	GlyphCache* gc = _gcfMap[key].get();
-
-	if(!gc) {
-		gc = new GlyphCache(_grMap[renderer], _textureWidth, _textureHeight);
-
-		std::ostringstream ss;
-		
-		ss << "GlyphCache_" << cacheId;
-
-		if(!renderer.empty()) ss << "_" << renderer;
-
-		gc->setName(ss.str());
-
-		cacheId++;
-
-		_gcfMap[key] = gc;
-	}
-
-	return gc;
-}
-
-void Context::resetGlyphCaches(const std::string& renderer) {
-	for(GlyphCacheFontMap::iterator it = _gcfMap.begin(); it != _gcfMap.end();) {
-		if(it->first.second == renderer) { 
-			GlyphCacheFontMap::iterator toErase = it++;
-	
-			_gcfMap.erase(toErase);
-		}
-
-		else ++it;
-	}
-}
-
 void Context::drawGlyphs(
 	PangoRenderer*    renderer,
 	PangoFont*        font,
@@ -177,7 +139,7 @@ void Context::drawGlyphs(
 	Text* text  = instance()._text;
 
 	if(!text) return;
-
+	
 	// Setup any kind of new "state" here.
 	ColorPair& color = instance()._color;
 
@@ -200,8 +162,8 @@ void Context::drawGlyphs(
 	);
 
 	else color.second.set(0.0f, 0.0f, 0.0f);
-
-	text->drawGlyphs(font, glyphs, x, y);
+	
+	text->_drawGlyphs(font, glyphs, x, y);
 }
 
 void Context::drawLayout(Text* text, PangoLayout* layout, int x, int y) {
@@ -220,67 +182,84 @@ void Context::drawLayout(Text* text, PangoLayout* layout, int x, int y) {
 }
 
 void Context::writeCachesToPNGFiles(const std::string& path) const {
-	for(GlyphCacheFontMap::const_iterator i = _gcfMap.begin(); i != _gcfMap.end(); i++) {
-		PangoFontDescription* d  = pango_font_describe(i->first.first);
-		GlyphCache*           gc = i->second.get();
+	for(GlyphRendererMap::const_iterator i = _grMap.begin(); i != _grMap.end(); i++) {
+		GlyphRenderer* r = i->second.get();
 
-		std::ostringstream os;
-
-		std::string family(pango_font_description_get_family(d));
-
-		// Get the PangoStyle and convert it to a string.
-		std::string style("Normal");
+		std::string prefix = path + "_" + i->first;
 		
-		PangoStyle pStyle = pango_font_description_get_style(d);
-
-		if(pStyle == PANGO_STYLE_OBLIQUE) style = "Oblique";
-
-		else if(pStyle == PANGO_STYLE_ITALIC) style = "Italic";
-
-		unsigned int size = pango_font_description_get_size(d) / PANGO_SCALE;
-
-		std::replace(family.begin(), family.end(), ' ', '_');
-
-		os 
-			<< path
-			<< "_" << gc->getGlyphRenderer()->getName()
-			<< "_" << family
-			<< "_" << style
-			<< "_" << size
-			<< "_"
-		;
-
-		// osg::notify(osg::NOTICE) << "Writing font file: " << os.str() << std::endl;
-
-		// TODO: Sometimes, we'll have a font in our map from Pango that was never
-		// actually USED, so it has nothing in it's cache! This is usually the "default"
-		// font or whatever, and we need to figure out why this is happening.
-		if(gc->getLayerSize()) gc->writeImagesAsFiles(os.str());
-
-		pango_font_description_free(d);
+		for(
+			GlyphRenderer::FontGlyphCacheMap::const_iterator j = r->getGlyphCaches().begin();
+			j != r->getGlyphCaches().end();
+			j++
+		) {
+			GlyphCache* gc = j->second.get();
+			
+			std::ostringstream ss;
+			
+			ss 
+				<< prefix
+				<< "_"
+				<< j->first
+				<< "_"
+			;
+			
+			gc->writeImagesAsFiles(ss.str());
+		}
 	}
 }
 
 unsigned long Context::getMemoryUsageInBytes() const {
 	unsigned long bytes = 0;
 
-	for(GlyphCacheFontMap::const_iterator i = _gcfMap.begin(); i != _gcfMap.end(); i++) {
-		GlyphCache* gc = i->second.get();
+	for(GlyphRendererMap::const_iterator i = _grMap.begin(); i != _grMap.end(); i++) {
+		GlyphRenderer* r = i->second.get();
 
-		bytes += gc->getMemoryUsageInBytes();
+		for(
+			GlyphRenderer::FontGlyphCacheMap::const_iterator j = r->getGlyphCaches().begin();
+			j != r->getGlyphCaches().end();
+			j++
+		) {
+			GlyphCache* gc = j->second.get();
+			
+			bytes += gc->getMemoryUsageInBytes();
+		}
 	}
 
 	return bytes;
 }
 
-bool Context::addGlyphRenderer(const std::string& name, GlyphRenderer* renderer) {
-	std::string key(name);
+void Context::setDefaultGlyphRenderer(GlyphRenderer* renderer) {
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+	
+	_grMap[""] = renderer;
+}
 
-	renderer->setName(name);
+void Context::addGlyphRenderer(const std::string& name, GlyphRenderer* renderer) {
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+	
+	_grMap[name] = renderer;
+	
+	if(_onAddCallback) (*_onAddCallback)(name, renderer);
 
-	_grMap[key] = renderer;
+	renderer->_name = name;
+}
 
-	return true;
+void Context::removeGlyphRenderer(const std::string &name, GlyphRenderer* renderer) {
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+	
+	if(_onRemoveCallback) (*_onRemoveCallback)(name, renderer);
+	
+	_grMap.erase(name);
+}
+
+void Context::reset() {
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
+	
+	_grMap.clear();
+
+	_text = 0;
+	
+	setDefaultGlyphRenderer(new GlyphRendererDefault());
 }
 
 Context::Context():
@@ -291,17 +270,15 @@ _text          (0),
 _color         (ColorPair(osg::Vec3(1.0f, 1.0f, 1.0f), osg::Vec3(0.0f, 0.0f, 0.0f))),
 _textureWidth  (DEFAULT_CACHE_WIDTH),
 _textureHeight (DEFAULT_CACHE_HEIGHT) {
-	_grMap[""] = new GlyphRendererDefault();
-
-	_grMap[""]->setName("Default");
+	setDefaultGlyphRenderer(new GlyphRendererDefault());
 }
 
 GlyphRenderer* Context::_getGlyphRenderer(const std::string& renderer) const {
 	const GlyphRendererMap::const_iterator i = _grMap.find(renderer);
-
+	
 	if(i == _grMap.end()) return 0;
 
-	return i->second;
+	return i->second.get();
 }
 
 }

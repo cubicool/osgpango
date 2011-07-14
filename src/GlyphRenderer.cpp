@@ -10,6 +10,8 @@
 #include <osgCairo/Util>
 #include <osgPango/ShaderManager>
 #include <osgPango/GlyphRenderer>
+#include <osgPango/Glyph>
+#include <osgPango/Context>
 
 namespace osgPango {
 
@@ -41,13 +43,13 @@ bool GlyphRenderer::renderLayer(
 	cairo_glyph_t* glyph,
 	unsigned int   width,
 	unsigned int   height
-) {
+) const {
 	if(layer < _layers.size()) return _layers[layer]->render(c, glyph, width, height);
 	
 	else return false;
 }
 
-bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
+bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) const {
 	osg::StateSet* state = geode->getOrCreateStateSet();
 
 	state->setMode(GL_BLEND, osg::StateAttribute::ON);	
@@ -84,7 +86,7 @@ bool GlyphRenderer::updateOrCreateState(int pass, osg::Geode* geode) {
 bool GlyphRenderer::updateOrCreateState(
 	osg::Geometry*            geometry,
 	const GlyphGeometryState& ggs
-) {
+) const {
 	if(
 		ggs.textures.size() != _layers.size() ||
 		ggs.colors.size() != _layers.size()
@@ -118,7 +120,7 @@ bool GlyphRenderer::updateOrCreateState(
 	return true;
 }
 	
-osg::Texture2D* GlyphRenderer::createTexture(osg::Image* img) {
+osg::Texture2D* GlyphRenderer::createTexture(osg::Image* img) const {
 	osg::Texture2D* texture = new osg::Texture2D();
 
 	texture->setImage(img);
@@ -144,13 +146,39 @@ void GlyphRenderer::clearLayers() {
 	_layers.clear();
 }
 
-cairo_format_t GlyphRenderer::getImageFormatForLayer(unsigned int index) {
+cairo_format_t GlyphRenderer::getImageFormatForLayer(unsigned int index) const {
 	if(index < _layers.size()) return _layers[index]->getCairoImageFormat();
 	
 	else return CAIRO_FORMAT_A8;
 }
 
-bool GlyphRenderer::_setFragmentShader(osg::Geode* geode, const std::string& shaderName) {
+GlyphCache* GlyphRenderer::getGlyphCache(PangoFont* font) const {
+	guint hashFont = _hashFont(font);
+	
+	FontGlyphCacheMap::const_iterator ct = _gc.find(hashFont);
+
+	return ct != _gc.end() ? ct->second : 0;
+}
+
+GlyphCache* GlyphRenderer::getOrCreateGlyphCache(PangoFont* font) {
+	guint hashFont = _hashFont(font);
+	
+	FontGlyphCacheMap::const_iterator ct = _gc.find(hashFont);
+
+	if(ct != _gc.end()) return ct->second;
+	
+	unsigned int w, h;
+
+	Context::instance().getTextureSize(w, h);
+	
+	GlyphCache* cache = new GlyphCache(this, w, h);
+	
+	_gc[hashFont] = cache;
+
+	return cache;
+}
+
+bool GlyphRenderer::_setFragmentShader(osg::Geode* geode, const std::string& shaderName) const {
 	osg::StateSet* state   = geode->getOrCreateStateSet();
 	osg::Program*  program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
 
@@ -167,6 +195,15 @@ bool GlyphRenderer::_setFragmentShader(osg::Geode* geode, const std::string& sha
 	program->addShader(getFragmentShader);
 	
 	return true;
+}
+
+guint GlyphRenderer::_hashFont(PangoFont* font) const {
+	PangoFontDescription* d = pango_font_describe(font);
+	guint              hash = pango_font_description_hash(d);
+
+	pango_font_description_free(d);
+
+	return hash;
 }
 
 }

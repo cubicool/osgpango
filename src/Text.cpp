@@ -38,9 +38,9 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 }
 
 Text::Text(ColorMode cm):
-_colorMode(cm),
-_coordinateAlign(COORDINATE_ALIGN_AUTO),
-_lastTransform(osg::Matrix::identity()) {
+_colorMode       (cm),
+_lastTransform   (osg::Matrix::identity()),
+_coordinateAlign (COORDINATE_ALIGN_AUTO) {
 	clear();
 }
 
@@ -55,7 +55,6 @@ void Text::clear() {
 	_baseline      = 0;
 	_alpha         = 1.0f;
 	_init          = false;
-	_newGlyphs     = false;
 	_finalized     = false;
 	_lastTransform = osg::Matrix::identity();
 }
@@ -76,16 +75,18 @@ GlyphGeometry* createGlyphGeometry() {
 	return gg;
 }
 
-void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
-	// Get the GlyphCache from a key, which may or may not be set via PangoAttr if I
-	// can it to work properly. :)
-	GlyphCache* gc = Context::instance().getGlyphCache(font, _glyphRenderer);
+void Text::_drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
+	GlyphRenderer* gr = Context::instance().getGlyphRenderer(_glyphRenderer);
+
+	if(!gr) return;
+
+	GlyphCache* gc = gr->getOrCreateGlyphCache(font);
 
 	if(!gc) return;
 
 	osg::Vec2 layoutPos(x / PANGO_SCALE, -(y / PANGO_SCALE));
 
-	osg::Vec4 extents = gc->getGlyphRenderer()->getExtraGlyphExtents();
+	osg::Vec4 extents = gr->getExtraGlyphExtents();
 	ColorPair color   = Context::instance().getColorPair();
 	
 	if(_colorMode == COLOR_MODE_PALETTE_ONLY) {
@@ -119,8 +120,6 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 		if(!cg) {
 			cg = gc->createCachedGlyph(font, gi);
-
-			_newGlyphs = true;
 		}
 
 		if(!cg) continue;
@@ -162,17 +161,9 @@ void Text::addText(
 	int                y,
 	const TextOptions& to
 ) {	
-	const GlyphRenderer* gr = Context::instance().getGlyphRenderer(to.renderer);
+	GlyphRenderer* gr = Context::instance().getGlyphRenderer(_glyphRenderer);
 
-	if(!gr) {
-		osg::notify(osg::WARN)
-			<< "Couldn't find the GlyphRender object '" << to.renderer
-			<< "'; no text will be displayed."
-			<< std::endl
-		;
-
-		return;
-	}
+	if(!gr) return;
 
 	String       text;
 	PangoLayout* layout = pango_layout_new(Context::instance().getPangoContext());
@@ -195,9 +186,7 @@ void Text::addText(
 	}
 
 	to.setupPangoLayout(layout);
-
-	_glyphRenderer = to.renderer;
-
+	
 	Context::instance().drawLayout(this, layout, x, y);
 
 	// Get text dimensions and whatnot; we'll accumulate this data after each rendering
@@ -210,10 +199,10 @@ void Text::addText(
 
 	const osg::Vec4& extents = gr->getExtraGlyphExtents();
 
-	osg::Vec2::value_type ox = -(x + rect.x); //- extents[0];
-	osg::Vec2::value_type oy = y + rect.y - extents[3];
+	osg::Vec2::value_type ox = -(x + rect.x);
+	osg::Vec2::value_type oy = y + rect.y;
 	osg::Vec2::value_type sw = rect.width;
-	osg::Vec2::value_type sh = rect.height + extents[3];
+	osg::Vec2::value_type sh = rect.height;
 
 	if(!_init) {
 		_origin.set(ox, oy);
@@ -244,7 +233,7 @@ osg::Vec2 Text::getOriginTranslated() const {
 }
 
 bool Text::_finalizeGeometry(osg::Group* group) {
-	typedef std::map<GlyphRenderer*, GeometryList> RendererGeometry;
+	typedef std::map<const GlyphRenderer*, GeometryList> RendererGeometry;
 
 	RendererGeometry rg;
 
@@ -254,12 +243,6 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 		GlyphGeometryIndex& ggi   = g->second;
 
 		for(GlyphGeometryIndex::iterator i = ggi.begin(); i != ggi.end(); i++) {
-			for(unsigned int layer = 0; layer < gc->getNumLayers(); ++layer) {
-				osg::Image* texture = gc->getImage(i->first, layer);
-
-				if(_newGlyphs && texture) texture->dirty();
-			}
-
 			if(!i->second->finalize()) continue;
 
 			if(rg.find(gc->getGlyphRenderer()) == rg.end())
@@ -280,7 +263,7 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 				_palette[1] = color.second;
 			}
 
-			for(unsigned int layer = 0; layer < gc->getNumLayers(); ++layer) {
+			for(unsigned int layer = 0; layer < gc->getLayers().size(); ++layer) {
 				ggs.textures.push_back(gc->getTexture(i->first, layer));
 				ggs.colors.push_back(_palette[layer]);
 			}
@@ -292,22 +275,21 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 	// First create/update geometry states which are common for each pass. During iteration update maximum
 	// number of passes.
 	for(RendererGeometry::const_iterator ct = rg.begin(); ct != rg.end(); ct++) {
-		GlyphRenderer*      renderer = ct->first;
-		const GeometryList& gl       = ct->second;
+		const GlyphRenderer* renderer = ct->first;
+		const GeometryList&        gl = ct->second;
 
 		maxPasses = std::max(renderer->getNumPasses(), maxPasses);
 
 		for(GeometryList::const_iterator i = gl.begin(); i != gl.end(); i++) {
-			renderer->updateOrCreateState(i->first, i->second);
+			if(!renderer->updateOrCreateState(i->first, i->second)) {
+				osg::notify(osg::WARN)
+					<< "Failed to called updateOrCreateState for Renderer '"
+					<< renderer->getName() << "' during GeometryList update. "
+					<< std::endl
+				;
+			}
 		}
 	}
-
-	if(!_alphaUniform.valid()) _alphaUniform = group->getOrCreateStateSet()->getOrCreateUniform(
-		"pangoAlpha",
-		osg::Uniform::FLOAT
-	);
-	
-	_alphaUniform->set(_alpha);
 
 	// Create structure for passes.
 	for(unsigned int i = 0; i < maxPasses; i++) {
@@ -315,20 +297,28 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 		osg::StateSet* state = pass->getOrCreateStateSet();
 
 		state->setRenderBinDetails(i, "RenderBin");
+		state->getOrCreateUniform("pangoAlpha", osg::Uniform::FLOAT)->set(_alpha);
 
 		group->addChild(pass);
 	}
-
+	
 	// Assign renderers to passes.
 	for(RendererGeometry::const_iterator ct = rg.begin(); ct != rg.end(); ct++) {
-		GlyphRenderer*      renderer = ct->first;
-		const GeometryList& gl       = ct->second;
+		const GlyphRenderer* renderer = ct->first;
+		const GeometryList&        gl = ct->second;
 
 		for(unsigned int i = 0; i < renderer->getNumPasses(); i++) {
 			// Each renderer has own geode node with assigned state required for pass.
 			osg::Geode* pass = new osg::Geode();
 
-			renderer->updateOrCreateState(i, pass);
+			if(!renderer->updateOrCreateState(i, pass)) {
+				osg::notify(osg::WARN)
+					<< "Failed to called updateOrCreateState for Renderer '"
+					<< renderer->getName() << "' on pass number "
+					<< i << "."
+					<< std::endl
+				;
+			}
 
 			// Attach renderer pass to common group.
 			osg::Group* attachTo = dynamic_cast<osg::Group*>(group->getChild(maxPasses - renderer->getNumPasses() + i));
@@ -366,37 +356,40 @@ public:
 		}
 	}
 	
-	void transform(bool pixelAlign) {
+	void transform(bool pixelAlign)  {
 		for(
 			DrawableSet::iterator i = _drawables.begin();
 			i != _drawables.end();
 			i++
 		) {
 			(*i)->accept(_functor);
+			(*i)->dirtyDisplayList();
+			(*i)->dirtyBound();
 			
-			if(!pixelAlign) continue;
-			
-			// Here we do some pixel-alignment calculations. What this
-			// means is that we iterate through all of vertices that make
-			// up our text and make sure they occur on integer-compatible
-			// coordinates. This is only important when a scale is applied
-			// to the text.
-			osg::Geometry* geometry = dynamic_cast<osg::Geometry*>(*i);
+			if(osg::Geometry* geometry = dynamic_cast<osg::Geometry*>(*i)) {
+				if(pixelAlign) {
+					// Here we do some pixel-alignment calculations. What this
+					// means is that we iterate through all of vertices that make
+					// up our text and make sure they occur on integer-compatible
+					// coordinates. This is only important when a scale is applied
+					// to the text.
 
-			if(!geometry) continue;
+					osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(
+						geometry->getVertexArray()
+					);
 
-			osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(
-				geometry->getVertexArray()
-			);
+					if(!verts) continue;
 
-			if(!verts) continue;
-
-			for(
-				osg::Vec3Array::iterator v = verts->begin();
-				v != verts->end();
-				v++
-			) {
-				roundVec3(*v);
+					for(
+						osg::Vec3Array::iterator v = verts->begin();
+						v != verts->end();
+						v++
+					) {
+						roundVec3(*v);
+					}
+				}
+				
+				if(geometry->getVertexArray()) geometry->getVertexArray()->dirty();
 			}
 		}
 	}
@@ -413,9 +406,20 @@ void Text::_applyTransform(osg::Node* node, const osg::Matrix& transform) {
 
 	bool align = false;
 
-	if(_coordinateAlign == COORDINATE_ALIGN_AUTO) align = _scale != 1;
+	switch(_coordinateAlign) {
+		case COORDINATE_ALIGN_NONE:
+			break;
+		
+		case COORDINATE_ALIGN_AUTO:
+			align = fmodf(_scale, static_cast<int>(_scale)) == 0.0f;
+			
+			break;
+		
+		case COORDINATE_ALIGN_ALWAYS:
+			align = true;
 
-	else if(_coordinateAlign == COORDINATE_ALIGN_ALWAYS) align = true;
+			break;
+	}
 
 	nv.transform(align);
 

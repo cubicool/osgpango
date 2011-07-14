@@ -18,7 +18,7 @@ GlyphRendererShadow::GlyphRendererShadow(int offsetX, int offsetY) {
 	addLayer(new GlyphLayerShadow(offsetX, offsetY));
 }
 
-bool GlyphRendererShadow::updateOrCreateState(int pass, osg::Geode* geode) {
+bool GlyphRendererShadow::updateOrCreateState(int pass, osg::Geode* geode) const {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
 	return _setFragmentShader(geode, "osgPango-frag2");

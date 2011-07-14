@@ -9,7 +9,7 @@ GlyphRendererDefault::GlyphRendererDefault() {
 	addLayer(new GlyphLayer());
 }
 
-bool GlyphRendererDefault::updateOrCreateState(int pass, osg::Geode* geode) {
+bool GlyphRendererDefault::updateOrCreateState(int pass, osg::Geode* geode) const {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
 	return _setFragmentShader(geode, "osgPango-frag1");

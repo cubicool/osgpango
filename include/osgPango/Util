@@ -4,19 +4,14 @@
 #ifndef OSGPANGO_UTIL
 #define OSGPANGO_UTIL
 
-#include <vector>
 #include <string>
 #include <osg/Vec3>
 #include <osgPango/Export>
 
 namespace osgPango {
 
-// An "FcChar8*" is typedef'd in Fontconfig as an "unsigned char".
-typedef std::vector<const unsigned char*> FontPaths;
-
-OSGPANGO_EXPORT bool        getFontPaths (const std::string&, FontPaths&);
-OSGPANGO_EXPORT std::string getFilePath  (const std::string&);
-OSGPANGO_EXPORT void        roundVec3    (osg::Vec3&);
+OSGPANGO_EXPORT std::string getFilePath (const std::string&);
+OSGPANGO_EXPORT void        roundVec3   (osg::Vec3&);
 
 }
 

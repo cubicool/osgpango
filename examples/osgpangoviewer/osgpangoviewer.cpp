@@ -201,11 +201,7 @@ int main(int argc, char** argv) {
 			continue;
 		}
 
-		if(r) {
-			context.addGlyphRenderer(renderer, r);
-
-			to.renderer = renderer;
-		}
+		if(r) context.addGlyphRenderer(renderer, r);
 	}
 
 	while(args.read("--bitmap", image)) {}
@@ -251,7 +247,7 @@ int main(int argc, char** argv) {
 	std::string text = boringStringParsing(args);
 
 	if(!image.empty() || bevel) {
-		osgPango::GlyphRenderer* r = context.getGlyphRenderer(to.renderer);
+		osgPango::GlyphRenderer* r = context.getGlyphRenderer(renderer);
 		osgPango::GlyphLayer*    l = 0;
 
 		if(!bevel) l = new osgPango::GlyphLayerBitmap(image);
@@ -274,6 +270,7 @@ int main(int argc, char** argv) {
 	// The user didn't set a width, so use our screen size.
 	if(to.width <= 0) to.width = WINDOW_WIDTH;
 
+	t->setGlyphRenderer(renderer);
 	t->addText(text, 0, 0, to);
 	
 	// TODO: Continue working on this API. :)

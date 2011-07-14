@@ -24,7 +24,7 @@ bool GlyphLayerShadowInset::render(
 	unsigned int   height
 ) {
 	if(cairo_status(c) || !glyph) return false;
-
+	
 	cairo_push_group(c);
 	cairo_glyph_path(c, glyph, 1);
 	cairo_clip(c);
@@ -43,14 +43,14 @@ bool GlyphLayerShadowInset::render(
 		-static_cast<double>(_getBlurSize()) * 2,
 		-static_cast<double>(_getBlurSize()) * 2
 	);
-	
+
 	cairo_glyph_path(c, glyph, 1);
 	cairo_clip(c);
 	cairo_paint(c);
 
 	cairo_surface_destroy(tmp);
 	cairo_pattern_destroy(pattern);
-
+	
 	return true;
 }
 

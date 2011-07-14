@@ -25,6 +25,11 @@ struct OSGPANGO_EXPORT RendererClass {
 	PangoRendererClass class_instance;
 };
 
+struct RendererCallback : public osg::Object {
+public:
+	virtual void operator()(std::string const &, GlyphRenderer*) = 0;
+};
+
 //! This class is a singleton which provides a gateway both into our Pango rendering
 //! backend and allows us to configure various global settings such as subpixel hinting
 //! and rendering DPI. Before osgPango can be used, the singleton object must be
@@ -32,6 +37,8 @@ struct OSGPANGO_EXPORT RendererClass {
 //! enough for most people without using any advanced arguments.
 class OSGPANGO_EXPORT Context {
 public:
+	typedef std::map<std::string, osg::ref_ptr<GlyphRenderer> > GlyphRendererMap;
+	
 	~Context();
 
 	//! Returns and/or creates our static singleton reference.
@@ -52,7 +59,7 @@ public:
 		int               x,
 		int               y
 	);
-
+	
 	//! Our main Context initialization routine; should only need to be called once
 	//! per program's lifetime. It lets us set some of the more advanced rendering
 	//! options of osgPango, so take special note of the arguments below and
@@ -104,29 +111,6 @@ public:
 	//! the number of available fonts.
 	unsigned int getFontList(FontList& fontList, bool faces = true);
 	
-	//! Returns a pointer to a GlyphCache object using the given PangoFont font pointer
-	//! and a string name of a GlyphRenderer (which you would have used when you
-	//! created the custom GlyphRenderer). This method is mostly for internal use, as
-	//! PangoFont objects are not easily accessible by the osgPango API, and are usually
-	//! only used in very low-level rendering code.
-	GlyphCache* getGlyphCache(PangoFont* font, const std::string& renderer = "");
-	
-	void resetGlyphCaches(const std::string& renderer);
-
-	//! This method will allow you to retrieve a read-write pointer any custom
-	//! GlyphRenderer object installed in the Context. USE WITH CAUTION!
-	GlyphRenderer* getGlyphRenderer(const std::string& renderer) {
-		return _getGlyphRenderer(renderer);
-	}
-
-	//! This method will allow you to retrieve a read-only pointer to any custom 
-	//! GlyphRenderer object you may have installed into the Context at a previous
-	//! time. For more about what this  means exactly, take a look at the documentation
-	//! for GlyphRenderer.
-	const GlyphRenderer* getGlyphRenderer(const std::string& renderer) const {
-		return _getGlyphRenderer(renderer);
-	}
-	
 	//! This is another method that is mostly used internally, due to the fact that
 	//! it requires a PangoLayout pointer which is not an object users generally
 	//! need to concern themselves with. Furthermore, osgPango's rendering backend
@@ -143,12 +127,39 @@ public:
 	//! layer container.
 	unsigned long getMemoryUsageInBytes() const;
 	
+	//! This method will allow you to retrieve a read-write pointer to any custom
+	//! GlyphRenderer object installed in the Context. USE WITH CAUTION!
+	GlyphRenderer* getGlyphRenderer(const std::string& renderer) {
+		return _getGlyphRenderer(renderer);
+	}
+	
+	//! This method will allow you to retrieve a read-only pointer to any custom 
+	//! GlyphRenderer object you may have installed into the Context at a previous
+	//! time. For more about what this  means exactly, take a look at the documentation
+	//! for GlyphRenderer.
+	const GlyphRenderer* getGlyphRenderer(const std::string& renderer) const {
+		return _getGlyphRenderer(renderer);
+	}
+	
+	const GlyphRenderer* getDefaultGlyphRenderer() const {
+		return _getGlyphRenderer("");
+	}
+
+	//! Set the GlyphRenderer using the string "".
+	void setDefaultGlyphRenderer(GlyphRenderer*);
+
 	//! Add a newly created GlyphRenderer object to the internal cache of known 
 	//! renderers within the Context. For more information about what
 	//! a GlyphRenderer is (basically, a custom effects "plugin" for your font),
 	//! please take a look at it's documentation.
-	bool addGlyphRenderer(const std::string& name, GlyphRenderer* renderer);
+	void addGlyphRenderer(const std::string&, GlyphRenderer*);
+	
+	void removeGlyphRenderer(const std::string&, GlyphRenderer*);
 
+	const GlyphRendererMap& getGlyphRenderers() const {
+		return _grMap;
+	}
+	
 	//! This will allow you to change (dynamically as you see fit) the size of the
 	//! glyph caching textures used internally. The compiled-in defaults (which
 	//! you can change in Context.cpp) are 256x256. However, you may have some
@@ -156,6 +167,11 @@ public:
 	void setTextureSize(unsigned int width, unsigned int height) {
 		_textureWidth  = width;
 		_textureHeight = height;
+	}
+	
+	void getTextureSize(unsigned int &width, unsigned int &height) const {
+		width  = _textureWidth;
+		height = _textureHeight;
 	}
 
 	//! Returns the currently set color and effects color ColorPair object set on
@@ -177,28 +193,43 @@ public:
 	PangoContext* getPangoContext() {
 		return _pContext;
 	}
-
+	
+	void setOnAddCallback(RendererCallback *callback) {
+		_onAddCallback = callback;
+	}
+	
+	RendererCallback* getOnAddCallback() const {
+		return _onAddCallback.get();
+	}
+	
+	void setOnRemoveCallback(RendererCallback *callback) {
+		_onRemoveCallback = callback;
+	}
+	
+	RendererCallback* getOnRemoveCallback() const {
+		return _onRemoveCallback.get();
+	}
+	
+	void reset();
+	
 private:
-	typedef std::pair<PangoFont*, std::string>                        GlyphCacheFontMapKey;
-	typedef std::map<GlyphCacheFontMapKey, osg::ref_ptr<GlyphCache> > GlyphCacheFontMap;
-	typedef std::map<std::string, osg::ref_ptr<GlyphRenderer> >       GlyphRendererMap;
-
 	Context();
-
+	
 	GlyphRenderer* _getGlyphRenderer(const std::string&) const;
 
 	static Context _context;
 	
-	GlyphRendererMap   _grMap;
-	GlyphCacheFontMap  _gcfMap;
-	PangoFontMap*      _pfMap;
-	PangoContext*      _pContext;
-	Renderer*          _renderer;
-	Text*              _text;
-	OpenThreads::Mutex _mutex;
-	ColorPair          _color;
-	unsigned int       _textureWidth;
-	unsigned int       _textureHeight;
+	GlyphRendererMap               _grMap;
+	PangoFontMap*                  _pfMap;
+	PangoContext*                  _pContext;
+	Renderer*                      _renderer;
+	Text*                          _text;
+	OpenThreads::Mutex             _mutex;
+	ColorPair                      _color;
+	unsigned int                   _textureWidth;
+	unsigned int                   _textureHeight;
+	osg::ref_ptr<RendererCallback> _onAddCallback;
+	osg::ref_ptr<RendererCallback> _onRemoveCallback;
 };
 
 }

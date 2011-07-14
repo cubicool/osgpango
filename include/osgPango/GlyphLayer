@@ -93,14 +93,14 @@ public:
 
 	void setBitmap(const std::string&);
 	
-	const std::string& getBitmap() const { 
+	const std::string&  getBitmap() const { 
 		return _path; 
 	}
 
 	unsigned int getRepeatX() const { 
 		return _repeatX; 
 	}
-
+	
 	unsigned int getRepeatY() const { 
 		return _repeatY; 
 	}
@@ -108,7 +108,7 @@ public:
 	void setRepeatX(unsigned int repeat) { 
 		_repeatX = repeat; 
 	}
-
+	
 	void setRepeatY(unsigned int repeat) { 
 		_repeatY = repeat; 
 	}

@@ -9,11 +9,13 @@
 #include <osg/Texture>
 #include <osgCairo/Image>
 #include <osgPango/Export>
-#include <osgPango/GlyphRenderer>
+
+#include <pango/pangocairo.h>
 
 namespace osgPango {
 
 class Font;
+class GlyphRenderer;
 
 struct OSGPANGO_EXPORT CachedGlyph {
 	CachedGlyph(
@@ -35,9 +37,6 @@ struct OSGPANGO_EXPORT CachedGlyph {
 	osg::Vec2    ul;
 };
 
-typedef std::pair<unsigned int, osg::Vec2> GlyphPositionPair;
-typedef std::list<GlyphPositionPair>       GlyphPositionList;
-
 // There is one GlyphCache object PER FONT object.
 class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {	
 public:
@@ -54,18 +53,6 @@ public:
 	void               writeImagesAsFiles    (const std::string&) const;
 	unsigned long      getMemoryUsageInBytes () const;
 
-	void setName(const std::string& name) {
-		_name = name;
-	}
-	
-	osgCairo::Image* getImage(unsigned int index, unsigned int layerIndex) {
-		return _getImage(index, layerIndex);
-	}
-	
-	const osgCairo::Image* getImage(unsigned int index, unsigned int layerIndex) const {
-		return _getImage(index, layerIndex);
-	}
-	
 	osg::Texture* getTexture(unsigned int index, unsigned int layerIndex) {
 		return _getTexture(index, layerIndex);
 	}
@@ -82,26 +69,36 @@ public:
 		return _imgHeight;
 	}
 
-	GlyphRenderer* getGlyphRenderer() {
-		return _renderer.get();
+	const GlyphRenderer* getGlyphRenderer() const {
+		return _renderer;
 	}
 
-	const GlyphRenderer* getGlyphRenderer() const {
-		return _renderer.get();
+	Layers& getLayers() { 
+		return _layers; 
 	}
 	
-	unsigned int getNumLayers() const {
-		return _renderer->getNumLayers();
+	const Layers& getLayers() const {
+		return _layers;
 	}
-
-	// TODO: THIS SHOULDN'T BE NECESSARY! Please see the comment in Context.cpp,
-	// in the writeCachesToPNGFiles function.
-	unsigned int getLayerSize() const {
-		return _layers.size();
+	
+	GlyphMap& getGlyphMap() {
+		return _glyphs;
 	}
-
-	const std::string& getName() const {
-		return _name;
+	
+	const GlyphMap& getGlyphMap() const {
+		return _glyphs;
+	}
+	
+	void getXYH(double &x, double &y, double &h) const {
+		x = _x;
+		y = _y;
+		h = _h;
+	} 
+	
+	void setXYH(double x, double y, double h) {
+		_x = x;
+		_y = y;
+		_h = h;
 	}
 
 private:
@@ -116,16 +113,12 @@ private:
 	osgCairo::Image* _getImage   (unsigned int, unsigned int) const;
 	osg::Texture*    _getTexture (unsigned int, unsigned int) const;
 
-	std::string _name;
-
 	// The "renderer" object, not bound to any local data.
-	osg::ref_ptr<GlyphRenderer> _renderer;
+	const GlyphRenderer* _renderer;
 
 	Layers _layers;
 	
 	// A map of external Pango glyph indexes to their internally CachedGlyph data structures.
-	// We also have a flag of what effects to use, though their rendering method is passed
-	// on from the text object.
 	GlyphMap _glyphs;
 
 	double       _x;
@@ -143,11 +136,7 @@ public:
 	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&);
 
 private:
-	static osg::ref_ptr<osg::Vec3Array> _norms;
-	static osg::ref_ptr<osg::Vec4Array> _cols;
-
 	unsigned int _numQuads;
-	unsigned int _numTextureCoords;
 };
 
 // We don't use an osg::ref_ptr here becase the Geometry will actually only be temporary.
