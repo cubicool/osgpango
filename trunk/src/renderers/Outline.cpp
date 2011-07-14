@@ -1,4 +1,4 @@
-// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
 // $Id$
 
 #include <osgPango/GlyphRenderer>

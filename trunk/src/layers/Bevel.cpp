@@ -1,4 +1,4 @@
-// -*-c++-*- Copyright (C) 2010 osgPango Development Team
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
 // $Id: Bevel.cpp 127 2010-09-03 01:40:46Z cubicool $
 
 #include <osgCairo/Util>
