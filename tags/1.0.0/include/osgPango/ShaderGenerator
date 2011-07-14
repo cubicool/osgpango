@@ -1,0 +1,23 @@
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_SHADER_GENERATOR
+#define OSGPANGO_SHADER_GENERATOR
+
+#include <string>
+#include <vector>
+#include <osgPango/Export>
+
+namespace osgPango {
+
+typedef std::vector<unsigned int> LayerIndexVector;
+
+OSGPANGO_EXPORT std::string defaultVertexShader     ();
+OSGPANGO_EXPORT std::string baseFragmentHeader      (unsigned int);
+OSGPANGO_EXPORT std::string baseFragmentFooter      ();
+OSGPANGO_EXPORT std::string createBackToFrontShader (unsigned int);
+OSGPANGO_EXPORT std::string createLayerIndexShader  (unsigned int, const LayerIndexVector&);
+
+}
+
+#endif

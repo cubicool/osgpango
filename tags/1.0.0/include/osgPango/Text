@@ -1,0 +1,467 @@
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_TEXT
+#define OSGPANGO_TEXT
+
+#include <pango/pangocairo.h>
+
+#include <osg/AutoTransform>
+#include <osg/MatrixTransform>
+#include <osgPango/String>
+#include <osgPango/Glyph>
+#include <osgPango/Util>
+
+namespace osgPango {
+
+//! An std::pair of OSG color values which we use in a few places as "key" values for
+//! differentiating Geometry states based on a foreground AND background (effects)
+//! color.
+typedef std::pair<osg::Vec3, osg::Vec3> ColorPair;
+
+//! TODO: Talk about how this is different from ColorPair and WHY we can't do 8 colors
+//! from Pango markup.
+typedef std::vector<osg::Vec3> ColorPalette;
+
+//! This class serves as a lightweight wrapper/container around the various options
+//! we can pass to the Pango backend layout manager; things like what effect to use,
+//! how much width should be available, etc. Remember, however, that this class only
+//! modifies the low-level, Pango-specific aspects of text. Things like changing the
+//! font size, face, and color are done dynamically using a special HTML-like
+//! markup language embedded within the string itself! :)
+class OSGPANGO_EXPORT TextOptions: public osg::Referenced {
+public:
+	//! These are the various alignment enums for the actual TEXT itself;
+	//! they do NOT affect the POSITION of the text physically in the
+	//! scene as you may think! That is the job of the derived class,
+	//! such as TextTransform.
+	enum TextAlignment {
+		//! Align all text in the normal, left-to-right style.
+		TEXT_ALIGN_LEFT,
+		
+		//! Align all text by putting each row in the center of
+		//! its permissable width.
+		TEXT_ALIGN_CENTER,
+		
+		//! Align all text by forcing each row to push as far as
+		//! is permissable with its allocated width.
+		TEXT_ALIGN_RIGHT,
+		
+		//! Align each row of text such that the first and last words
+		//! of every row fall on the left and right sides of the
+		//! allocated width; this is achieved by Pango by adding
+		//! additional extraneous space to each true space where required.
+		TEXT_ALIGN_JUSTIFY
+	};
+	
+	TextOptions(
+		std::string   r = "",
+		TextAlignment a = TEXT_ALIGN_LEFT,
+		int           w = -1,
+		int           h = -1,
+		int           i = -1,
+		int           s = -1
+	):
+	renderer  (r),
+	alignment (a),
+	width     (w),
+	height    (h),
+	indent    (i),
+	spacing   (s) {
+	}
+
+	bool setupPangoLayout(PangoLayout* layout) const;
+
+	std::string   renderer;
+	TextAlignment alignment;
+	int           width;
+	int           height;
+	int           indent;
+	int           spacing;
+};
+
+class OSGPANGO_EXPORT Text {
+public:
+	typedef std::pair<GlyphCache*, ColorPair>                 GlyphGeometryMapKey;
+	typedef std::map<GlyphGeometryMapKey, GlyphGeometryIndex> GlyphGeometryMap;
+
+	enum ColorMode {
+		COLOR_MODE_MARKUP_OVERWRITE,
+		COLOR_MODE_PALETTE_ONLY
+	};
+
+	enum CoordinateAlign {
+		COORDINATE_ALIGN_AUTO,
+		COORDINATE_ALIGN_NONE,
+		COORDINATE_ALIGN_ALWAYS
+	};
+
+	Text(ColorMode = COLOR_MODE_MARKUP_OVERWRITE);
+
+	virtual ~Text();
+
+	// You cannot instaniante Text directly; you need to derive from it and
+	// override finalize to actually do something with the _ggMap object
+	// internally. A TextTransform object is provided by default.
+	virtual bool finalize() = 0;
+
+	virtual void clear();
+
+	void drawGlyphs      (PangoFont*, PangoGlyphString*, int, int);
+	void setColorPalette (const ColorPalette&);
+
+	//! This version of addText assumes you are using PangoMarkup and does not require
+	//! that you pass in a font description. It uses the encoding defined by
+	//! OSGPANGO_ENCODING in the osgPango/Export header.
+	inline void addText(const std::string& str, int x, int y, const TextOptions& to) {
+		addText(OSGPANGO_ENCODING, str, "", x, y, to);
+	}
+
+	//! This version of addText does not allow PangoMarkup, and instead requires that
+	//! you pass an additional font description string (something like "verdana 100px").
+	//! It uses the encoding defined by OSGPANGO_ENCODING.
+	inline void addText(
+		const std::string& str,
+		const std::string& descr,
+		int                x,
+		int                y,
+		const TextOptions& to
+	) {
+		addText(OSGPANGO_ENCODING, str, descr, x, y, to);
+	}
+
+	//! Here you can specify the encoding as the first argument. We do it this way rather
+	//! than adding it on as a final option because having to always specify a default
+	//! TextOptions() is unwieldy and doesn't always make for the most readable code.
+	//! PangoMarkup usage is turned on.
+	inline void addText(
+		String::Encoding   encoding,
+		const std::string& str,
+		int                x,
+		int                y,
+		const TextOptions& to
+	) {
+		addText(encoding, str, "", x, y, to);
+	}
+
+	//! This is our fourth addText method which turns off PangoMarkup and requires that
+	//! you specify a font description string, in addition to the encoding. This is the
+	//! "master" addText method which all others directly call. However, its argument
+	//! list can be unwieldy, so we provide the easier-to-use wrappers above.
+	void addText(
+		String::Encoding,
+		const std::string&,
+		const std::string&,
+		int,
+		int,
+		const TextOptions& = TextOptions()
+	);
+	
+	void setScale(unsigned int scale) {
+		_scale = scale;
+	}
+
+	void setAlpha(float alpha) {
+		_alpha = alpha;
+		
+		if(_alphaUniform) _alphaUniform->set(_alpha);
+	}
+
+	void setCoordinateAlign(CoordinateAlign align) {
+		_coordinateAlign = align;
+	}
+	
+	float getAlpha() const {
+		return _alpha;
+	}
+
+	const osg::Vec2& getSize() {
+		return _size;
+	}
+
+	const osg::Vec2& getSize() const {
+		return _size;
+	}
+
+	//! The origin of a Text object is actually its upper-left corner; this happens
+	//! due to the way osgPango interfaces with Pango and how Pango renders text from
+	//! top-to-bottom and lef-to-right (remember that OpenGL people are the
+	//! "oddities" in that we expect origins to be, and align with, the bottom left of
+	//! a canvas or rendering surface). In most cases this value won't be of much use
+	//! in an OpenGL environment, but since I cannot predict all of the possible uses
+	//! of text in an application, here it remains. 
+	osg::Vec2 getOrigin() {
+		return _origin;
+	}
+
+	const osg::Vec2& getOrigin() const {
+		return _origin;
+	}
+
+	unsigned int getScale() const {
+		return _scale;
+	}
+
+	//! The baseline of a Text object is the bottom-most "line" that text is rendered
+	//! on using Pango internally. Similar to getOrigin(), the value returned by
+	//! getBaseline() is based on the value derived while interfacing with Pango, and
+	//! won't be of much use without a bit of transformation (though this is handled
+	//! for you in other Text getter methods).
+	unsigned int getBaseline() const {
+		return _baseline;
+	}
+
+	ColorMode getColorMode() const {
+		return _colorMode;
+	}
+
+	//! This method differs from getOrigin() in that instead of returning the origin
+	//! in Pango space, it returns a 2D vector that you can translate the entire Text
+	//! object by in order to align it in OpenGL space to the baseline value.
+	osg::Vec2 getOriginBaseline() const;
+
+	//! This method, similar to getOriginBaseline(), returns a translation value
+	//! allowing you to align the Text with the furthest, bottom-left coordinate.
+	//! This is the most natural alignment point for static text, but is not
+	//! reliable for text that will change frequently (like a user input widget).
+	//! In those cases, a user should use getOriginBaseline(), so that the
+	//! glyphs with parts that render "under" the baseline do not modify the
+	//! placement of the Text object too drastically.
+	osg::Vec2 getOriginTranslated() const;
+
+protected:
+	bool _finalizeGeometry (osg::Group*);
+	void _applyTransform   (osg::Node*, const osg::Matrix&);
+
+	GlyphGeometryMap           _ggMap;
+	osg::Vec2                  _size;
+	osg::Vec2                  _origin;
+	unsigned int               _scale;
+	int                        _baseline;
+	float                      _alpha;
+	bool                       _init;
+	bool                       _newGlyphs;
+	bool                       _finalized;
+	std::string                _glyphRenderer;
+	ColorMode                  _colorMode;
+	ColorPalette               _palette;
+	CoordinateAlign            _coordinateAlign;
+	osg::Matrix                _lastTransform;
+	osg::ref_ptr<osg::Uniform> _alphaUniform;
+};
+
+//! This is a wrapper template class that makes deriving from Text much easier.
+//! Using this class isn't strictly necessary, but it does provide a few very
+//! valuable services that could become quite cumbersome reimplimenting in
+//! every Text-derived object.
+template<typename T>
+class TextInterface: public Text, public T {
+public:
+	//! These are the alignment enums within TextInterface (not Text itself, since
+	//! Text is virtual and has no way of positioning itself) that define how the
+	//! text is arranged RELATIVE TO IT'S POSITION. They're pretty much
+	//! self-explanatory so I won't document each one individually.
+	enum PositionAlignment {
+		POS_ALIGN_LEFT_TOP,
+		POS_ALIGN_LEFT_BOTTOM,
+		POS_ALIGN_LEFT_CENTER,
+		POS_ALIGN_RIGHT_TOP,
+		POS_ALIGN_RIGHT_CENTER,
+		POS_ALIGN_RIGHT_BOTTOM,
+		POS_ALIGN_CENTER_TOP,
+		POS_ALIGN_CENTER_CENTER,
+		POS_ALIGN_CENTER_BOTTOM,
+		POS_ALIGN_LEFT_BASE_LINE,
+		POS_ALIGN_CENTER_BASE_LINE,
+		POS_ALIGN_RIGHT_BASE_LINE
+	};
+
+	enum AxisAlignment { 
+		AXIS_ALIGN_XY_PLANE, 
+		AXIS_ALIGN_REVERSED_XY_PLANE, 
+		AXIS_ALIGN_XZ_PLANE, 
+		AXIS_ALIGN_REVERSED_XZ_PLANE, 
+		AXIS_ALIGN_YZ_PLANE, 
+		AXIS_ALIGN_REVERSED_YZ_PLANE, 
+	};
+	
+	TextInterface(ColorMode cm = COLOR_MODE_MARKUP_OVERWRITE):
+	Text               (cm),
+	_positionAlignment (POS_ALIGN_LEFT_BOTTOM),
+	_axisAlignment     (AXIS_ALIGN_XY_PLANE) {
+	}
+
+	//! Necessary override required by Text; its purpose is to commit
+	//! any and all text changes internally and ready the object for display.
+	//! If you call addText() dynamically, you will need to also call
+	//! finalize() to refresh your changes. This is not true, however,
+	//! if you only adjust the position or alignment; as long as the text
+	//! doesn't change, there is no need to call finalize().
+	virtual bool finalize() {
+		if(!_finalizeGeometry(this)) return false;
+	
+		_calculatePosition();
+		
+		return true;
+	}
+	
+	virtual void clear() {
+		Text::clear();
+		
+		T::removeChild(0, T::getNumChildren());
+	}
+
+	//! Returns the PositionAlignment enum currently in use.
+	PositionAlignment getPositionAlignment() const {
+		return _positionAlignment;
+	}
+	
+	AxisAlignment getAxisAlignment() const {
+		return _axisAlignment; 
+	}
+	
+	//! Sets the PositionAlignment enum to use for modifying the position of
+	//! the Text, modifying its absolute placement. The default PositionAlignment
+	//! of POS_ALIGN_LEFT_BOTTOM however is a no-op, since it corresponds to how
+	//! Pango arranges the layout by default. The recalculate argument is the
+	//! same as for setPosition().
+	void setPositionAlignment(PositionAlignment alignment, bool recalculate=true) {
+		_positionAlignment = alignment;
+
+		if(recalculate) _calculatePosition();
+	}
+	
+	void setAxisAlignment(AxisAlignment alignment, bool recalculate=true) {
+		_axisAlignment = alignment;
+		
+		if(recalculate) _calculatePosition();
+	}
+
+protected:
+	void  _calculatePosition() {
+		osg::Vec3::value_type s = 1.0f / static_cast<osg::Vec3::value_type>(_scale);
+
+		osg::Vec3   origin(getOriginTranslated(), 0.0f);
+		osg::Vec3   size(_size, 0.0f);
+		osg::Matrix axisMatrix(osg::Matrix::identity());
+		osg::Matrix scaleMatrix(osg::Matrix::scale(osg::Vec3(s, s, 1.0f)));
+
+		origin *= s;
+		size   *= s;
+
+		roundVec3(origin);
+		roundVec3(size);
+
+		if(_positionAlignment == POS_ALIGN_CENTER_BOTTOM) 
+			origin.x() -= osg::round(size.x() / 2.0f)
+		;
+
+		else if(_positionAlignment == POS_ALIGN_RIGHT_BOTTOM)
+			origin.x() -= osg::round(size.x())
+		;
+
+		else if(_positionAlignment == POS_ALIGN_RIGHT_CENTER) origin -= osg::Vec3(
+			osg::round(size.x()),
+			osg::round(size.y() / 2.0f),
+			0.0f
+		);
+
+		else if(_positionAlignment == POS_ALIGN_RIGHT_TOP)
+			origin -= size
+		;
+
+		else if(_positionAlignment == POS_ALIGN_CENTER_TOP) origin -= osg::Vec3(
+			osg::round(size.x() / 2.0f),
+			size.y(),
+			0.0f
+		);
+
+		else if(_positionAlignment == POS_ALIGN_LEFT_TOP)
+			origin.y() -= size.y()
+		;
+
+		else if(_positionAlignment == POS_ALIGN_LEFT_CENTER)
+			origin.y() -= osg::round(size.y() / 2.0f)
+		;
+
+		else if(_positionAlignment == POS_ALIGN_CENTER_CENTER) origin += osg::Vec3(
+			osg::round(-size.x() / 2.0f),
+			osg::round(-size.y() / 2.0f),
+			0.0f
+		);
+
+		// TODO: We call origin.set here, but we modify the exisiting origin in
+		// the previous calls; why?
+		else if(_positionAlignment == POS_ALIGN_LEFT_BASE_LINE) origin.set(
+			getOriginBaseline().x(),
+			getOriginBaseline().y(),
+			0.0f
+		);
+
+		else if(_positionAlignment == POS_ALIGN_CENTER_BASE_LINE) origin.set(
+			getOriginBaseline().x() - osg::round(size.x() / 2.0f),
+			getOriginBaseline().y(),
+			0.0f
+		);
+
+		else if(_positionAlignment == POS_ALIGN_RIGHT_BASE_LINE) origin.set(
+			getOriginBaseline().x() - osg::round(size.x()),
+			getOriginBaseline().y(),
+			0.0f
+		);
+ 
+		// Handle _axisAlignment...
+		if(_axisAlignment == AXIS_ALIGN_XZ_PLANE) axisMatrix = osg::Matrix(
+			 1.0,  0.0,  0.0,  0.0,
+			 0.0,  0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0,  0.0,
+			 0.0,  0.0,  0.0,  1.0
+		);
+
+		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XZ_PLANE) axisMatrix = osg::Matrix(
+			-1.0,  0.0,  0.0,  0.0,
+			 0.0,  0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0,  0.0,
+			 0.0,  0.0,  0.0,  1.0
+		); 
+
+		else if(_axisAlignment == AXIS_ALIGN_YZ_PLANE) axisMatrix = osg::Matrix(
+			 0.0,  1.0,  0.0, 0.0,
+			 0.0,  0.0,  1.0, 0.0,
+			 1.0,  0.0,  0.0, 0.0,
+			 0.0,  0.0,  0.0, 1.0
+		);
+
+		else if(_axisAlignment == AXIS_ALIGN_REVERSED_YZ_PLANE) axisMatrix = osg::Matrix(
+			 0.0, -1.0,  0.0, 0.0,
+			 0.0,  0.0,  1.0, 0.0,
+			 1.0,  0.0,  0.0, 0.0,
+			 0.0,  0.0,  0.0, 1.0
+		); 
+
+		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XY_PLANE) axisMatrix = osg::Matrix(
+			-1.0,  0.0,  0.0, 0.0,
+			 0.0,  1.0,  0.0, 0.0,
+			 0.0,  0.0,  1.0, 0.0,
+			 0.0,  0.0,  0.0, 1.0
+		);
+
+		_applyTransform(this, scaleMatrix * osg::Matrix::translate(origin) * axisMatrix);
+	}
+		
+	PositionAlignment _positionAlignment;
+	AxisAlignment     _axisAlignment;
+};
+
+//! TextTransform is both a useful Text subclass for quick osgPango usage and
+//! a small demonstration of how to use TextInterface by gluing
+//! the Geometry provided by our parent class with the natural positioning 
+//! power of osg::MatrixTransform. It provides a small API for arranging text
+//! in 3D space, though it is not at all suited for people who want a full range
+//! of transformations (unless they just want to interface with osg::MatrixTransform
+//! directly, which is perfectly fine).
+typedef TextInterface<osg::MatrixTransform> TextTransform;
+
+}
+
+#endif

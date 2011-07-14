@@ -1,0 +1,11 @@
+- Add GlyphCache loading from images/metadata.
+
+- Add the ability to dump the caches in one large PNG, instead of a
+  bunch of pngs. This should be a "developer debug" image.
+
+- Add a wrapper around having to use <span> all the time; perhaps
+  a kind of ostream<< clone.
+
+- Investigate manually creating a GlyphCache using a Pango font
+  description and using that in addText.
+

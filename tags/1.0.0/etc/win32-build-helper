@@ -1,0 +1,31 @@
+#!/bin/bash
+# This file is intended to be used on Windows systems with Cygwin installed
+# and the MSVC tools in that path. I use vim to edit, so it's nice to never
+# have to pull up the GUI.
+
+MODE='Release|Win32'
+TEXT="<span font='Segoe UI 35'>ABCDE°</span>"
+
+case $1 in
+	ex*)
+		vcbuild examples/osgpangoviewer/osgpangoviewer.vcproj "${MODE}"
+		./examples/osgpangoviewer/Release/osgpangoviewer.exe --renderer outline 1 "${TEXT}"
+	;;
+
+	in*)
+		vcbuild INSTALL.vcproj "${MODE}"
+	;;
+
+	un*)
+		vcbuild UNINSTALL.vcproj "${MODE}"
+	;;
+
+	re*)
+		vcbuild /rebuild osgPango.sln "${MODE}"
+	;;
+
+	*)
+		vcbuild osgPango.sln "${MODE}"
+	;;
+esac
+

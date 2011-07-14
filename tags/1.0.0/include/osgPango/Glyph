@@ -1,0 +1,160 @@
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_GLYPHCACHE
+#define OSGPANGO_GLYPHCACHE
+
+#include <map>
+#include <osg/Geometry>
+#include <osg/Texture>
+#include <osgCairo/Image>
+#include <osgPango/Export>
+#include <osgPango/GlyphRenderer>
+
+namespace osgPango {
+
+class Font;
+
+struct OSGPANGO_EXPORT CachedGlyph {
+	CachedGlyph(
+		unsigned int     = 0,
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2(),
+		const osg::Vec2& = osg::Vec2()
+	);
+
+	unsigned int img;
+	osg::Vec2    origin;
+	osg::Vec2    size;
+	osg::Vec2    bl;
+	osg::Vec2    br;
+	osg::Vec2    ur;
+	osg::Vec2    ul;
+};
+
+typedef std::pair<unsigned int, osg::Vec2> GlyphPositionPair;
+typedef std::list<GlyphPositionPair>       GlyphPositionList;
+
+// There is one GlyphCache object PER FONT object.
+class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {	
+public:
+	typedef std::map<unsigned int, CachedGlyph>      GlyphMap;
+	typedef std::pair<osg::ref_ptr<osgCairo::Image>, 
+	                  osg::ref_ptr<osg::Texture> >   CairoAndTexture;
+	typedef std::vector<CairoAndTexture>             Images;
+	typedef std::vector<Images>                      Layers;
+
+	GlyphCache(GlyphRenderer* = 0, unsigned int = 0, unsigned int = 0);
+
+	const CachedGlyph* getCachedGlyph        (unsigned int);
+	const CachedGlyph* createCachedGlyph     (PangoFont*, PangoGlyphInfo*);
+	void               writeImagesAsFiles    (const std::string&) const;
+	unsigned long      getMemoryUsageInBytes () const;
+
+	void setName(const std::string& name) {
+		_name = name;
+	}
+	
+	osgCairo::Image* getImage(unsigned int index, unsigned int layerIndex) {
+		return _getImage(index, layerIndex);
+	}
+	
+	const osgCairo::Image* getImage(unsigned int index, unsigned int layerIndex) const {
+		return _getImage(index, layerIndex);
+	}
+	
+	osg::Texture* getTexture(unsigned int index, unsigned int layerIndex) {
+		return _getTexture(index, layerIndex);
+	}
+	
+	const osg::Texture* getTexture(unsigned int index, unsigned int layerIndex) const {
+		return _getTexture(index, layerIndex);
+	}
+
+	unsigned int getImageWidth() const {
+		return _imgWidth;
+	}
+
+	unsigned int getImageHeight() const {
+		return _imgHeight;
+	}
+
+	GlyphRenderer* getGlyphRenderer() {
+		return _renderer.get();
+	}
+
+	const GlyphRenderer* getGlyphRenderer() const {
+		return _renderer.get();
+	}
+	
+	unsigned int getNumLayers() const {
+		return _renderer->getNumLayers();
+	}
+
+	// TODO: THIS SHOULDN'T BE NECESSARY! Please see the comment in Context.cpp,
+	// in the writeCachesToPNGFiles function.
+	unsigned int getLayerSize() const {
+		return _layers.size();
+	}
+
+	const std::string& getName() const {
+		return _name;
+	}
+
+private:
+	bool _newImageAndTexture();
+
+	void _writeImageVectorFiles(
+		const std::string&,
+		const std::string&,
+		const Images&
+	) const;
+
+	osgCairo::Image* _getImage   (unsigned int, unsigned int) const;
+	osg::Texture*    _getTexture (unsigned int, unsigned int) const;
+
+	std::string _name;
+
+	// The "renderer" object, not bound to any local data.
+	osg::ref_ptr<GlyphRenderer> _renderer;
+
+	Layers _layers;
+	
+	// A map of external Pango glyph indexes to their internally CachedGlyph data structures.
+	// We also have a flag of what effects to use, though their rendering method is passed
+	// on from the text object.
+	GlyphMap _glyphs;
+
+	double       _x;
+	double       _y;
+	double       _h;
+	unsigned int _imgWidth;
+	unsigned int _imgHeight;
+};
+
+class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
+public:
+	GlyphGeometry();
+
+	bool finalize          ();
+	bool pushCachedGlyphAt (const CachedGlyph*, const osg::Vec2&);
+
+private:
+	static osg::ref_ptr<osg::Vec3Array> _norms;
+	static osg::ref_ptr<osg::Vec4Array> _cols;
+
+	unsigned int _numQuads;
+	unsigned int _numTextureCoords;
+};
+
+// We don't use an osg::ref_ptr here becase the Geometry will actually only be temporary.
+// The newly allocated osg::Geometry will passed to an osg::Geode during finalize, and
+// the Geode will properly dictate when the resources are freed.
+typedef std::map<unsigned int, GlyphGeometry*> GlyphGeometryIndex;
+
+}
+
+#endif

@@ -1,0 +1,198 @@
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_GLYPHLAYER
+#define OSGPANGO_GLYPHLAYER
+
+#include <osg/Texture>
+#include <osgCairo/Image>
+#include <osgPango/GlyphLayerInterface>
+
+namespace osgPango {
+
+class OSGPANGO_EXPORT GlyphLayer: public osg::Referenced {
+public:
+	GlyphLayer(cairo_format_t = CAIRO_FORMAT_A8);
+
+	// Render custom shape of glyph.
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+	
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+
+	cairo_format_t getCairoImageFormat() const {
+		return _imageFormat;
+	}
+	
+	void setCairoImageFormat(cairo_format_t format) {
+		_imageFormat = format;
+	}
+		
+protected:
+	cairo_format_t _imageFormat;
+};
+
+class OSGPANGO_EXPORT GlyphLayerOutline: public GlyphLayer {
+public:
+	GlyphLayerOutline(unsigned int = 2);
+	
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+	
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+	
+	void setOutline(unsigned int outline) {
+		_outline = outline;
+	}
+	
+	unsigned int getOutline() const {
+		return _outline;
+	}
+	
+private:
+	unsigned int _outline;
+};
+
+class OSGPANGO_EXPORT GlyphLayerShadow: public GlyphLayerInterfaceOffset, public GlyphLayer {
+public:
+	GlyphLayerShadow(int = 1, int = 1);
+
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+	
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+};
+
+class OSGPANGO_EXPORT GlyphLayerShadowBlur:
+	public GlyphLayerInterfaceOffset,
+	public GlyphLayerInterfaceBlur,
+	public GlyphLayer
+{
+public:
+	GlyphLayerShadowBlur(int = 1, int = 1, unsigned int = 2, unsigned int = 0);
+	
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+	
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+};
+
+class OSGPANGO_EXPORT GlyphLayerShadowInset: 
+	public GlyphLayerInterfaceOffset,
+	public GlyphLayerInterfaceBlur, 
+	public GlyphLayer {
+public:
+	GlyphLayerShadowInset(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
+	
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+};
+
+class OSGPANGO_EXPORT GlyphLayerBitmap: public GlyphLayer {
+public:
+	GlyphLayerBitmap(const std::string& = "");
+	
+	virtual ~GlyphLayerBitmap();
+
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+
+	void setBitmap(const std::string&);
+	
+	const std::string& getBitmap() const { 
+		return _path; 
+	}
+
+	unsigned int getRepeatX() const { 
+		return _repeatX; 
+	}
+
+	unsigned int getRepeatY() const { 
+		return _repeatY; 
+	}
+
+	void setRepeatX(unsigned int repeat) { 
+		_repeatX = repeat; 
+	}
+
+	void setRepeatY(unsigned int repeat) { 
+		_repeatY = repeat; 
+	}
+
+private:
+	std::string                   _path;
+	unsigned int                  _repeatX;
+	unsigned int                  _repeatY;
+	osg::ref_ptr<osgCairo::Image> _bitmap;
+	cairo_pattern_t*              _pattern;
+};
+
+class OSGPANGO_EXPORT GlyphLayerBevel: public GlyphLayer {
+public:
+	GlyphLayerBevel(double, double, double, double, double, double, double);
+	
+	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+
+	double getBevelWidth() const {
+		return _bevelWidth;
+	}
+
+	double getBevelStep() const {
+		return _bevelStep;
+	}
+
+	double getAzimuth() const {
+		return _azimuth;
+	}
+
+	double getElevation() const {
+		return _elevation;
+	}
+
+	double getHeight() const {
+		return _height;
+	}
+
+	double getAmbient() const {
+		return _ambient;
+	}
+
+	double getDiffuse() const {
+		return _diffuse;
+	}
+
+	void setBevelWidth(double bevelWidth) {
+		_bevelWidth = bevelWidth;
+	}
+
+	void setBevelStep(double bevelStep) {
+		_bevelStep = _bevelStep;
+	}
+
+	void setAzimuth(double azimuth) {
+		_azimuth = azimuth;
+	}
+
+	void setElevation(double elevation) {
+		_elevation = elevation;
+	}
+
+	void setHeight(double height) {
+		_height = height;
+	}
+
+	void setAmbient(double ambient) {
+		_ambient = ambient;
+	}
+
+	void setDiffuse(double diffuse) {
+		_diffuse = diffuse;
+	}
+
+private:
+	double _bevelWidth;
+	double _bevelStep;
+	double _azimuth;
+	double _elevation;
+	double _height;
+	double _ambient;
+	double _diffuse;
+};
+
+}
+
+#endif
