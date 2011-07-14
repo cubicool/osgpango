@@ -24,16 +24,16 @@ bool GlyphLayerShadowBlur::render(
 ) {
 	if(cairo_status(c) || !glyph) return false;
 	
-	cairo_translate(c, getOffsetX(), getOffsetY());	
+	cairo_translate(c, getOffsetX(), getOffsetY());
 	cairo_push_group(c);
 	cairo_set_line_join(c, CAIRO_LINE_JOIN_ROUND);
-	cairo_set_line_width(c, static_cast<double>(_radius) - 0.5f);
+	cairo_set_line_width(c, _radius - 0.5f);
 	cairo_glyph_path(c, glyph, 1);
 	cairo_stroke_preserve(c);
 	cairo_fill(c);
 	
 	cairo_pattern_t* pattern = cairo_pop_group(c);
-	cairo_surface_t* tmp     = createBlurredSurface(CAIRO_FORMAT_A8, pattern, width, height);
+	cairo_surface_t* tmp = createBlurredSurface(CAIRO_FORMAT_A8, pattern, width, height);
 
 	cairo_set_source_surface(
 		c,

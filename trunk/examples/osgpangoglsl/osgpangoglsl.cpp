@@ -23,7 +23,7 @@ struct GlyphRendererMultiOutline: public osgPango::GlyphRenderer {
 		);
 	}
 
-	bool updateOrCreateState(int pass, osg::Geode* geode) {
+	bool updateOrCreateState(int pass, osg::Geode* geode) const {
 		if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
 		osg::StateSet* state = geode->getOrCreateStateSet();
@@ -79,17 +79,18 @@ int main(int argc, char** argv) {
 
 	t->setAlpha(1.0f);
 	t->setColorPalette(cp);
+	t->setGlyphRenderer("multioutline");
 	t->addText(
-		"<span font='Cheri Liney 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
+		// "<span font='Cheri Liney 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
+		"<span font='Sans 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
 		0,
-		0,
-		osgPango::TextOptions("multioutline")
+		0
 	);
-
 
 	t->finalize();
 	t->setMatrix(osg::Matrixd::translate(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f)));
 	t->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER);
+	// t->setCoordinateAlign(osgPango::TextTransform::COORDINATE_ALIGN_ALWAYS);
 
 	osgViewer::Viewer viewer;
 

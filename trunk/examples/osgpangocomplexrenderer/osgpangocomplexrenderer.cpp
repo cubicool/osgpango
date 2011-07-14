@@ -66,13 +66,10 @@ struct GlyphLayerLines: public osgPango::GlyphLayer {
 };
 
 struct GlyphRendererComplex: public osgPango::GlyphRenderer {
-	GlyphRendererComplex(bool useCustomLayer = false) {
+	GlyphRendererComplex() {
 		addLayer(new osgPango::GlyphLayerShadowBlur(0.0f, 0.0f, 10, 5.0));
 		addLayer(new osgPango::GlyphLayerOutline(2.0f));
-
-		if(useCustomLayer) addLayer(new GlyphLayerLines());
-		
-		else addLayer(new osgPango::GlyphLayer());
+		addLayer(new GlyphLayerLines());
 
 		unsigned int liv2[] = {1, 2};
 		unsigned int liv3[] = {2};
@@ -112,7 +109,7 @@ struct GlyphRendererComplex: public osgPango::GlyphRenderer {
 		return 3;
 	}
 
-	bool updateOrCreateState(int pass, osg::Geode* geode) {
+	bool updateOrCreateState(int pass, osg::Geode* geode) const {
 		if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
 		osg::StateSet* state = geode->getOrCreateStateSet();
@@ -174,7 +171,6 @@ int main(int argc, char** argv) {
 
 	context.init();
 	context.addGlyphRenderer("complex", new GlyphRendererComplex());
-	context.addGlyphRenderer("complex-lines", new GlyphRendererComplex(true));
 
 	osgPango::TextTransform* t = new osgPango::TextTransform(osgPango::Text::COLOR_MODE_PALETTE_ONLY);
 
@@ -185,21 +181,9 @@ int main(int argc, char** argv) {
 	cp.push_back(osg::Vec3(0.0f, 0.0f, 1.0f));
 
 	t->setColorPalette(cp);
-
-	t->addText(
-		"<span font='Verdana Bold 40'>This is a cow.</span>",
-		0,
-		0,
-		osgPango::TextOptions("complex")
-	);
-
-	t->addText(
-		"<span font='Verdana Bold 40'>Yes, a cow.</span>",
-		0,
-		-60,
-		osgPango::TextOptions("complex-lines")
-	);
-
+	t->setGlyphRenderer("complex");
+	t->addText("<span font='Verdana Bold 40'>This is a cow.</span>", 0, 0);
+	t->addText("<span font='Verdana Bold 40'>Yes, a cow.</span>", 0, -60);
 	t->finalize();
 	t->setMatrix(osg::Matrixd::translate(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f)));
 	t->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER);

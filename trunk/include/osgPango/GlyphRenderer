@@ -9,6 +9,7 @@
 #include <osgCairo/Image>
 #include <osgPango/Export>
 #include <osgPango/GlyphLayer>
+#include <osgPango/Glyph>
 
 namespace osgPango {
 
@@ -23,6 +24,7 @@ typedef std::list<GeometryAndState>                   GeometryList;
 
 class OSGPANGO_EXPORT GlyphRenderer: public osg::Referenced {
 public:
+
 	GlyphRenderer();
 
 	// This method returns an osg::Vec4 object whose values correspond to the following:
@@ -37,17 +39,13 @@ public:
 		cairo_glyph_t*,
 		unsigned int,
 		unsigned int
-	);
+	) const;
 	
-	virtual bool updateOrCreateState (int pass, osg::Geode*);
-	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&);
+	virtual bool updateOrCreateState (int pass, osg::Geode*) const;
+	virtual bool updateOrCreateState (osg::Geometry*, const GlyphGeometryState&) const;
 
 	// You can override this method to enable mipmapping, if you like.
-	virtual osg::Texture2D* createTexture(osg::Image*);
-
-	void setName(const std::string& name) {
-		_name = name;
-	}
+	virtual osg::Texture2D* createTexture(osg::Image*) const;
 
 	void setPixelSpacing(unsigned int spacing) {
 		_pixelSpacing = spacing;
@@ -55,10 +53,6 @@ public:
 
 	void setMinFilterMode(osg::Texture::FilterMode fm) {
 		_minFilter = fm;
-	}
-
-	const std::string& getName() const {
-		return _name;
 	}
 
 	unsigned int getPixelSpacing() const {
@@ -74,6 +68,10 @@ public:
 	void replaceLayer (unsigned int, GlyphLayer*);
 	void clearLayers  ();
 
+	const std::string& getName() const {
+		return _name;
+	}
+
 	virtual unsigned int getNumLayers() const {
 		return _layers.size();
 	}
@@ -82,50 +80,64 @@ public:
 		return 1;
 	}
 
-	virtual cairo_format_t getImageFormatForLayer(unsigned int);
+	virtual cairo_format_t getImageFormatForLayer(unsigned int) const;
 
 protected:
-	bool _setFragmentShader (osg::Geode*, const std::string&);
+	friend class Text;
+	friend class Context;
+	
+	typedef std::map<guint, osg::ref_ptr<GlyphCache> >  FontGlyphCacheMap;
+	
+	GlyphCache* getGlyphCache         (PangoFont* font) const;
+	GlyphCache* getOrCreateGlyphCache (PangoFont* font);
+	
+	const FontGlyphCacheMap& getGlyphCaches() const {
+		return _gc;
+	}
+	
+	bool  _setFragmentShader (osg::Geode*, const std::string&) const;
+	guint _hashFont          (PangoFont* font) const;
 
-	std::string                            _name;
 	std::vector<osg::ref_ptr<GlyphLayer> > _layers;
 	unsigned int                           _pixelSpacing;
 	osg::Texture::FilterMode               _minFilter;
+	FontGlyphCacheMap                      _gc;
+	std::string                            _name;
 };
 
 class OSGPANGO_EXPORT GlyphRendererDefault: public GlyphRenderer {
 public:
 	GlyphRendererDefault();
 	
-	virtual bool updateOrCreateState(int pass, osg::Geode*);
+	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
 
 class OSGPANGO_EXPORT GlyphRendererOutline: public GlyphRenderer {
 public:
 	GlyphRendererOutline(unsigned int = 2);
 
-	virtual bool updateOrCreateState(int pass, osg::Geode*);
+	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
 
 class OSGPANGO_EXPORT GlyphRendererShadow: public GlyphRenderer {
 public:
 	GlyphRendererShadow(int = 1, int = 1);
 
-	virtual bool updateOrCreateState(int pass, osg::Geode*);
+	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
 
 class OSGPANGO_EXPORT GlyphRendererShadowBlur: public GlyphRenderer {
 public:
 	GlyphRendererShadowBlur(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
 	
-	virtual bool updateOrCreateState(int pass, osg::Geode*);
+	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
 
 class OSGPANGO_EXPORT GlyphRendererShadowInset: public GlyphRenderer {
 public:
 	GlyphRendererShadowInset(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
 	
-	virtual bool updateOrCreateState(int pass, osg::Geode*);
+	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
 
 }

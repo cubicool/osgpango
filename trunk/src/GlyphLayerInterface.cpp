@@ -13,7 +13,7 @@ _xOffset (xOffset),
 _yOffset (yOffset) {
 }
 
-GlyphLayerInterfaceBlur::GlyphLayerInterfaceBlur(unsigned int radius, unsigned int deviation):
+GlyphLayerInterfaceBlur::GlyphLayerInterfaceBlur(double radius, double deviation):
 _radius    (radius),
 _deviation (deviation) {
 }
@@ -45,7 +45,8 @@ cairo_surface_t* GlyphLayerInterfaceBlur::createBlurredSurface(
 
 	cairo_destroy(tc);
 
-	osgCairo::util::gaussianBlur(tmp, _radius, _deviation);
+	if(_deviation > 0.0)
+		osgCairo::util::gaussianBlur(tmp, _radius, _deviation);
 
 	return tmp;
 }

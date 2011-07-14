@@ -78,8 +78,8 @@ int main(int argc, char** argv) {
 	
 	os << "<span font='Verdana Bold 40'>" << LOREM_IPSUM << "</span>";
 
+	t->setGlyphRenderer("gradient");
 	t->addText(os.str().c_str(), 0, 0, osgPango::TextOptions(
-		"gradient",
 		osgPango::TextOptions::TEXT_ALIGN_CENTER,
 		750
 	));
