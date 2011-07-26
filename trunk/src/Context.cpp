@@ -239,15 +239,17 @@ void Context::addGlyphRenderer(const std::string& name, GlyphRenderer* renderer)
 	
 	_grMap[name] = renderer;
 	
-	if(_onAddCallback) (*_onAddCallback)(name, renderer);
+	if(_onAddCallback) (*_onAddCallback)(renderer);
 
 	renderer->_name = name;
 }
 
-void Context::removeGlyphRenderer(const std::string &name, GlyphRenderer* renderer) {
+void Context::removeGlyphRenderer(const std::string& name) {
 	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
-	
-	if(_onRemoveCallback) (*_onRemoveCallback)(name, renderer);
+
+	GlyphRenderer* gr = _grMap[name].get();
+
+	if(gr && _onRemoveCallback) (*_onRemoveCallback)(gr);
 	
 	_grMap.erase(name);
 }
