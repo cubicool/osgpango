@@ -9,6 +9,8 @@
 
 namespace osgPango {
 
+//! This interface class provides X and Y offset members, in addition to methods by
+//! which a user can manipulate these members. It can only be constructed by subclasses.
 class OSGPANGO_EXPORT GlyphLayerInterfaceOffset {
 public:
 	int getOffsetX() const {
@@ -34,13 +36,19 @@ protected:
 	int _yOffset;
 };
 
+//! This interface provides a blurring API to the subclass. 
 class OSGPANGO_EXPORT GlyphLayerInterfaceBlur {
 public:
+	//! This powerful convenience routine handles the actual "blurring" of this interface
+	//! class. It accepts a target format, a pattern (which is almost always the result
+	//! or your desired surface having cairo_pop_group() called on it), and the width and
+	//! height of the pattern. The returned result is a gaussian blurred copy of the
+	//! passed-in pattern.
 	cairo_surface_t* createBlurredSurface(
-		cairo_format_t,
-		cairo_pattern_t*,
-		unsigned int,
-		unsigned int
+		cairo_format_t   format,
+		cairo_pattern_t* pattern,
+		unsigned int     width,
+		unsigned int     height
 	);
 
 	double getRadius() const {
@@ -68,12 +76,13 @@ protected:
 	double _deviation;
 };
 
+// TODO: Implement this!
 class OSGPANGO_EXPORT GlyphLayerInterfaceEmboss {
 public:
 	cairo_surface_t* createEmbossedSurface(
-		cairo_surface_t*,
-		unsigned int,
-		unsigned int
+		cairo_surface_t* surface,
+		unsigned int     width,
+		unsigned int     height
 	);
 
 	double getAzimuth() const {
@@ -98,7 +107,6 @@ protected:
 	double _azimuth;
 	double _elevation;
 };
-
 
 }
 

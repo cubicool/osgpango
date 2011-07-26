@@ -10,13 +10,30 @@
 
 namespace osgPango {
 
+//! The standard GlyphLayer base class. Its most important method is render(), which is called
+//! by the parent GlyphRenderer when a glyph needs to be rasterized.
 class OSGPANGO_EXPORT GlyphLayer: public osg::Referenced {
 public:
-	GlyphLayer(cairo_format_t = CAIRO_FORMAT_A8);
+	//! The standard default layer format is A8; in some cases, your subclass might want
+	//! RGB24 or ARGB32.
+	GlyphLayer(cairo_format_t format = CAIRO_FORMAT_A8);
 
-	// Render custom shape of glyph.
-	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+	//! Here is where your subclass renders the custom shape of glyph. You are given a
+	//! Cairo context to use with the understanding that the parent GlyphRenderer has already
+	//! translated itself to the proper XY position. The width and height are also passed in
+	//! for convenience, as this information is NOT available in the glyph structure itself.
+	virtual bool render(
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
+	);
 	
+	//! This method should return any extra pixel space a glyph will need beyond its own,
+	//! normal spacing. This allows the parent GlyphRenderer to accurately determine if the
+	//! current XYH position in the cache atlas is large enough to hold the incoming
+	//! rasterization request. The format is: vec4(extraX, extraY, extraWidth, extraHeight).
+	//! This value will be accumulated later for each layer in the parent GlyphRenderer.
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 
 	cairo_format_t getCairoImageFormat() const {
@@ -31,14 +48,23 @@ protected:
 	cairo_format_t _imageFormat;
 };
 
+//! This GlyphLayer implementation performs a stroke of the glyph's vector path, instead of a
+//! standard fill.
 class OSGPANGO_EXPORT GlyphLayerOutline: public GlyphLayer {
 public:
-	GlyphLayerOutline(unsigned int = 2);
+	//! The outline argument determines the size (usually in pixels) of the line to be stroked.
+	GlyphLayerOutline(unsigned int outline = 2);
 	
-	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
-	
+	virtual bool render(
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
+	);
+
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 	
+	//! Set the outline size, after construction.
 	void setOutline(unsigned int outline) {
 		_outline = outline;
 	}
@@ -51,49 +77,105 @@ private:
 	unsigned int _outline;
 };
 
+//! A GlyphLayer implementation which provides a (non-blurred) shadow for the glyph. This class
+//! also inherits from one our common GlyphLayerInterface APIs, which gives it additional methods
+//! and members to manipulate the drop shadow.
 class OSGPANGO_EXPORT GlyphLayerShadow: public GlyphLayerInterfaceOffset, public GlyphLayer {
 public:
-	GlyphLayerShadow(int = 1, int = 1);
+	//! Our constructor defaults to a +1, +1 drop shadow offset. These are in Cairo drawing
+	//! coordinates, which means the origin is in the upper-left of the image.
+	GlyphLayerShadow(int xOffset = 1, int yOffset = 1);
 
-	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
-	
+	virtual bool render(
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
+	);
+
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 };
 
+//! This is an example of a moderately-complex Layer that inherits from multiple interfaces to
+//! provide a very pleasing effect. Similar to GlyphLayerShadow, this class provides a drop shadow
+//! effect, though that shadow is additionally blurred using a typical gaussian algorithm.
 class OSGPANGO_EXPORT GlyphLayerShadowBlur:
 	public GlyphLayerInterfaceOffset,
 	public GlyphLayerInterfaceBlur,
 	public GlyphLayer
 {
 public:
-	GlyphLayerShadowBlur(int = 1, int = 1, unsigned int = 2, unsigned int = 0);
+	//! The layer's x and y offsets, in addition to the blur's radius and deviation. A large 
+	//! radius is a very quick way to eat up texture memory. :)
+	GlyphLayerShadowBlur(
+		int          xOffset       = 1,
+		int          yOffset       = 1,
+		unsigned int blurRadius    = 2,
+		unsigned int blurDeviation = 0
+	);
 	
-	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
-	
+	virtual bool render(
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
+	);
+
 	virtual osg::Vec4 getExtraGlyphExtents() const;
 };
 
+//! This class is essentially the opposite of GlyphLayerShadowBlur; instead of producing a blur 
+//! "punched out" by the original glyph's outline, this layer implementation will apply the
+//! gaussian blur using the glyph's outline as a mask. Notice that, for this reason, no extra
+//! glyph extents are necessary.
 class OSGPANGO_EXPORT GlyphLayerShadowInset: 
 	public GlyphLayerInterfaceOffset,
 	public GlyphLayerInterfaceBlur, 
 	public GlyphLayer {
 public:
-	GlyphLayerShadowInset(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
+	GlyphLayerShadowInset(
+		int          xOffset       = 1,
+		int          yOffset       = 1,
+		unsigned int blurRadius    = 2,
+		unsigned int blurDeviation = 0
+	);
 	
-	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+	virtual bool render(
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
+	);
+
 };
 
+//! This unique layer implementation will fill a glyph with a bitmap image instead of an RGBA color
+//! vector. The possibilities for such a mechanism are endless, and I can't even begin to describe
+//! the myriad of crazy things that are possible herein.
+//! TODO: This class should also accept in-memory data, rather than only a path to a file on disk.
 class OSGPANGO_EXPORT GlyphLayerBitmap: public GlyphLayer {
 public:
-	GlyphLayerBitmap(const std::string& = "");
-	
+	//! Our constructor accepts the location of an image on disk which will be loaded by
+	//! osgCairo and used to fill the glyph's path. NOTE!!! Since osgCairo::readImageFile
+	//! is used internally, any image whose format CANNOT be converted into an acceptable
+	//! cairo_format_t will not be used.
+	GlyphLayerBitmap(const std::string& path = "");
+
+	//! Explicit destruction is necessary to cleanup our cairo_pattern_t.
 	virtual ~GlyphLayerBitmap();
 
-	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+	virtual bool render(
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
+	);
 
+	//! Set the image data to be used from an image file on disk.
 	void setBitmap(const std::string&);
 	
-	const std::string&  getBitmap() const { 
+	//! Return the path to the file on disk being used internally.
+	const std::string& getBitmap() const { 
 		return _path; 
 	}
 
@@ -105,10 +187,14 @@ public:
 		return _repeatY; 
 	}
 
+	//! Set the number of times the image should be repeated in the X direction; the
+	//! default is 1.
 	void setRepeatX(unsigned int repeat) { 
 		_repeatX = repeat; 
 	}
 	
+	//! Set the number of time the image should be repeated in the Y direction; the
+	//! default is 1.
 	void setRepeatY(unsigned int repeat) { 
 		_repeatY = repeat; 
 	}
@@ -121,11 +207,32 @@ private:
 	cairo_pattern_t*              _pattern;
 };
 
+//! This layer takes advantage of a function in cairocks to create a very flexible bevel
+//! effect. Interested users of this class will want to consult the cairocks documentation for
+//! the function cairocks_emboss_create().
 class OSGPANGO_EXPORT GlyphLayerBevel: public GlyphLayer {
 public:
-	GlyphLayerBevel(double, double, double, double, double, double, double);
-	
-	virtual bool render(cairo_t*, cairo_glyph_t*, unsigned int, unsigned int);
+	//! The constructor accepts the same arguments as cairocks_emboss_create, except that
+	//! in order to achieve our bevelling effect we introduce two additional variables
+	//! into the emboss application: @bevelWidth, which is the size of the "ramp", and
+	//! @bevelStep, which is the number of overwrite the algorithm will use internally
+	//! while stroking to @bevelWidth.
+	GlyphLayerBevel(
+		double bevelWidth,
+		double bevelStep,
+		double azimuth,
+		double elevation,
+		double height,
+		double ambient,
+		double diffuse
+	);
+
+	virtual bool render(
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
+	);
 
 	double getBevelWidth() const {
 		return _bevelWidth;

@@ -50,7 +50,8 @@
 //! After creating a Text object, the user begins to call the addText method. This
 //! method adds a string of Pango Markup formatted text at the specified offsets 
 //! and using the various tidbits of the TextOptions struct which is, optionally,
-//! passed in as the 4th and final argument.
+//! passed in as the 4th and final argument. Each Text object can only be rendered
+//! to a single GlyphRenderer object, though this may change in the future.
 //! 
 //! It should be noted that what the user is REALLY doing here is simply asking
 //! the osgPango::Text object to create osg::Geometry objects internally and store

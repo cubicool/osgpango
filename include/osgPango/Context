@@ -25,9 +25,15 @@ struct OSGPANGO_EXPORT RendererClass {
 	PangoRendererClass class_instance;
 };
 
+//! These callbacks are invoked when a new Renderer object is added to the Context.
+//! This lets you do things  at load/unload time. One user, for example, informed
+//! me that he used this callback to implement static loading/unloading for already-cached
+//! glyphs. INTERESTING...
 struct RendererCallback : public osg::Object {
 public:
-	virtual void operator()(std::string const &, GlyphRenderer*) = 0;
+	//! You just get a pointer to the GlyphRenderer; if you need its name, you can 
+	//! retrieve it via ::getName().
+	virtual void operator()(GlyphRenderer* renderer) = 0;
 };
 
 //! This class is a singleton which provides a gateway both into our Pango rendering
@@ -37,6 +43,8 @@ public:
 //! enough for most people without using any advanced arguments.
 class OSGPANGO_EXPORT Context {
 public:
+	//! This type maps the string names of your GlyphRenderer objects to their actual
+	//! instances.
 	typedef std::map<std::string, osg::ref_ptr<GlyphRenderer> > GlyphRendererMap;
 	
 	~Context();
@@ -61,11 +69,11 @@ public:
 	);
 	
 	//! Our main Context initialization routine; should only need to be called once
-	//! per program's lifetime. It lets us set some of the more advanced rendering
-	//! options of osgPango, so take special note of the arguments below and
-	//! what they mean. Please keep in mind that not ALL of the options are honored
-	//! on every Pango backend; though the most common backend, FreeType, appears
-	//! to support them all (whereas a few don't always work using ClearType).
+	//! per program's lifetime, unless you first call reset(). It lets us set
+	//! some of the more advanced rendering options of osgPango, so take special note of
+	//! the arguments below and what they mean. Please keep in mind that not ALL of the
+	//! options are honored on every Pango backend; though the most common backend, FreeType,
+	//! appears to support them all (whereas a few don't always work using ClearType).
 	bool init(
 		//! The rendering DPI to be used when Pango calculates font sizes
 		//! internally. This does not--as you might want to think at first--
@@ -101,7 +109,8 @@ public:
 		//! If CAIRO_ANTIALIAS_SUBPIXEL is set. Please see
 		//! <a href="http://www.cairographics.org/manual/cairo-font-options.html#cairo-subpixel-order-t">
 		//! this Cairo API reference link</a> for more information on what each
-		//! possible value means. The osgPango Context default is CAIRO_SUBPIXEL_ORDER_DEFAULT.
+		//! possible value means. The osgPango Context default is
+		//! CAIRO_SUBPIXEL_ORDER_DEFAULT.
 		cairo_subpixel_order_t spo = CAIRO_SUBPIXEL_ORDER_DEFAULT
 	);
 
@@ -141,21 +150,25 @@ public:
 		return _getGlyphRenderer(renderer);
 	}
 	
+	//! An empty string is key the GlyphRendererMap's default renderer. This gets setup
+	//! when the Context is created.
 	const GlyphRenderer* getDefaultGlyphRenderer() const {
 		return _getGlyphRenderer("");
 	}
 
 	//! Set the GlyphRenderer using the string "".
-	void setDefaultGlyphRenderer(GlyphRenderer*);
+	void setDefaultGlyphRenderer(GlyphRenderer* renderer);
 
 	//! Add a newly created GlyphRenderer object to the internal cache of known 
 	//! renderers within the Context. For more information about what
 	//! a GlyphRenderer is (basically, a custom effects "plugin" for your font),
 	//! please take a look at it's documentation.
-	void addGlyphRenderer(const std::string&, GlyphRenderer*);
+	void addGlyphRenderer(const std::string& name, GlyphRenderer* renderer);
 	
-	void removeGlyphRenderer(const std::string&, GlyphRenderer*);
+	//! Remove a previously created GlyphRenderer.
+	void removeGlyphRenderer(const std::string& name);
 
+	//! Get a READ-ONLY const reference to the GlyphRendererMap. Use this with caution...
 	const GlyphRendererMap& getGlyphRenderers() const {
 		return _grMap;
 	}
@@ -193,26 +206,31 @@ public:
 	PangoContext* getPangoContext() {
 		return _pContext;
 	}
-	
-	void setOnAddCallback(RendererCallback *callback) {
-		_onAddCallback = callback;
-	}
-	
+
 	RendererCallback* getOnAddCallback() const {
 		return _onAddCallback.get();
 	}
-	
-	void setOnRemoveCallback(RendererCallback *callback) {
-		_onRemoveCallback = callback;
-	}
-	
+
 	RendererCallback* getOnRemoveCallback() const {
 		return _onRemoveCallback.get();
 	}
+
+	//! Set the callback to be invoked when new GlyphRenderers are added.
+	void setOnAddCallback(RendererCallback* callback) {
+		_onAddCallback = callback;
+	}
+		
+	//! Set the callback to be invoked when GlyphRenderers are deleted.
+	void setOnRemoveCallback(RendererCallback* callback) {
+		_onRemoveCallback = callback;
+	}
 	
+	//! Reset the Context, so that init() can be called again. All data is cleared
+	//! internally, so be careful when you call this.
 	void reset();
 	
 private:
+	//! Our constructor is private; Singleton.
 	Context();
 	
 	GlyphRenderer* _getGlyphRenderer(const std::string&) const;
