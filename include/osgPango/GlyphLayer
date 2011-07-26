@@ -267,7 +267,7 @@ public:
 	}
 
 	void setBevelStep(double bevelStep) {
-		_bevelStep = _bevelStep;
+		_bevelStep = bevelStep;
 	}
 
 	void setAzimuth(double azimuth) {
