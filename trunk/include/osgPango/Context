@@ -6,10 +6,18 @@
 
 #include <pango/pangocairo.h>
 
-#include <osgPango/Glyph>
-#include <osgPango/Text>
+#include <osgPango/GlyphRenderer>
 
 namespace osgPango {
+
+//! An std::pair of OSG color values which we use in a few places as "key" values for
+//! differentiating Geometry states based on a foreground AND background (effects)
+//! color.
+typedef std::pair<osg::Vec3, osg::Vec3> ColorPair;
+
+//! TODO: Talk about how this is different from ColorPair and WHY we can't do 8 colors
+//! from Pango markup.
+typedef std::vector<osg::Vec3> ColorPalette;
 
 //! A list of string names of available fonts recognized by Pango; used
 //! in Context::getFontList().
@@ -29,11 +37,19 @@ struct OSGPANGO_EXPORT RendererClass {
 //! This lets you do things  at load/unload time. One user, for example, informed
 //! me that he used this callback to implement static loading/unloading for already-cached
 //! glyphs. INTERESTING...
-struct RendererCallback : public osg::Object {
+class RendererCallback : public osg::Object {
 public:
 	//! You just get a pointer to the GlyphRenderer; if you need its name, you can 
 	//! retrieve it via ::getName().
 	virtual void operator()(GlyphRenderer* renderer) = 0;
+};
+
+//! TODO: DOCUMENT THE SHIT OUT OF THIS!!!
+class OSGPANGO_EXPORT ContextDrawable {
+public:
+	//! Anything that wants to be called by the Context (or rather, "layed out") must define
+	//! this method.
+	virtual void drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) = 0;
 };
 
 //! This class is a singleton which provides a gateway both into our Pango rendering
@@ -120,12 +136,10 @@ public:
 	//! the number of available fonts.
 	unsigned int getFontList(FontList& fontList, bool faces = true);
 	
-	//! This is another method that is mostly used internally, due to the fact that
-	//! it requires a PangoLayout pointer which is not an object users generally
-	//! need to concern themselves with. Furthermore, osgPango's rendering backend
-	//! cannot currently be called from separate threads, and this routine
-	//! is one of those reasons why.
-	void drawLayout(Text* text, PangoLayout* layout, int x, int y);
+	//! This is the method called by ContextDrawables (and in fact, they pass the
+	//! "this" pointer as the @drawable argument) to begin the layout process. It will,
+	//! in turn, invoke the drawGlyphs method of the ContextDrawable in question.
+	void drawLayout(ContextDrawable* drawable, PangoLayout* layout, int x, int y);
 	
 	//! Write all the current caches of fonts and their effects to files prefixed with
 	//! the string path parameter. This is great for debugging when you want to see
@@ -241,7 +255,7 @@ private:
 	PangoFontMap*                  _pfMap;
 	PangoContext*                  _pContext;
 	Renderer*                      _renderer;
-	Text*                          _text;
+	ContextDrawable*               _drawable;
 	OpenThreads::Mutex             _mutex;
 	ColorPair                      _color;
 	unsigned int                   _textureWidth;

@@ -10,7 +10,7 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/Context>
+#include <osgPango/Text>
 #include <osgPango/ShaderGenerator>
 #include <osgPango/ShaderManager>
 
@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
 
 	t->setColorPalette(cp);
 	t->setGlyphRenderer("complex");
-	t->addText("<span font='Verdana Bold 40'>This is a cow.</span>", 0, 0);
+	t->addText("<span font='Verdana Bold 40'>This is a cow.</span>");
 	t->addText("<span font='Verdana Bold 40'>Yes, a cow.</span>", 0, -60);
 	t->finalize();
 	t->setMatrix(osg::Matrixd::translate(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f)));

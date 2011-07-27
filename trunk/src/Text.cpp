@@ -9,7 +9,7 @@
 #include <osg/Geode>
 #include <osg/TexEnvCombine>
 #include <osgUtil/TransformAttributeFunctor>		
-#include <osgPango/Context>
+#include <osgPango/Text>
 
 namespace osgPango {
 
@@ -75,7 +75,7 @@ GlyphGeometry* createGlyphGeometry() {
 	return gg;
 }
 
-void Text::_drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
+void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	GlyphRenderer* gr = Context::instance().getGlyphRenderer(_glyphRenderer);
 
 	if(!gr) return;
@@ -118,9 +118,7 @@ void Text::_drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) 
 
 		const CachedGlyph* cg = gc->getCachedGlyph(gi->glyph);
 
-		if(!cg) {
-			cg = gc->createCachedGlyph(font, gi);
-		}
+		if(!cg) cg = gc->createCachedGlyph(font, gi);
 
 		if(!cg) continue;
 
@@ -283,7 +281,7 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 		for(GeometryList::const_iterator i = gl.begin(); i != gl.end(); i++) {
 			if(!renderer->updateOrCreateState(i->first, i->second)) {
 				osg::notify(osg::WARN)
-					<< "Failed to called updateOrCreateState for Renderer '"
+					<< "Failed to call updateOrCreateState for Renderer '"
 					<< renderer->getName() << "' during GeometryList update. "
 					<< std::endl
 				;
@@ -313,7 +311,7 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 
 			if(!renderer->updateOrCreateState(i, pass)) {
 				osg::notify(osg::WARN)
-					<< "Failed to called updateOrCreateState for Renderer '"
+					<< "Failed to call updateOrCreateState for Renderer '"
 					<< renderer->getName() << "' on pass number "
 					<< i << "."
 					<< std::endl

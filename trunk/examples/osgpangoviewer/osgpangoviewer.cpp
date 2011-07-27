@@ -12,7 +12,7 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/Context>
+#include <osgPango/Text>
 #include <osgPango/ShaderManager>
 
 const std::string LOREM_IPSUM(

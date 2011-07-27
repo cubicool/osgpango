@@ -146,6 +146,7 @@ ENDFOREACH(INCLUDEFILE)
 
 ADD_SUBDIRECTORY(examples/osgpangoanimation)
 ADD_SUBDIRECTORY(examples/osgpangocomplexrenderer)
+ADD_SUBDIRECTORY(examples/osgpangodistancefield)
 ADD_SUBDIRECTORY(examples/osgpangofonts)
 ADD_SUBDIRECTORY(examples/osgpangoglsl)
 #ADD_SUBDIRECTORY(examples/osgpangoguiviewer)
