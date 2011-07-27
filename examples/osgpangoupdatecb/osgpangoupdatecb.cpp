@@ -8,7 +8,7 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgGA/StateSetManipulator>
 #include <osgDB/WriteFile>
-#include <osgPango/Context>
+#include <osgPango/Text>
 
 const unsigned int WINDOW_WIDTH  = 800;
 const unsigned int WINDOW_HEIGHT = 600;
@@ -93,11 +93,7 @@ public:
 			os << FONT << pal.second << "</span>";
 
 			oldTransform->clear();
-			oldTransform->addText(
-				os.str().c_str(),
-				0,
-				0
-			);
+			oldTransform->addText(os.str().c_str());
 			oldTransform->setPositionAlignment(pal.first, false);
 			oldTransform->finalize();
 		}
@@ -153,7 +149,7 @@ int main(int ac, char **av) {
 	textTransform->setMatrix(osg::Matrixd::translate(pos));
 	textTransform->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER);
 	textTransform->setGlyphRenderer("outline");
-	textTransform->addText(FONT "POS_ALIGN_CENTER_CENTER</span>", 0, 0);
+	textTransform->addText(FONT "POS_ALIGN_CENTER_CENTER</span>");
 	textTransform->finalize();
 
 	geode->addDrawable(new osg::ShapeDrawable(new osg::Sphere(pos, 4.0f)));

@@ -96,4 +96,26 @@ std::string createLayerIndexShader(unsigned int num, const LayerIndexVector& liv
 	return shaderSource.str();
 }
 
+std::string createDistanceFieldShader() {
+	std::ostringstream shaderSource;
+
+	shaderSource
+		<< "#version 120" << std::endl
+		<< "varying vec4      pangoTexCoord;" << std::endl
+		<< "uniform sampler2D pangoTexture[1];" << std::endl
+		<< "uniform vec4      pangoColor[2];" << std::endl
+		<< "uniform float     pangoAlpha;" << std::endl
+		<< "uniform float     pangoAlphaMin;" << std::endl
+		<< "uniform float     pangoAlphaMax;" << std::endl
+		<< "void main() {" << std::endl
+		<< "gl_FragColor = pangoColor[0] * smoothstep(" << std::endl
+		<< "pangoAlphaMin, pangoAlphaMax, texture2D(pangoTexture[0], pangoTexCoord.st).a" << std::endl
+		<< ");" << std::endl
+		<< "}" << std::endl
+	;
+
+	return shaderSource.str();
 }
+
+}
+

@@ -8,7 +8,7 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/Context>
+#include <osgPango/Text>
 
 const std::string LOREM_IPSUM(
 	"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod "

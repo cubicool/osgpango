@@ -8,21 +8,11 @@
 
 #include <osg/AutoTransform>
 #include <osg/MatrixTransform>
-#include <osgPango/String>
-#include <osgPango/Glyph>
-#include <osgPango/GlyphRenderer>
+#include <osgPango/Context>
 #include <osgPango/Util>
+#include <osgPango/String>
 
 namespace osgPango {
-
-//! An std::pair of OSG color values which we use in a few places as "key" values for
-//! differentiating Geometry states based on a foreground AND background (effects)
-//! color.
-typedef std::pair<osg::Vec3, osg::Vec3> ColorPair;
-
-//! TODO: Talk about how this is different from ColorPair and WHY we can't do 8 colors
-//! from Pango markup.
-typedef std::vector<osg::Vec3> ColorPalette;
 
 //! This class serves as a lightweight wrapper/container around the various options
 //! we can pass to the Pango backend layout manager; things like what effect to use,
@@ -78,19 +68,31 @@ public:
 	int           spacing;
 };
 
-class OSGPANGO_EXPORT Text {
+class OSGPANGO_EXPORT Text: public ContextDrawable {
 public:
 	typedef std::pair<GlyphCache*, ColorPair>                 GlyphGeometryMapKey;
 	typedef std::map<GlyphGeometryMapKey, GlyphGeometryIndex> GlyphGeometryMap;
 
 	enum ColorMode {
+		//! Allow the fgcolor and bgcolor values in Pango markup to overwrite the
+		//! first and second indices of the ColorPalette.
 		COLOR_MODE_MARKUP_OVERWRITE,
+
+		//! ONLY use the values in the ColorPalette; always ignore the Pango
+		//! markup values.
 		COLOR_MODE_PALETTE_ONLY
 	};
 	
 	enum CoordinateAlign {
+		//! Request pixel-alignment if the scale is an integral value such as 1.0f,
+		//! 2.0f, 3.0f, etc; that is to say, there is no remainder when the scale
+		//! is divided by the integer cast of itself.
 		COORDINATE_ALIGN_AUTO,
+
+		//! Never pixel-align.
 		COORDINATE_ALIGN_NONE,
+
+		//! Always pixel-align.
 		COORDINATE_ALIGN_ALWAYS
 	};
 
@@ -110,7 +112,12 @@ public:
 	//! This version of addText assumes you are using PangoMarkup and does not require
 	//! that you pass in a font description. It uses the encoding defined by
 	//! OSGPANGO_ENCODING in the osgPango/Export header.
-	inline void addText(const std::string& str, int x, int y, const TextOptions& to = TextOptions()) {
+	inline void addText(
+		const std::string& str,
+		int                x  = 0,
+		int                y  = 0,
+		const TextOptions& to = TextOptions()
+	) {
 		addText(OSGPANGO_ENCODING, str, "", x, y, to);
 	}
 
@@ -120,8 +127,8 @@ public:
 	inline void addText(
 		const std::string& str,
 		const std::string& descr,
-		int                x,
-		int                y,
+		int                x  = 0,
+		int                y  = 0,
 		const TextOptions& to = TextOptions()
 	) {
 		addText(OSGPANGO_ENCODING, str, descr, x, y, to);
@@ -134,8 +141,8 @@ public:
 	inline void addText(
 		String::Encoding   encoding,
 		const std::string& str,
-		int                x,
-		int                y,
+		int                x  = 0,
+		int                y  = 0,
 		const TextOptions& to = TextOptions()
 	) {
 		addText(encoding, str, "", x, y, to);
@@ -147,11 +154,11 @@ public:
 	//! list can be unwieldy, so we provide the easier-to-use wrappers above.
 	void addText(
 		String::Encoding,
-		const std::string&,
-		const std::string&,
-		int,
-		int,
-		const TextOptions& = TextOptions()
+		const std::string& str,
+		const std::string& descr,
+		int                x  = 0, 
+		int                y  = 0,
+		const TextOptions& to = TextOptions()
 	);
 	
 	void setScale(double scale) {
@@ -236,10 +243,11 @@ public:
 		return _glyphRenderer;
 	}
 
+	//! This is the method inherited from ContextDrawable; it will be called as a result of:
+	//! Context::drawLayout being called with "this" instance.
+	virtual void drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y);
+
 protected:
-	friend class Context;
-	
-	void _drawGlyphs       (PangoFont*, PangoGlyphString*, int, int);
 	bool _finalizeGeometry (osg::Group*);
 	void _applyTransform   (osg::Node*, const osg::Matrix&);
 
@@ -454,7 +462,7 @@ public:
 
 
 protected:
-	void  _calculatePosition() {
+	void _calculatePosition() {
 		osg::Matrix alignmentTransform = getAlignmentTransform();
 
 		_applyTransform(this, alignmentTransform);

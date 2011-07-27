@@ -136,9 +136,9 @@ void Context::drawGlyphs(
 	int               x,
 	int               y
 ) {
-	Text* text  = instance()._text;
+	ContextDrawable* drawable  = instance()._drawable;
 
-	if(!text) return;
+	if(!drawable) return;
 	
 	// Setup any kind of new "state" here.
 	ColorPair& color = instance()._color;
@@ -163,13 +163,13 @@ void Context::drawGlyphs(
 
 	else color.second.set(0.0f, 0.0f, 0.0f);
 	
-	text->_drawGlyphs(font, glyphs, x, y);
+	drawable->drawGlyphs(font, glyphs, x, y);
 }
 
-void Context::drawLayout(Text* text, PangoLayout* layout, int x, int y) {
+void Context::drawLayout(ContextDrawable* drawable, PangoLayout* layout, int x, int y) {
 	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(instance()._mutex);
 
-	_text = text;
+	_drawable = drawable;
 	
 	pango_renderer_draw_layout(
 		PANGO_RENDERER(_renderer),
@@ -178,7 +178,7 @@ void Context::drawLayout(Text* text, PangoLayout* layout, int x, int y) {
 		-(y * PANGO_SCALE)
 	);
 
-	_text = 0;
+	_drawable = 0;
 }
 
 void Context::writeCachesToPNGFiles(const std::string& path) const {
@@ -259,7 +259,7 @@ void Context::reset() {
 	
 	_grMap.clear();
 
-	_text = 0;
+	_drawable = 0;
 	
 	setDefaultGlyphRenderer(new GlyphRendererDefault());
 }
@@ -268,7 +268,7 @@ Context::Context():
 _pfMap         (0),
 _pContext      (0),
 _renderer      (0),
-_text          (0),
+_drawable      (0),
 _color         (ColorPair(osg::Vec3(1.0f, 1.0f, 1.0f), osg::Vec3(0.0f, 0.0f, 0.0f))),
 _textureWidth  (DEFAULT_CACHE_WIDTH),
 _textureHeight (DEFAULT_CACHE_HEIGHT) {

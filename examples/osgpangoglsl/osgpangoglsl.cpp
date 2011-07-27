@@ -5,7 +5,7 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/Context>
+#include <osgPango/Text>
 #include <osgPango/ShaderGenerator>
 #include <osgPango/ShaderManager>
 
@@ -81,10 +81,8 @@ int main(int argc, char** argv) {
 	t->setColorPalette(cp);
 	t->setGlyphRenderer("multioutline");
 	t->addText(
-		// "<span font='Cheri Liney 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
-		"<span font='Sans 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
-		0,
-		0
+		"<span font='Cheri Liney 70'>I've got\na lovely bunch\nof coconuts!!!</span>"
+		// "<span font='Sans 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
 	);
 
 	t->finalize();

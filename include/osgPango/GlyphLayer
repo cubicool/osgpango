@@ -53,7 +53,7 @@ protected:
 class OSGPANGO_EXPORT GlyphLayerOutline: public GlyphLayer {
 public:
 	//! The outline argument determines the size (usually in pixels) of the line to be stroked.
-	GlyphLayerOutline(unsigned int outline = 2);
+	GlyphLayerOutline(unsigned int outline);
 	
 	virtual bool render(
 		cairo_t*       c,
@@ -84,7 +84,7 @@ class OSGPANGO_EXPORT GlyphLayerShadow: public GlyphLayerInterfaceOffset, public
 public:
 	//! Our constructor defaults to a +1, +1 drop shadow offset. These are in Cairo drawing
 	//! coordinates, which means the origin is in the upper-left of the image.
-	GlyphLayerShadow(int xOffset = 1, int yOffset = 1);
+	GlyphLayerShadow(int xOffset, int yOffset);
 
 	virtual bool render(
 		cairo_t*       c,
@@ -108,10 +108,10 @@ public:
 	//! The layer's x and y offsets, in addition to the blur's radius and deviation. A large 
 	//! radius is a very quick way to eat up texture memory. :)
 	GlyphLayerShadowBlur(
-		int          xOffset       = 1,
-		int          yOffset       = 1,
-		unsigned int blurRadius    = 2,
-		unsigned int blurDeviation = 0
+		int          xOffset,
+		int          yOffset,
+		unsigned int blurRadius,
+		unsigned int blurDeviation
 	);
 	
 	virtual bool render(
@@ -134,10 +134,10 @@ class OSGPANGO_EXPORT GlyphLayerShadowInset:
 	public GlyphLayer {
 public:
 	GlyphLayerShadowInset(
-		int          xOffset       = 1,
-		int          yOffset       = 1,
-		unsigned int blurRadius    = 2,
-		unsigned int blurDeviation = 0
+		int          xOffset,
+		int          yOffset,
+		unsigned int blurRadius,
+		unsigned int blurDeviation
 	);
 	
 	virtual bool render(

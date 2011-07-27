@@ -85,6 +85,7 @@ ShaderManager::ShaderManager() {
 	addShaderSource("osgPango-vert", osg::Shader::VERTEX, defaultVertexShader());
 	addShaderSource("osgPango-frag1", osg::Shader::FRAGMENT, createBackToFrontShader(1));
 	addShaderSource("osgPango-frag2", osg::Shader::FRAGMENT, createBackToFrontShader(2));
+	addShaderSource("osgPango-distanceField", osg::Shader::FRAGMENT, createDistanceFieldShader());
 }
 
 }

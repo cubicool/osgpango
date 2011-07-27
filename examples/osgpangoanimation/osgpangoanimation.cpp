@@ -10,7 +10,7 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgAnimation/EaseMotion>
-#include <osgPango/Context>
+#include <osgPango/Text>
 
 #include <stdlib.h>
 
@@ -134,9 +134,7 @@ int main(int argc, char** argv) {
 	t->addText(
 		"<span font='Georgia Bold 50' color='black' bgcolor='white'>"
 		"osgPango\nand\nosgAnimation"
-		"</span>",
-		0,
-		0
+		"</span>"
 	);
 
 	t->finalize();
