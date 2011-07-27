@@ -120,10 +120,10 @@ bool GlyphRenderer::updateOrCreateState(
 	return true;
 }
 	
-osg::Texture2D* GlyphRenderer::createTexture(osg::Image* img) const {
+osg::Texture2D* GlyphRenderer::createTexture(osg::Image* image) const {
 	osg::Texture2D* texture = new osg::Texture2D();
 
-	texture->setImage(img);
+	texture->setImage(image);
 	texture->setFilter(osg::Texture::MIN_FILTER, _minFilter);
 	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
 
