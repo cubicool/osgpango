@@ -105,7 +105,7 @@ public:
 
 	virtual void clear();
 
-	void setColorPalette (const ColorPalette&);
+	void setColorPalette(const ColorPalette&);
 	
 	//! This version of addText assumes you are using PangoMarkup and does not require
 	//! that you pass in a font description. It uses the encoding defined by
