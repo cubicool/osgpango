@@ -1,6 +1,8 @@
 // -*-c++-*- Copyright (C) 2011 osgPango Development Team
 // $Id$
 
+#include <osg/Notify>
+
 #include <sstream>
 #include <osgPango/ShaderGenerator>
 
@@ -40,8 +42,6 @@ std::string baseFragmentHeader(unsigned int num) {
 		<< "else if(c.a == CAIRO_FORMAT_ARGB32) return vec4(t.rgb, t.a);" << std::endl
 		<< "else return vec4(c.rgb * t.a, t.a);" << std::endl
 		<< "}" << std::endl
-		<< "void main() {" << std::endl
-		<< "vec4 frag = vec4(0.0, 0.0, 0.0, 0.0);" << std::endl
 	;
 
 	return source.str();
@@ -63,6 +63,8 @@ std::string createBackToFrontShader(unsigned int num) {
 
 	shaderSource
 		<< baseFragmentHeader(num)
+		<< "void main() {" << std::endl
+		<< "vec4 frag = vec4(0.0, 0.0, 0.0, 0.0);" << std::endl
 		<< "for(int i = (NUMLAYERS - 1); i >= 0; i--) {" << std::endl
 		<< "vec4 col = pangoGetColor(i);" << std::endl
 		<< "frag = (col + (1.0 - col.a) * frag) * pangoAlpha;" << std::endl
@@ -78,6 +80,8 @@ std::string createLayerIndexShader(unsigned int num, const LayerIndexVector& liv
 
 	shaderSource
 		<< baseFragmentHeader(num)
+		<< "void main() {" << std::endl
+		<< "vec4 frag = vec4(0.0, 0.0, 0.0, 0.0);" << std::endl
 		<< "int[" << liv.size() << "] indices;" << std::endl
 	;
 
@@ -100,19 +104,17 @@ std::string createDistanceFieldShader() {
 	std::ostringstream shaderSource;
 
 	shaderSource
-		<< "#version 120" << std::endl
-		<< "varying vec4      pangoTexCoord;" << std::endl
-		<< "uniform sampler2D pangoTexture[1];" << std::endl
-		<< "uniform vec4      pangoColor[2];" << std::endl
-		<< "uniform float     pangoAlpha;" << std::endl
-		<< "uniform float     pangoAlphaMin;" << std::endl
-		<< "uniform float     pangoAlphaMax;" << std::endl
+		<< baseFragmentHeader(1)
+		<< "uniform float pangoDFMin;" << std::endl
+		<< "uniform float pangoDFMax;" << std::endl
 		<< "void main() {" << std::endl
-		<< "gl_FragColor = pangoColor[0] * smoothstep(" << std::endl
-		<< "pangoAlphaMin, pangoAlphaMax, texture2D(pangoTexture[0], pangoTexCoord.st).a" << std::endl
+		<< "gl_FragColor = vec4(pangoColor[0].rgb, pangoAlpha) * smoothstep(" << std::endl
+		<< "pangoDFMin, pangoDFMax, texture2D(pangoTexture[0], pangoTexCoord.st).a" << std::endl
 		<< ");" << std::endl
 		<< "}" << std::endl
 	;
+
+	OSG_NOTICE << shaderSource.str() << std::endl;
 
 	return shaderSource.str();
 }

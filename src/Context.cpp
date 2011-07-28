@@ -7,9 +7,6 @@
 
 namespace osgPango {
 
-const unsigned int DEFAULT_CACHE_WIDTH  = 256;
-const unsigned int DEFAULT_CACHE_HEIGHT = 256;
-
 Context Context::_context;
 
 G_DEFINE_TYPE(Renderer, renderer, PANGO_TYPE_RENDERER);
@@ -265,13 +262,11 @@ void Context::reset() {
 }
 
 Context::Context():
-_pfMap         (0),
-_pContext      (0),
-_renderer      (0),
-_drawable      (0),
-_color         (ColorPair(osg::Vec3(1.0f, 1.0f, 1.0f), osg::Vec3(0.0f, 0.0f, 0.0f))),
-_textureWidth  (DEFAULT_CACHE_WIDTH),
-_textureHeight (DEFAULT_CACHE_HEIGHT) {
+_pfMap    (0),
+_pContext (0),
+_renderer (0),
+_drawable (0),
+_color    (ColorPair(osg::Vec3(1.0f, 1.0f, 1.0f), osg::Vec3(0.0f, 0.0f, 0.0f))) {
 	setDefaultGlyphRenderer(new GlyphRendererDefault());
 }
 

@@ -300,6 +300,20 @@ private:
 	double _diffuse;
 };
 
+class OSGPANGO_EXPORT GlyphLayerDistanceField: public GlyphLayer {
+public:
+	GlyphLayerDistanceField();
+	
+	virtual bool render(
+		cairo_t*       c,
+		cairo_glyph_t* glyph,
+		unsigned int   width,
+		unsigned int   height
+	);
+
+	virtual osg::Vec4 getExtraGlyphExtents() const;
+};
+
 }
 
 #endif

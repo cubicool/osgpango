@@ -53,6 +53,20 @@ public:
 	//! already been sorted properly prior to calling this routine.
 	virtual bool updateOrCreateState(osg::Geometry* geometry, const GlyphGeometryState& state) const;
 
+	//! This will allow you to change (dynamically as you see fit) the size of the
+	//! glyph caching textures used internally. The compiled-in defaults (which
+	//! you can change in Context.cpp) are 256x256. However, you may have some
+	//! bizarre case where you need more. :)
+	void setTextureSize(unsigned int width, unsigned int height) {
+		_textureWidth  = width;
+		_textureHeight = height;
+	}
+	
+	void getTextureSize(unsigned int& width, unsigned int& height) const {
+		width  = _textureWidth;
+		height = _textureHeight;
+	}
+
 	//! This method simple creates and returns a new Texture2D object using the @image argument
 	//! as its data source. You could override this method to enable mipmapping by default, for example.
 	virtual osg::Texture2D* createTexture(osg::Image* image) const;
@@ -141,6 +155,8 @@ protected:
 
 	std::vector<osg::ref_ptr<GlyphLayer> > _layers;
 	unsigned int                           _pixelSpacing;
+	unsigned int                           _textureWidth;
+	unsigned int                           _textureHeight;
 	osg::Texture::FilterMode               _minFilter;
 	FontGlyphCacheMap                      _gc;
 	std::string                            _name;
@@ -179,6 +195,25 @@ public:
 	GlyphRendererShadowInset(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
 	
 	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
+};
+
+//! TODO: This is a cool class! :)
+class OSGPANGO_EXPORT GlyphRendererDistanceField: public GlyphRenderer {
+public:
+	enum Mode {
+		MODE_SMALL,
+		MODE_MEDIUM,
+		MODE_LARGE
+	};
+
+	GlyphRendererDistanceField(Mode mode);
+	
+	virtual bool updateOrCreateState(int pass, osg::Geode* geode) const;
+	
+	static void updateScaleState(osg::Vec3::value_type scale, osg::StateSet* state);
+
+protected:
+	Mode _mode;
 };
 
 }
