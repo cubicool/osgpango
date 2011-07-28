@@ -31,6 +31,7 @@ SET(OSGCAIRO_LIB_DIR "" CACHE PATH "Location of the osgCairo library objects.")
 
 SET(SRC_FILES
 	src/Context.cpp
+	src/DistanceFieldText.cpp
 	src/Glyph.cpp
 	src/GlyphLayerInterface.cpp
 	src/GlyphLayer.cpp
@@ -44,6 +45,7 @@ SET(SRC_FILES
 SET(SRC_LAYER_FILES
 	src/layers/Bitmap.cpp
 	src/layers/Bevel.cpp
+	src/layers/DistanceField.cpp
 	src/layers/Outline.cpp
 	src/layers/ShadowBlur.cpp
 	src/layers/ShadowInset.cpp
@@ -52,6 +54,7 @@ SET(SRC_LAYER_FILES
 
 SET(SRC_RENDERER_FILES
 	src/renderers/Default.cpp
+	src/renderers/DistanceField.cpp
 	src/renderers/Outline.cpp
 	src/renderers/ShadowBlur.cpp
 	src/renderers/ShadowInset.cpp
@@ -60,6 +63,7 @@ SET(SRC_RENDERER_FILES
 
 SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/Context
+	${osgPango_SOURCE_DIR}/include/osgPango/DistanceFieldText
 	${osgPango_SOURCE_DIR}/include/osgPango/Export
 	${osgPango_SOURCE_DIR}/include/osgPango/Glyph
 	${osgPango_SOURCE_DIR}/include/osgPango/GlyphLayerInterface

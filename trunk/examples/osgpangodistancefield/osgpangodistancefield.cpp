@@ -12,7 +12,7 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/Context>
+#include <osgPango/Text>
 #include <osgPango/ShaderManager>
 
 const unsigned int WINDOW_WIDTH  = 800;
@@ -36,18 +36,19 @@ osg::Camera* createOrthoCamera(float width, float height) {
 }
 
 int main(int argc, char** argv) {
-	/*
 	osgViewer::Viewer viewer;
 
 	osgPango::Context& context = osgPango::Context::instance();
 
 	context.init();
-	context.addGlyphRenderer("distancefield", new osgPango::GlyphRendererDistanceField(10));
+	context.addGlyphRenderer("distancefield", new osgPango::GlyphRendererDistanceField(
+		osgPango::GlyphRendererDistanceField::MODE_LARGE
+	));
 
 	osgPango::TextTransform* t = new osgPango::TextTransform();
 
 	t->setGlyphRenderer("distancefield");
-	t->addText("<span font='sans 200px'>A</span>", 0, 0);
+	t->addText("<span font='sans 128px'>Jeremy</span>");
 	t->finalize();
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
@@ -75,7 +76,6 @@ int main(int argc, char** argv) {
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
 	
 	return viewer.run();
-	*/
 
 	return 0;
 }

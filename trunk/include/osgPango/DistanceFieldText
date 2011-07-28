@@ -1,0 +1,29 @@
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_DISTANCE_FIELD_TEXT
+#define OSGPANGO_DISTNACE_FIELD_TEXT
+
+#include <osgPango/Text>
+
+namespace osgPango {
+
+class OSGPANGO_EXPORT DistanceFieldText: public Text {
+public:
+	virtual void drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y);
+
+	virtual void addText(
+		String::Encoding,
+		const std::string& str,
+		const std::string& descr,
+		int                x  = 0, 
+		int                y  = 0,
+		const TextOptions& to = TextOptions()
+	);
+};
+
+// typedef TextOSGInterface<DistanceFieldText, osg::MatrixTransform> DistanceFieldTextTransform;
+
+}
+
+#endif

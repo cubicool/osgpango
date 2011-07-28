@@ -7,7 +7,6 @@
 #include <osg/Math>
 #include <osg/Image>
 #include <osg/Geode>
-#include <osg/TexEnvCombine>
 #include <osgUtil/TransformAttributeFunctor>		
 #include <osgPango/Text>
 
@@ -45,18 +44,6 @@ _coordinateAlign (COORDINATE_ALIGN_AUTO) {
 }
 
 Text::~Text() {
-}
-
-void Text::clear() {
-	_ggMap.clear();
-	_size          = osg::Vec2();
-	_origin        = osg::Vec2();
-	_scale         = 1;
-	_baseline      = 0;
-	_alpha         = 1.0f;
-	_init          = false;
-	_finalized     = false;
-	_lastTransform = osg::Matrix::identity();
 }
 
 GlyphGeometry* createGlyphGeometry() {
@@ -147,6 +134,18 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 	if(!_init || baseline > _baseline) _baseline = baseline;
 }
 
+void Text::clear() {
+	_ggMap.clear();
+	_size          = osg::Vec2();
+	_origin        = osg::Vec2();
+	_scale         = 1;
+	_baseline      = 0;
+	_alpha         = 1.0f;
+	_init          = false;
+	_finalized     = false;
+	_lastTransform = osg::Matrix::identity();
+}
+
 void Text::setColorPalette(const ColorPalette& cp) {
 	_palette = cp;
 }
@@ -187,39 +186,9 @@ void Text::addText(
 	
 	Context::instance().drawLayout(this, layout, x, y);
 
-	// Get text dimensions and whatnot; we'll accumulate this data after each rendering
-	// to keep it accurate.
-	PangoRectangle rect;
-
-	pango_layout_get_pixel_extents(layout, &rect, 0);
-
-	g_object_unref(layout);
-
-	const osg::Vec4& extents = gr->getExtraGlyphExtents();
-
-	osg::Vec2::value_type ox = -(x + rect.x);
-	osg::Vec2::value_type oy = y + rect.y;
-	osg::Vec2::value_type sw = rect.width;
-	osg::Vec2::value_type sh = rect.height;
-
-	if(!_init) {
-		_origin.set(ox, oy);
-		_size.set(sw, sh);
-	}
+	_updateOriginAndSize(x, y, layout, gr->getExtraGlyphExtents());
 	
-	else {
-		if(ox > _origin[0]) _origin[0] = ox;
-
-		if(oy > _origin[1]) _origin[1] = oy;
-
-		if(sw > _size[0]) _size[0] = sw;
-
-		if(sh > _size[1]) _size[1] = sh;
-	}
-
-	// We've run ONCE, so we're initialized to some state. Everything else from
-	// here is based on this position, greater or lower.
-	_init = true;
+	g_object_unref(layout);
 }
 
 osg::Vec2 Text::getOriginBaseline() const {
@@ -337,6 +306,38 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 	_ggMap.clear();
 	
 	return true;
+}
+
+void Text::_updateOriginAndSize(int x, int y, PangoLayout* layout, const osg::Vec4& extents) {
+	// Get text dimensions and whatnot; we'll accumulate this data after each rendering
+	// to keep it accurate.
+	PangoRectangle rect;
+
+	pango_layout_get_pixel_extents(layout, &rect, 0);
+
+	osg::Vec2::value_type ox = -(x + rect.x);
+	osg::Vec2::value_type oy = y + rect.y;
+	osg::Vec2::value_type sw = rect.width;
+	osg::Vec2::value_type sh = rect.height;
+
+	if(!_init) {
+		_origin.set(ox, oy);
+		_size.set(sw, sh);
+	}
+	
+	else {
+		if(ox > _origin[0]) _origin[0] = ox;
+
+		if(oy > _origin[1]) _origin[1] = oy;
+
+		if(sw > _size[0]) _size[0] = sw;
+
+		if(sh > _size[1]) _size[1] = sh;
+	}
+
+	// We've run ONCE, so we're initialized to some state. Everything else from
+	// here is based on this position, greater or lower.
+	_init = true;
 }
 
 class ApplyTransformsVisitor: public osg::NodeVisitor {

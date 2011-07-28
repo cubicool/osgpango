@@ -68,6 +68,9 @@ public:
 	int           spacing;
 };
 
+//! The Text object is the basic "arrange a group of quad Geometry in the scene according
+//! to how Pango instructs us" class. It will satisfy the bulk of you high-quality 2D text
+//! needs, especially if you use TextTransform.
 class OSGPANGO_EXPORT Text: public ContextDrawable {
 public:
 	typedef std::pair<GlyphCache*, ColorPair>                 GlyphGeometryMapKey;
@@ -99,6 +102,10 @@ public:
 	Text(ColorMode = COLOR_MODE_MARKUP_OVERWRITE);
 
 	virtual ~Text();
+
+	//! This is the method inherited from ContextDrawable; it will be called as a result of:
+	//! Context::drawLayout being called with "this" instance.
+	virtual void drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y);
 
 	// You cannot instaniante Text directly; you need to derive from it and
 	// override finalize to actually do something with the _ggMap object
@@ -148,11 +155,11 @@ public:
 		addText(encoding, str, "", x, y, to);
 	}
 
-	//! This is our fourth addText method which turns off PangoMarkup and requires that
-	//! you specify a font description string, in addition to the encoding. This is the
-	//! "master" addText method which all others directly call. However, it's argument
-	//! list can be unwieldy, so we provide the easier-to-use wrappers above.
-	void addText(
+	//! This is the "master" addText method which all others directly call. However,
+	//! it's argument list can be unwieldy, so we provide the easier-to-use wrappers above.
+	//! Furthermore, this is the version any subclasses should override if they chose
+	//! to modify Text behavior.
+	virtual void addText(
 		String::Encoding,
 		const std::string& str,
 		const std::string& descr,
@@ -243,13 +250,10 @@ public:
 		return _glyphRenderer;
 	}
 
-	//! This is the method inherited from ContextDrawable; it will be called as a result of:
-	//! Context::drawLayout being called with "this" instance.
-	virtual void drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y);
-
 protected:
-	bool _finalizeGeometry (osg::Group*);
-	void _applyTransform   (osg::Node*, const osg::Matrix&);
+	bool _finalizeGeometry    (osg::Group* group);
+	void _updateOriginAndSize (int x, int y, PangoLayout* layout, const osg::Vec4& extents);
+	void _applyTransform      (osg::Node* node, const osg::Matrix& matrix);
 
 	GlyphGeometryMap _ggMap;
 	osg::Vec2        _size;
@@ -266,16 +270,17 @@ protected:
 	CoordinateAlign  _coordinateAlign;
 };
 
-//! This is a wrapper template class that makes deriving from Text much easier.
+//! This is a wrapper template class that makes deriving from Text AND combining
+//! that object with an OSG object (like MatrixTransform or Billboard) much easier.
 //! Using this class isn't strictly necessary, but it does provide a few very
 //! valuable services that could become quite cumbersome reimplimenting in
 //! every Text-derived object.
-template<typename T>
-class TextInterface: public Text, public T {
+template<typename TextClass, typename OSGClass>
+class TextOSGInterface: public TextClass, public OSGClass {
 public:
-	//! These are the alignment enums within TextTransformInterface (not Text itself, since
+	//! These are the alignment enums within TextInterface (not Text itself, since
 	//! Text is virtual and has no way of positioning itself) that define how the
-	//! text is arranged RELATIVE TO IT'S POSITION. They're pretty much
+	//! text is arranged RELATIVE TO ITS POSITION. They're pretty much
 	//! self-explanatory so I won't document each one individually.
 	enum PositionAlignment {
 		POS_ALIGN_LEFT_TOP,
@@ -301,8 +306,8 @@ public:
 		AXIS_ALIGN_REVERSED_YZ_PLANE, 
 	};
 	
-	TextInterface(ColorMode cm = COLOR_MODE_MARKUP_OVERWRITE):
-	Text               (cm),
+	TextOSGInterface(typename TextClass::ColorMode cm = TextClass::COLOR_MODE_MARKUP_OVERWRITE):
+	TextClass          (cm),
 	_positionAlignment (POS_ALIGN_LEFT_BOTTOM),
 	_axisAlignment     (AXIS_ALIGN_XY_PLANE) {
 	}
@@ -314,7 +319,7 @@ public:
 	//! if you only adjust the position or alignment; as long as the text
 	//! doesn't change, there is no need to call finalize().
 	virtual bool finalize() {
-		if(!_finalizeGeometry(this)) return false;
+		if(!TextClass::_finalizeGeometry(this)) return false;
 	
 		_calculatePosition();
 		
@@ -322,9 +327,9 @@ public:
 	}
 	
 	virtual void clear() {
-		Text::clear();
+		TextClass::clear();
 		
-		T::removeChild(0, T::getNumChildren());
+		OSGClass::removeChild(0, OSGClass::getNumChildren());
 	}
 
 	//! Returns the PositionAlignment enum currently in use.
@@ -354,10 +359,11 @@ public:
 	}
 	
 	virtual osg::Matrix getAlignmentTransform() const {
-		osg::Vec3::value_type s = 1.0f / static_cast<osg::Vec3::value_type>(_scale);
+		osg::Vec3::value_type s = 1.0f / static_cast<osg::Vec3::value_type>(TextClass::getScale());
 
-		osg::Vec3   origin(getOriginTranslated(), 0.0f);
-		osg::Vec3   size(_size, 0.0f);
+		osg::Vec3   origin(TextClass::getOriginTranslated(), 0.0f);
+		osg::Vec3   originBaseline(TextClass::getOriginBaseline(), 0.0f);
+		osg::Vec3   size(TextClass::getSize(), 0.0f);
 		osg::Matrix axisMatrix(osg::Matrix::identity());
 		osg::Matrix scaleMatrix(osg::Matrix::scale(osg::Vec3(s, s, 1.0f)));
 
@@ -402,20 +408,20 @@ public:
 		// TODO: We call origin.set here, but we modify the exisiting origin in
 		// the previous calls; why?
 		else if(_positionAlignment == POS_ALIGN_LEFT_BASE_LINE) origin.set(
-			getOriginBaseline().x(),
-			getOriginBaseline().y(),
+			originBaseline.x(),
+			originBaseline.y(),
 			0.0f
 		);
 
 		else if(_positionAlignment == POS_ALIGN_CENTER_BASE_LINE) origin.set(
-			getOriginBaseline().x() - osg::round(size.x() / 2.0f),
-			getOriginBaseline().y(),
+			originBaseline.x() - osg::round(size.x() / 2.0f),
+			originBaseline.y(),
 			0.0f
 		);
 
 		else if(_positionAlignment == POS_ALIGN_RIGHT_BASE_LINE) origin.set(
-			getOriginBaseline().x() - osg::round(size.x()),
-			getOriginBaseline().y(),
+			originBaseline.x() - osg::round(size.x()),
+			originBaseline.y(),
 			0.0f
 		);
  
@@ -423,38 +429,38 @@ public:
 		
 		// Handle _axisAlignment...
 		if(_axisAlignment == AXIS_ALIGN_XZ_PLANE) axisMatrix = osg::Matrix(
-			 1.0,  0.0,  0.0,  0.0,
-			 0.0,  0.0,  1.0,  0.0,
-			 0.0,  1.0,  0.0,  0.0,
-			 0.0,  0.0,  0.0,  1.0
+			 1.0f,  0.0f,  0.0f,  0.0f,
+			 0.0f,  0.0f,  1.0f,  0.0f,
+			 0.0f,  1.0f,  0.0f,  0.0f,
+			 0.0f,  0.0f,  0.0f,  1.0f
 		);
 
 		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XZ_PLANE) axisMatrix = osg::Matrix(
-			-1.0,  0.0,  0.0,  0.0,
-			 0.0,  0.0,  1.0,  0.0,
-			 0.0,  1.0,  0.0,  0.0,
-			 0.0,  0.0,  0.0,  1.0
+			-1.0f,  0.0f,  0.0f,  0.0f,
+			 0.0f,  0.0f,  1.0f,  0.0f,
+			 0.0f,  1.0f,  0.0f,  0.0f,
+			 0.0f,  0.0f,  0.0f,  1.0f
 		); 
 
 		else if(_axisAlignment == AXIS_ALIGN_YZ_PLANE) axisMatrix = osg::Matrix(
-			 0.0,  1.0,  0.0, 0.0,
-			 0.0,  0.0,  1.0, 0.0,
-			 1.0,  0.0,  0.0, 0.0,
-			 0.0,  0.0,  0.0, 1.0
+			 0.0f,  1.0f,  0.0f, 0.0f,
+			 0.0f,  0.0f,  1.0f, 0.0f,
+			 1.0f,  0.0f,  0.0f, 0.0f,
+			 0.0f,  0.0f,  0.0f, 1.0f
 		);
 
 		else if(_axisAlignment == AXIS_ALIGN_REVERSED_YZ_PLANE) axisMatrix = osg::Matrix(
-			 0.0, -1.0,  0.0, 0.0,
-			 0.0,  0.0,  1.0, 0.0,
-			 1.0,  0.0,  0.0, 0.0,
-			 0.0,  0.0,  0.0, 1.0
+			 0.0f, -1.0f,  0.0f, 0.0f,
+			 0.0f,  0.0f,  1.0f, 0.0f,
+			 1.0f,  0.0f,  0.0f, 0.0f,
+			 0.0f,  0.0f,  0.0f, 1.0f
 		); 
 
 		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XY_PLANE) axisMatrix = osg::Matrix(
-			-1.0,  0.0,  0.0, 0.0,
-			 0.0,  1.0,  0.0, 0.0,
-			 0.0,  0.0,  1.0, 0.0,
-			 0.0,  0.0,  0.0, 1.0
+			-1.0f,  0.0f,  0.0f, 0.0f,
+			 0.0f,  1.0f,  0.0f, 0.0f,
+			 0.0f,  0.0f,  1.0f, 0.0f,
+			 0.0f,  0.0f,  0.0f, 1.0f
 		);
 		
 		return scaleMatrix * osg::Matrix::translate(origin) * axisMatrix;
@@ -473,13 +479,13 @@ protected:
 };
 
 //! TextTransform is both a useful Text subclass for quick osgPango usage and
-//! a small demonstration of how to use TextInterface by gluing
+//! a small demonstration of how to use TextOSGInterface by gluing
 //! the Geometry provided by our parent class with the natural positioning 
 //! power of osg::MatrixTransform. It provides a small API for arranging text
 //! in 3D space, though it is not at all suited for people who want a full range
 //! of transformations (unless they just want to interface with osg::MatrixTransform
 //! directly, which is perfectly fine).
-typedef TextInterface<osg::MatrixTransform> TextTransform;
+typedef TextOSGInterface<Text, osg::MatrixTransform> TextTransform;
 
 }
 

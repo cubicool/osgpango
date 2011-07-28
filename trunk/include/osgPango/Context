@@ -187,20 +187,6 @@ public:
 		return _grMap;
 	}
 	
-	//! This will allow you to change (dynamically as you see fit) the size of the
-	//! glyph caching textures used internally. The compiled-in defaults (which
-	//! you can change in Context.cpp) are 256x256. However, you may have some
-	//! bizarre case where you need more. :)
-	void setTextureSize(unsigned int width, unsigned int height) {
-		_textureWidth  = width;
-		_textureHeight = height;
-	}
-	
-	void getTextureSize(unsigned int &width, unsigned int &height) const {
-		width  = _textureWidth;
-		height = _textureHeight;
-	}
-
 	//! Returns the currently set color and effects color ColorPair object set on
 	//! the Context. If this makes you feel dirty, you probably know too much about
 	//! how osgPango and Pango work together. :)
