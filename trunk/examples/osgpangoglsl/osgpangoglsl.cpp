@@ -5,7 +5,7 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/Text>
+#include <osgPango/TextTransform>
 #include <osgPango/ShaderGenerator>
 #include <osgPango/ShaderManager>
 

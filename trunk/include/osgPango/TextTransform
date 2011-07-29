@@ -1,0 +1,22 @@
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_TEXT_TRANSFORM
+#define OSGPANGO_TEXT_TRANSFORM
+
+#include <osgPango/TextOSGInterface>
+
+namespace osgPango {
+
+//! TextTransform is both a useful Text subclass for quick osgPango usage and
+//! a small demonstration of how to use TextOSGInterface by gluing
+//! the Geometry provided by our parent class with the natural positioning 
+//! power of osg::MatrixTransform. It provides a small API for arranging text
+//! in 3D space, though it is not at all suited for people who want a full range
+//! of transformations (unless they just want to interface with osg::MatrixTransform
+//! directly, which is perfectly fine).
+typedef TextOSGInterface<Text, osg::MatrixTransform> TextTransform;
+
+}
+
+#endif

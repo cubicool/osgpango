@@ -7,7 +7,6 @@
 #include <osg/Math>
 #include <osg/Image>
 #include <osg/Geode>
-#include <osgUtil/TransformAttributeFunctor>		
 #include <osgPango/Text>
 
 namespace osgPango {
@@ -37,9 +36,7 @@ bool TextOptions::setupPangoLayout(PangoLayout* layout) const {
 }
 
 Text::Text(ColorMode cm):
-_colorMode       (cm),
-_lastTransform   (osg::Matrix::identity()),
-_coordinateAlign (COORDINATE_ALIGN_AUTO) {
+_colorMode(cm) {
 	clear();
 }
 
@@ -136,14 +133,13 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 void Text::clear() {
 	_ggMap.clear();
-	_size          = osg::Vec2();
-	_origin        = osg::Vec2();
-	_scale         = 1;
-	_baseline      = 0;
-	_alpha         = 1.0f;
-	_init          = false;
-	_finalized     = false;
-	_lastTransform = osg::Matrix::identity();
+
+	_size      = osg::Vec2();
+	_origin    = osg::Vec2();
+	_baseline  = 0;
+	_alpha     = 1.0f;
+	_init      = false;
+	_finalized = false;
 }
 
 void Text::setColorPalette(const ColorPalette& cp) {
@@ -340,89 +336,5 @@ void Text::_updateOriginAndSize(int x, int y, PangoLayout* layout, const osg::Ve
 	_init = true;
 }
 
-class ApplyTransformsVisitor: public osg::NodeVisitor {
-public:	
-	typedef std::set<osg::Drawable*> DrawableSet;
-
-	ApplyTransformsVisitor (const osg::Matrix& matrix):
-	osg::NodeVisitor       (osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
-	_functor               (matrix) {
-	}
-	
-	virtual void apply(osg::Geode& geode) {
-		for(unsigned int i = 0; i < geode.getNumDrawables(); i++) {
-			_drawables.insert(geode.getDrawable(i));
-		}
-	}
-	
-	void transform(bool pixelAlign)  {
-		for(
-			DrawableSet::iterator i = _drawables.begin();
-			i != _drawables.end();
-			i++
-		) {
-			(*i)->accept(_functor);
-			(*i)->dirtyDisplayList();
-			(*i)->dirtyBound();
-			
-			if(osg::Geometry* geometry = dynamic_cast<osg::Geometry*>(*i)) {
-				if(pixelAlign) {
-					// Here we do some pixel-alignment calculations. What this
-					// means is that we iterate through all of vertices that make
-					// up our text and make sure they occur on integer-compatible
-					// coordinates. This is only important when a scale is applied
-					// to the text.
-
-					osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(
-						geometry->getVertexArray()
-					);
-
-					if(!verts) continue;
-
-					for(
-						osg::Vec3Array::iterator v = verts->begin();
-						v != verts->end();
-						v++
-					) {
-						roundVec3(*v);
-					}
-				}
-				
-				if(geometry->getVertexArray()) geometry->getVertexArray()->dirty();
-			}
-		}
-	}
-
-private:
-	osgUtil::TransformAttributeFunctor _functor;
-	DrawableSet                        _drawables;
-};
-
-void Text::_applyTransform(osg::Node* node, const osg::Matrix& transform) {
-	ApplyTransformsVisitor nv(_lastTransform * transform);
-	
-	node->accept(nv);
-
-	bool align = false;
-
-	switch(_coordinateAlign) {
-		case COORDINATE_ALIGN_NONE:
-			break;
-		
-		case COORDINATE_ALIGN_AUTO:
-			align = fmodf(_scale, static_cast<int>(_scale)) == 0.0f;
-			
-			break;
-		
-		case COORDINATE_ALIGN_ALWAYS:
-			align = true;
-
-			break;
-	}
-
-	nv.transform(align);
-
-	_lastTransform = osg::Matrix::inverse(transform);
 }
 
-}

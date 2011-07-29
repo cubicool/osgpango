@@ -8,7 +8,7 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgGA/StateSetManipulator>
 #include <osgDB/WriteFile>
-#include <osgPango/Text>
+#include <osgPango/TextTransform>
 
 const unsigned int WINDOW_WIDTH  = 800;
 const unsigned int WINDOW_HEIGHT = 600;

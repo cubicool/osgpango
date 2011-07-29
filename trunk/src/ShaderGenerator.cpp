@@ -1,8 +1,6 @@
 // -*-c++-*- Copyright (C) 2011 osgPango Development Team
 // $Id$
 
-#include <osg/Notify>
-
 #include <sstream>
 #include <osgPango/ShaderGenerator>
 
@@ -22,6 +20,22 @@ std::string defaultVertexShader() {
 	return shaderSource.str();
 }
 
+std::string pangoGetColor() {
+	std::ostringstream source;
+	
+	source
+		<< "vec4 pangoGetColor(int i) {" << std::endl
+		<< "vec4 c = pangoColor[i];" << std::endl
+		<< "vec4 t = texture2D(pangoTexture[i], pangoTexCoord.st);" << std::endl
+		<< "if(c.a == CAIRO_FORMAT_RGB24) return vec4(t.rgb, 1.0);" << std::endl
+		<< "else if(c.a == CAIRO_FORMAT_ARGB32) return vec4(t.rgb, t.a);" << std::endl
+		<< "else return vec4(c.rgb * t.a, t.a);" << std::endl
+		<< "}" << std::endl
+	;
+
+	return source.str();
+}
+
 std::string baseFragmentHeader(unsigned int num) {
 	std::ostringstream source;
 	
@@ -35,13 +49,6 @@ std::string baseFragmentHeader(unsigned int num) {
 		<< "uniform vec4 pangoColor[NUMLAYERS];" << std::endl
 		<< "uniform sampler2D pangoTexture[NUMLAYERS];" << std::endl
 		<< "uniform float pangoAlpha;" << std::endl
-		<< "vec4 pangoGetColor(int i) {" << std::endl
-		<< "vec4 c = pangoColor[i];" << std::endl
-		<< "vec4 t = texture2D(pangoTexture[i], pangoTexCoord.st);" << std::endl
-		<< "if(c.a == CAIRO_FORMAT_RGB24) return vec4(t.rgb, 1.0);" << std::endl
-		<< "else if(c.a == CAIRO_FORMAT_ARGB32) return vec4(t.rgb, t.a);" << std::endl
-		<< "else return vec4(c.rgb * t.a, t.a);" << std::endl
-		<< "}" << std::endl
 	;
 
 	return source.str();
@@ -63,6 +70,7 @@ std::string createBackToFrontShader(unsigned int num) {
 
 	shaderSource
 		<< baseFragmentHeader(num)
+		<< pangoGetColor()
 		<< "void main() {" << std::endl
 		<< "vec4 frag = vec4(0.0, 0.0, 0.0, 0.0);" << std::endl
 		<< "for(int i = (NUMLAYERS - 1); i >= 0; i--) {" << std::endl
@@ -80,6 +88,7 @@ std::string createLayerIndexShader(unsigned int num, const LayerIndexVector& liv
 
 	shaderSource
 		<< baseFragmentHeader(num)
+		<< pangoGetColor()
 		<< "void main() {" << std::endl
 		<< "vec4 frag = vec4(0.0, 0.0, 0.0, 0.0);" << std::endl
 		<< "int[" << liv.size() << "] indices;" << std::endl
@@ -108,13 +117,11 @@ std::string createDistanceFieldShader() {
 		<< "uniform float pangoDFMin;" << std::endl
 		<< "uniform float pangoDFMax;" << std::endl
 		<< "void main() {" << std::endl
-		<< "gl_FragColor = vec4(pangoColor[0].rgb, pangoAlpha) * smoothstep(" << std::endl
-		<< "pangoDFMin, pangoDFMax, texture2D(pangoTexture[0], pangoTexCoord.st).a" << std::endl
-		<< ");" << std::endl
+		<< "float a = smoothstep(pangoDFMin, pangoDFMax, texture2D(pangoTexture[0], pangoTexCoord.st).a);" << std::endl
+		<< "vec4 col = vec4(pangoColor[0].rgb * a, a);" << std::endl
+		<< "gl_FragColor = (col + (1.0 - a) * vec4(0.0, 0.0, 0.0, 0.0)) * pangoAlpha;" << std::endl
 		<< "}" << std::endl
 	;
-
-	OSG_NOTICE << shaderSource.str() << std::endl;
 
 	return shaderSource.str();
 }
