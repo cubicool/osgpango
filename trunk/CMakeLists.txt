@@ -39,6 +39,7 @@ SET(SRC_FILES
 	src/ShaderGenerator.cpp
 	src/ShaderManager.cpp
 	src/Text.cpp
+	src/TextTransform.cpp
 	src/Util.cpp
 )
 
