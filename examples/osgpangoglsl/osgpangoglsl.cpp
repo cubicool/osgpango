@@ -85,9 +85,9 @@ int main(int argc, char** argv) {
 		// "<span font='Sans 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
 	);
 
-	t->finalize();
 	t->setMatrix(osg::Matrixd::translate(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f)));
-	t->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER);
+	t->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER, false);
+	t->finalize();
 	// t->setCoordinateAlign(osgPango::TextTransform::COORDINATE_ALIGN_ALWAYS);
 
 	osgViewer::Viewer viewer;

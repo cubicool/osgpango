@@ -7,7 +7,6 @@
 #include <osg/MatrixTransform>
 #include <osg/Geode>
 #include <osgUtil/TransformAttributeFunctor>
-#include <osgPango/Util>
 #include <osgPango/Text>
 
 namespace osgPango {
@@ -16,56 +15,11 @@ class ApplyTransformsVisitor: public osg::NodeVisitor {
 public:	
 	typedef std::set<osg::Drawable*> DrawableSet;
 
-	ApplyTransformsVisitor (const osg::Matrix& matrix):
-	osg::NodeVisitor       (osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
-	_functor               (matrix) {
-	}
+	ApplyTransformsVisitor(const osg::Matrix& matrix);
 	
-	virtual void apply(osg::Geode& geode) {
-		for(unsigned int i = 0; i < geode.getNumDrawables(); i++) {
-			_drawables.insert(geode.getDrawable(i));
-		}
-	}
+	virtual void apply(osg::Geode& geode);
 	
-	void transform(bool pixelAlign)  {
-		for(
-			DrawableSet::iterator i = _drawables.begin();
-			i != _drawables.end();
-			i++
-		) {
-			(*i)->accept(_functor);
-			(*i)->dirtyDisplayList();
-			(*i)->dirtyBound();
-			
-			osg::Geometry* geometry = dynamic_cast<osg::Geometry*>(*i);
-			
-			if(!geometry) continue;
-			
-			if(pixelAlign) {
-				// Here we do some pixel-alignment calculations. What this
-				// means is that we iterate through all of vertices that make
-				// up our text and make sure they occur on integer-compatible
-				// coordinates. This is only important when a scale is applied
-				// to the text.
-
-				osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(
-					geometry->getVertexArray()
-				);
-
-				if(!verts) continue;
-
-				for(
-					osg::Vec3Array::iterator v = verts->begin();
-					v != verts->end();
-					v++
-				) {
-					roundVec3(*v);
-				}
-			}
-			
-			if(geometry->getVertexArray()) geometry->getVertexArray()->dirty();
-		}
-	}
+	void transform(bool pixelAlign);
 
 private:
 	osgUtil::TransformAttributeFunctor _functor;
@@ -115,14 +69,7 @@ public:
 		COORDINATE_ALIGN_ALWAYS
 	};
 
-	TextTransform(ColorMode cm = COLOR_MODE_MARKUP_OVERWRITE):
-	Text               (cm),
-	_positionAlignment (POS_ALIGN_LEFT_BOTTOM),
-	_axisAlignment     (AXIS_ALIGN_XY_PLANE),
-	_scale             (1.0f),
-	_lastTransform     (osg::Matrix::identity()),
-	_coordinateAlign   (COORDINATE_ALIGN_AUTO) {
-	}
+	TextTransform(ColorMode cm = COLOR_MODE_MARKUP_OVERWRITE);
 
 	//! Necessary override required by Text; it's purpose is to commit
 	//! any and all text changes internally and ready the object for display.
@@ -130,22 +77,13 @@ public:
 	//! finalize() to refresh your changes. This is not true, however,
 	//! if you only adjust the position or alignment; as long as the text
 	//! doesn't change, there is no need to call finalize().
-	virtual bool finalize() {
-		if(!_finalizeGeometry(this)) return false;
-	
-		_calculatePosition();
-		
-		return true;
-	}
-	
-	virtual void clear() {
-		Text::clear();
-	
-		_scale         = 1.0f;
-		_lastTransform = osg::Matrix::identity();
+	virtual bool finalize();
 
-		removeChild(0, getNumChildren());
-	}
+	//! Clears all internal state and data.
+	virtual void clear();
+
+	//! This method sets the Matrix in the parent MatrixTransform class.
+	virtual void calculatePosition();
 
 	//! Returns the PositionAlignment enum currently in use.
 	PositionAlignment getPositionAlignment() const {
@@ -164,112 +102,6 @@ public:
 		return _coordinateAlign;
 	}
 
-	virtual osg::Matrix getAlignmentTransform() const {
-		osg::Vec3   origin(getOriginTranslated(), 0.0f);
-		osg::Vec3   originBaseline(getOriginBaseline(), 0.0f);
-		osg::Vec3   size(getSize(), 0.0f);
-		osg::Matrix axisMatrix(osg::Matrix::identity());
-		osg::Matrix scaleMatrix(osg::Matrix::scale(osg::Vec3(_scale, _scale, 1.0f)));
-
-		if(_positionAlignment == POS_ALIGN_CENTER_BOTTOM) 
-			origin.x() -= size.x() / 2.0f
-		;
-
-		else if(_positionAlignment == POS_ALIGN_RIGHT_BOTTOM)
-			origin.x() -= size.x()
-		;
-
-		else if(_positionAlignment == POS_ALIGN_RIGHT_CENTER) origin -= osg::Vec3(
-			size.x(),
-			size.y() / 2.0f,
-			0.0f
-		);
-
-		else if(_positionAlignment == POS_ALIGN_RIGHT_TOP)
-			origin -= size
-		;
-
-		else if(_positionAlignment == POS_ALIGN_CENTER_TOP) origin -= osg::Vec3(
-			size.x() / 2.0f,
-			size.y(),
-			0.0f
-		);
-
-		else if(_positionAlignment == POS_ALIGN_LEFT_TOP)
-			origin.y() -= size.y()
-		;
-
-		else if(_positionAlignment == POS_ALIGN_LEFT_CENTER)
-			origin.y() -= size.y() / 2.0f
-		;
-
-		else if(_positionAlignment == POS_ALIGN_CENTER_CENTER) origin += osg::Vec3(
-			-size.x() / 2.0f,
-			-size.y() / 2.0f,
-			0.0f
-		);
-
-		// TODO: We call origin.set here, but we modify the exisiting origin in
-		// the previous calls; why?
-		else if(_positionAlignment == POS_ALIGN_LEFT_BASE_LINE) origin.set(
-			originBaseline.x(),
-			originBaseline.y(),
-			0.0f
-		);
-
-		else if(_positionAlignment == POS_ALIGN_CENTER_BASE_LINE) origin.set(
-			originBaseline.x() - osg::round(size.x() / 2.0f),
-			originBaseline.y(),
-			0.0f
-		);
-
-		else if(_positionAlignment == POS_ALIGN_RIGHT_BASE_LINE) origin.set(
-			originBaseline.x() - osg::round(size.x()),
-			originBaseline.y(),
-			0.0f
-		);
- 
-		origin *= _scale;
-		
-		// Handle _axisAlignment...
-		if(_axisAlignment == AXIS_ALIGN_XZ_PLANE) axisMatrix = osg::Matrix(
-			 1.0f,  0.0f,  0.0f,  0.0f,
-			 0.0f,  0.0f,  1.0f,  0.0f,
-			 0.0f,  1.0f,  0.0f,  0.0f,
-			 0.0f,  0.0f,  0.0f,  1.0f
-		);
-
-		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XZ_PLANE) axisMatrix = osg::Matrix(
-			-1.0f,  0.0f,  0.0f,  0.0f,
-			 0.0f,  0.0f,  1.0f,  0.0f,
-			 0.0f,  1.0f,  0.0f,  0.0f,
-			 0.0f,  0.0f,  0.0f,  1.0f
-		); 
-
-		else if(_axisAlignment == AXIS_ALIGN_YZ_PLANE) axisMatrix = osg::Matrix(
-			 0.0f,  1.0f,  0.0f, 0.0f,
-			 0.0f,  0.0f,  1.0f, 0.0f,
-			 1.0f,  0.0f,  0.0f, 0.0f,
-			 0.0f,  0.0f,  0.0f, 1.0f
-		);
-
-		else if(_axisAlignment == AXIS_ALIGN_REVERSED_YZ_PLANE) axisMatrix = osg::Matrix(
-			 0.0f, -1.0f,  0.0f, 0.0f,
-			 0.0f,  0.0f,  1.0f, 0.0f,
-			 1.0f,  0.0f,  0.0f, 0.0f,
-			 0.0f,  0.0f,  0.0f, 1.0f
-		); 
-
-		else if(_axisAlignment == AXIS_ALIGN_REVERSED_XY_PLANE) axisMatrix = osg::Matrix(
-			-1.0f,  0.0f,  0.0f, 0.0f,
-			 0.0f,  1.0f,  0.0f, 0.0f,
-			 0.0f,  0.0f,  1.0f, 0.0f,
-			 0.0f,  0.0f,  0.0f, 1.0f
-		);
-		
-		return scaleMatrix * osg::Matrix::translate(origin) * axisMatrix;
-	}
-
 	//! Sets the PositionAlignment enum to use for modifying the position of
 	//! the Text, modifying it's absolute placement. The default PositionAlignment
 	//! of POS_ALIGN_LEFT_BOTTOM however is a no-op, since it corresponds to how
@@ -278,64 +110,31 @@ public:
 	void setPositionAlignment(PositionAlignment alignment, bool recalculate = true) {
 		_positionAlignment = alignment;
 
-		if(recalculate) _calculatePosition();
+		if(recalculate) calculatePosition();
 	}
 	
 	void setAxisAlignment(AxisAlignment alignment, bool recalculate = true) {
 		_axisAlignment = alignment;
 		
-		if(recalculate) _calculatePosition();
+		if(recalculate) calculatePosition();
 	}
 	
-	void setScale(double scale, bool recalculate = true) {
+	void setScale(osg::Vec3::value_type scale, bool recalculate = true) {
 		_scale = scale;
 		
-		if(recalculate) _calculatePosition();
+		if(recalculate) calculatePosition();
 	}
 
 	void setCoordinateAlign(CoordinateAlign align) {
 		_coordinateAlign = align;
 	}
 
-protected:
-	void _calculatePosition() {
-		osg::Matrix alignmentTransform = getAlignmentTransform();
-
-		// TODO: Make sure that the Matrix translation is pixel-aligned, too.
-		// TODO: Make sure that the Matrix translation is pixel-aligned, too.
-		// TODO: Make sure that the Matrix translation is pixel-aligned, too.
-
-		ApplyTransformsVisitor nv(_lastTransform * alignmentTransform);
-	
-		this->accept(nv);
-
-		bool align = false;
-
-		switch(_coordinateAlign) {
-			case COORDINATE_ALIGN_NONE:
-				break;
-		
-			case COORDINATE_ALIGN_AUTO:
-				align = fmodf(_scale, static_cast<int>(_scale)) == 0.0f;
-			
-				break;
-		
-			case COORDINATE_ALIGN_ALWAYS:
-				align = true;
-
-				break;
-		}
-
-		nv.transform(align);
-
-		_lastTransform = osg::Matrix::inverse(alignmentTransform);
-	}
-		
-	PositionAlignment _positionAlignment;
-	AxisAlignment     _axisAlignment;
-	double            _scale;
-	osg::Matrix       _lastTransform;
-	CoordinateAlign   _coordinateAlign;
+protected:	
+	PositionAlignment     _positionAlignment;
+	AxisAlignment         _axisAlignment;
+	osg::Vec3::value_type _scale;
+	osg::Matrix           _lastTransform;
+	CoordinateAlign       _coordinateAlign;
 };
 
 }
