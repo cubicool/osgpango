@@ -26,9 +26,11 @@ bool GlyphRendererDistanceField::updateOrCreateState(int pass, osg::Geode* geode
 const char* PANGO_DFMIN_NAME = "pangoDFMin";
 const char* PANGO_DFMAX_NAME = "pangoDFMax";
 
-void GlyphRendererDistanceField::updateScaleState(osg::Vec3::value_type scale, osg::StateSet* state) {
-	float pdfMin = std::max(0.0f, 0.5f - 0.07f / (scale / 2.0f));
-	float pdfMax = std::min(0.5f + 0.07f / (scale / 2.0f), 1.0f);
+void GlyphRendererDistanceField::updateScaleState(osg::Vec3::value_type scale, osg::StateSet* state) const {
+	scale /= 1.0f;
+
+	float pdfMin = std::max(0.0f, 0.5f - 0.07f / scale );
+	float pdfMax = std::min(0.5f + 0.07f / scale, 1.0f);
 
 	osg::Uniform* pdfMinUniform = state->getUniform(PANGO_DFMIN_NAME);
 	osg::Uniform* pdfMaxUniform = state->getUniform(PANGO_DFMAX_NAME);

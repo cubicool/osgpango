@@ -1,61 +1,72 @@
 // -*-c++-*- Copyright (C) 2011 osgPango Development Team
 // $Id$
 
+#include <osg/Geode>
+#include <osgUtil/TransformAttributeFunctor>
 #include <osgPango/Util>
 #include <osgPango/TextTransform>
 
 namespace osgPango {
 
-ApplyTransformsVisitor::ApplyTransformsVisitor(const osg::Matrix& matrix):
-osg::NodeVisitor (osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
-_functor         (matrix) {
-}
+class ApplyTransformsVisitor: public osg::NodeVisitor {
+public:	
+	typedef std::set<osg::Drawable*> DrawableSet;
+
+	ApplyTransformsVisitor(const osg::Matrix& matrix):
+	osg::NodeVisitor (osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
+	_functor         (matrix) {
+	}
 	
-void ApplyTransformsVisitor::apply(osg::Geode& geode) {
-	for(unsigned int i = 0; i < geode.getNumDrawables(); i++) {
-		_drawables.insert(geode.getDrawable(i));
-	}
-}
-
-void ApplyTransformsVisitor::transform(bool pixelAlign)  {
-	for(
-		DrawableSet::iterator i = _drawables.begin();
-		i != _drawables.end();
-		i++
-	) {
-		(*i)->accept(_functor);
-		(*i)->dirtyDisplayList();
-		(*i)->dirtyBound();
-		
-		osg::Geometry* geometry = dynamic_cast<osg::Geometry*>(*i);
-		
-		if(!geometry) continue;
-		
-		if(pixelAlign) {
-			// Here we do some pixel-alignment calculations. What this
-			// means is that we iterate through all of vertices that make
-			// up our text and make sure they occur on integer-compatible
-			// coordinates. This is only important when a scale is applied
-			// to the text.
-
-			osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(
-				geometry->getVertexArray()
-			);
-
-			if(!verts) continue;
-
-			for(
-				osg::Vec3Array::iterator v = verts->begin();
-				v != verts->end();
-				v++
-			) {
-				roundVec3(*v);
-			}
+	void apply(osg::Geode& geode) {
+		for(unsigned int i = 0; i < geode.getNumDrawables(); i++) {
+			_drawables.insert(geode.getDrawable(i));
 		}
-		
-		if(geometry->getVertexArray()) geometry->getVertexArray()->dirty();
 	}
-}
+
+	void transform(bool pixelAlign)  {
+		for(
+			DrawableSet::iterator i = _drawables.begin();
+			i != _drawables.end();
+			i++
+		) {
+			(*i)->accept(_functor);
+			(*i)->dirtyDisplayList();
+			(*i)->dirtyBound();
+		
+			osg::Geometry* geometry = dynamic_cast<osg::Geometry*>(*i);
+		
+			if(!geometry) continue;
+		
+			if(pixelAlign) {
+				// Here we do some pixel-alignment calculations. What this
+				// means is that we iterate through all of vertices that make
+				// up our text and make sure they occur on integer-compatible
+				// coordinates. This is only important when a scale is applied
+				// to the text.
+
+				osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(
+					geometry->getVertexArray()
+				);
+
+				if(!verts) continue;
+
+				for(
+					osg::Vec3Array::iterator v = verts->begin();
+					v != verts->end();
+					v++
+				) {
+					roundVec3(*v);
+				}
+			}
+		
+			if(geometry->getVertexArray()) geometry->getVertexArray()->dirty();
+		}
+	}
+
+private:
+	osgUtil::TransformAttributeFunctor _functor;
+	DrawableSet                        _drawables;
+};
 
 TextTransform::TextTransform(ColorMode cm):
 Text               (cm),
@@ -83,8 +94,10 @@ void TextTransform::clear() {
 	removeChild(0, getNumChildren());
 }
 
-
 void TextTransform::calculatePosition() {
+	// We need to have been finalized at least once to calculate a proper position.
+	if(!_finalized) return;
+
 	osg::Vec3   origin(getOriginTranslated(), 0.0f);
 	osg::Vec3   originBaseline(getOriginBaseline(), 0.0f);
 	osg::Vec3   size(getSize(), 0.0f);
@@ -198,8 +211,6 @@ void TextTransform::calculatePosition() {
 	
 	osg::Matrix alignmentTransform = scaleMatrix * osg::Matrix::translate(origin) * axisMatrix;
 
-	// TODO: Make sure that the Matrix translation is pixel-aligned, too.
-
 	ApplyTransformsVisitor nv(_lastTransform * alignmentTransform);
 
 	this->accept(nv);
@@ -208,6 +219,6 @@ void TextTransform::calculatePosition() {
 
 	_lastTransform = osg::Matrix::inverse(alignmentTransform);
 }
-		
+
 }
 

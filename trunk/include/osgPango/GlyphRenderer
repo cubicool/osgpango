@@ -208,9 +208,8 @@ public:
 
 	GlyphRendererDistanceField(Mode mode);
 	
-	virtual bool updateOrCreateState(int pass, osg::Geode* geode) const;
-	
-	static void updateScaleState(osg::Vec3::value_type scale, osg::StateSet* state);
+	virtual bool updateOrCreateState (int pass, osg::Geode* geode) const;
+	virtual void updateScaleState    (osg::Vec3::value_type scale, osg::StateSet* state) const;
 
 protected:
 	Mode _mode;

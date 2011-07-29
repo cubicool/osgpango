@@ -23,6 +23,7 @@ bool GlyphLayerDistanceField::render(
 	// cairo_translate(cr, 0.0f, 0.0f);
 	// double aspectRatio = static_cast<double>(width) / static_cast<double>(height);
 
+	cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 	cairo_set_scaled_font(cr, cairo_get_scaled_font(c));
 	cairo_scale(cr, 32, 32);
 	cairo_glyph_path(cr, glyph, 1);

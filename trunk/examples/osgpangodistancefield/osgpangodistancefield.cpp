@@ -12,11 +12,59 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/TextTransform>
+#include <osgPango/DistanceFieldText>
 #include <osgPango/ShaderManager>
 
-const unsigned int WINDOW_WIDTH  = 800;
-const unsigned int WINDOW_HEIGHT = 600;
+const unsigned int          WINDOW_WIDTH  = 800;
+const unsigned int          WINDOW_HEIGHT = 600;
+const osg::Vec3::value_type SCALE_STEP    = 0.05f;
+
+class ScaleSetHandler: public osgGA::GUIEventHandler {
+public:
+	osgPango::DistanceFieldText* getDistanceFieldText(osgGA::GUIActionAdapter& aa) {
+		osgViewer::View* view = dynamic_cast<osgViewer::View*>(&aa);
+
+		if(!view) return 0;
+		
+		osg::Camera* camera = dynamic_cast<osg::Camera*>(view->getSceneData());
+
+		if(!camera) return 0;
+		
+		osgPango::DistanceFieldText* text = dynamic_cast<osgPango::DistanceFieldText*>(
+			camera->getChild(0)
+		);
+
+		if(!text) return 0;
+
+		return text;
+	}
+
+	virtual bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa) {
+		if(
+			ea.getEventType() != osgGA::GUIEventAdapter::KEYDOWN ||
+			(
+				ea.getKey() != '=' &&
+				ea.getKey() != '-'
+			)
+		) return false;
+
+		osgPango::DistanceFieldText* text = getDistanceFieldText(aa);
+		
+		if(!text) return false;
+
+		osg::Vec3::value_type scale = text->getScale();
+
+		if(ea.getKey() == '=') scale += SCALE_STEP;
+
+		else if(ea.getKey() == '-') scale -= SCALE_STEP;
+		
+		OSG_NOTICE << "Scale: " << scale << std::endl;
+
+		text->setScale(scale);
+
+		return true;
+	}
+};
 
 osg::Camera* createOrthoCamera(float width, float height) {
 	osg::Camera* camera = new osg::Camera();
@@ -48,19 +96,12 @@ int main(int argc, char** argv) {
 
 	context.addGlyphRenderer("distancefield", dfgr);
 
-	osgPango::TextTransform* t = new osgPango::TextTransform();
+	osgPango::DistanceFieldText* t = new osgPango::DistanceFieldText();
 
 	t->setGlyphRenderer("distancefield");
-	t->addText("<span font='sans 128px'>JE</span>");
-	t->setScale(2.0f, false);
-	// t->setCoordinateAlign(osgPango::TextTransform::COORDINATE_ALIGN_ALWAYS);
+	t->addText("<span font='sans 128px'>osg</span>");
+	t->setCoordinateAlign(osgPango::TextTransform::COORDINATE_ALIGN_NONE);
 	t->finalize();
-
-	viewer.addEventHandler(new osgViewer::StatsHandler());
-	viewer.addEventHandler(new osgViewer::WindowSizeHandler());
-	viewer.addEventHandler(new osgGA::StateSetManipulator(
-		viewer.getCamera()->getOrCreateStateSet()
-	));
 
 	bool perspective = false;
 
@@ -73,15 +114,23 @@ int main(int argc, char** argv) {
 	}
 
 	else {
-		t->setAxisAlignment(osgPango::TextTransform::AXIS_ALIGN_XZ_PLANE);
+		t->setAxisAlignment(osgPango::DistanceFieldText::AXIS_ALIGN_XZ_PLANE);
 
 		viewer.setSceneData(t);
 	}
 
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
+	viewer.addEventHandler(new ScaleSetHandler());
+	viewer.addEventHandler(new osgViewer::StatsHandler());
+	viewer.addEventHandler(new osgViewer::WindowSizeHandler());
+	viewer.addEventHandler(new osgGA::StateSetManipulator(
+		viewer.getCamera()->getOrCreateStateSet()
+	));
 
-	return viewer.run();
+	int r = viewer.run();
 
-	return 0;
+	context.writeCachesToPNGFiles("osgpangoviewer");
+
+	return r;
 }
 

@@ -5,26 +5,9 @@
 #define OSGPANGO_TEXT_TRANSFORM
 
 #include <osg/MatrixTransform>
-#include <osg/Geode>
-#include <osgUtil/TransformAttributeFunctor>
 #include <osgPango/Text>
 
 namespace osgPango {
-
-class ApplyTransformsVisitor: public osg::NodeVisitor {
-public:	
-	typedef std::set<osg::Drawable*> DrawableSet;
-
-	ApplyTransformsVisitor(const osg::Matrix& matrix);
-	
-	virtual void apply(osg::Geode& geode);
-	
-	void transform(bool pixelAlign);
-
-private:
-	osgUtil::TransformAttributeFunctor _functor;
-	DrawableSet                        _drawables;
-};
 
 class TextTransform: public Text, public osg::MatrixTransform {
 public:

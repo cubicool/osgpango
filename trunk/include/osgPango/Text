@@ -217,7 +217,8 @@ public:
 	}
 
 protected:
-	bool _finalizeGeometry    (osg::Group* group);
+	// TODO: Investigate removing group here...
+	bool _finalizeGeometry(osg::Group* group);
 	void _updateOriginAndSize (int x, int y, PangoLayout* layout, const osg::Vec4& extents);
 
 	GlyphGeometryMap _ggMap;
