@@ -10,7 +10,7 @@
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgAnimation/EaseMotion>
-#include <osgPango/Text>
+#include <osgPango/TextTransform>
 
 #include <stdlib.h>
 

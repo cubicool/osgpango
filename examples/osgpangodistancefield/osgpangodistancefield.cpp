@@ -12,7 +12,7 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgPango/Text>
+#include <osgPango/TextTransform>
 #include <osgPango/ShaderManager>
 
 const unsigned int WINDOW_WIDTH  = 800;
@@ -41,14 +41,19 @@ int main(int argc, char** argv) {
 	osgPango::Context& context = osgPango::Context::instance();
 
 	context.init();
-	context.addGlyphRenderer("distancefield", new osgPango::GlyphRendererDistanceField(
+
+	osgPango::GlyphRenderer* dfgr = new osgPango::GlyphRendererDistanceField(
 		osgPango::GlyphRendererDistanceField::MODE_LARGE
-	));
+	);
+
+	context.addGlyphRenderer("distancefield", dfgr);
 
 	osgPango::TextTransform* t = new osgPango::TextTransform();
 
 	t->setGlyphRenderer("distancefield");
-	t->addText("<span font='sans 128px'>Jeremy</span>");
+	t->addText("<span font='sans 128px'>JE</span>");
+	t->setScale(2.0f, false);
+	// t->setCoordinateAlign(osgPango::TextTransform::COORDINATE_ALIGN_ALWAYS);
 	t->finalize();
 
 	viewer.addEventHandler(new osgViewer::StatsHandler());
@@ -74,7 +79,7 @@ int main(int argc, char** argv) {
 	}
 
 	viewer.setUpViewInWindow(50, 50, WINDOW_WIDTH, WINDOW_HEIGHT);
-	
+
 	return viewer.run();
 
 	return 0;

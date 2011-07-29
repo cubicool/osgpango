@@ -18,7 +18,7 @@ GlyphRendererDistanceField::GlyphRendererDistanceField(GlyphRendererDistanceFiel
 bool GlyphRendererDistanceField::updateOrCreateState(int pass, osg::Geode* geode) const {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 
-	updateScaleState(1.0f, geode->getOrCreateStateSet());
+	updateScaleState(4.0f, geode->getOrCreateStateSet());
 
 	return _setFragmentShader(geode, "osgPango-distanceField");
 }
