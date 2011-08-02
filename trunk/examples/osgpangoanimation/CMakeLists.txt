@@ -1,12 +1,10 @@
 PROJECT(osgpangoanimation)
 
-# osgPango gets the proper debug postfix automatically since it's part of the
-# current project, but we need to add the postfix for the other libs.
 LINK_LIBRARIES(osgPango
-               debug     OpenThreads${CMAKE_DEBUG_POSTFIX}
-               optimized OpenThreads
-               debug     osgGA${CMAKE_DEBUG_POSTFIX}
-               optimized osgGA
+	debug     osgViewer${CMAKE_DEBUG_POSTFIX}
+	optimized osgViewer
+	debug     osgGA${CMAKE_DEBUG_POSTFIX}
+	optimized osgGA
 )
 
 ADD_EXECUTABLE(osgpangoanimation osgpangoanimation.cpp)
