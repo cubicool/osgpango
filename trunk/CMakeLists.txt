@@ -75,6 +75,7 @@ SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/Text
 	${osgPango_SOURCE_DIR}/include/osgPango/TextTransform
 	${osgPango_SOURCE_DIR}/include/osgPango/Util
+	${osgPango_SOURCE_DIR}/include/osgPango/Version
 )
 
 SOURCE_GROUP("Header Files" FILES ${HEADER_FILES})
