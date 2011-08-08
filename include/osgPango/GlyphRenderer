@@ -23,10 +23,15 @@ struct OSGPANGO_EXPORT GlyphGeometryState {
 typedef std::pair<osg::Geometry*, GlyphGeometryState> GeometryAndState;
 typedef std::list<GeometryAndState>                   GeometryList;
 
-//! Our base class for all GlyphRenderer objects. This object can only be constructed by
-//! subclasses, and doesn't actually know how to render anything itself.
-class OSGPANGO_EXPORT GlyphRenderer: public osg::Referenced {
+//! Our base class for all GlyphRenderer objects. This object doesn't actually know how to
+//! draw anything; use GlyphRendererDefault for that.
+class OSGPANGO_EXPORT GlyphRenderer: public osg::Object {
 public:
+	META_Object(osgPango, GlyphRenderer);
+
+	GlyphRenderer();
+	GlyphRenderer(const GlyphRenderer& gr, const osg::CopyOp& copyOp);
+
 	//! This method returns an osg::Vec4 object whose values correspond to the following:
 	//! the x origin offset, y origin offset, extra width, and extra height respectively.
 	//! It is used when custom "effects" implementations needs to inform the cache object
@@ -129,9 +134,6 @@ protected:
 	friend class Text;
 	friend class Context;
 
-	//! Our constructor is protected, so that only subclasses can instantiate it.
-	GlyphRenderer();
-
 	//! Maps the result of _hashFont() to a GlyphCache atlas object. Each GlyphRenderer
 	//! maintains its own cache, which diverges greatly from the API in 1.0.0.
 	typedef std::map<guint, osg::ref_ptr<GlyphCache> > FontGlyphCacheMap;
@@ -197,22 +199,29 @@ public:
 	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
 
-//! TODO: This is a cool class! :)
+//! TODO: This is a cool class, is going to require a lot of documentation. :)
 class OSGPANGO_EXPORT GlyphRendererDistanceField: public GlyphRenderer {
 public:
-	enum Mode {
-		MODE_SMALL,
-		MODE_MEDIUM,
-		MODE_LARGE
-	};
-
-	GlyphRendererDistanceField(Mode mode);
+	GlyphRendererDistanceField(
+		unsigned int scanSize,
+		unsigned int blockSize,
+		double       padding,
+		double       scaleDenominator = 1.0f
+	);
 	
 	virtual bool updateOrCreateState (int pass, osg::Geode* geode) const;
 	virtual void updateScaleState    (osg::Vec3::value_type scale, osg::StateSet* state) const;
 
+	void setScaleDenominator(double scaleDenominator) {
+		_scaleDenominator = scaleDenominator;
+	}
+
+	double getScaleDenominator() const {
+		return _scaleDenominator;
+	}
+
 protected:
-	Mode _mode;
+	double _scaleDenominator;
 };
 
 }

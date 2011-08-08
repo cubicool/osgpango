@@ -77,6 +77,16 @@ _lastTransform     (osg::Matrix::identity()),
 _coordinateAlign   (COORDINATE_ALIGN_AUTO) {
 }
 
+TextTransform::TextTransform(const TextTransform& tt, const osg::CopyOp& copyOp):
+Text                 (tt),
+osg::MatrixTransform (tt, copyOp),
+_positionAlignment   (tt._positionAlignment),
+_axisAlignment       (tt._axisAlignment),
+_scale               (tt._scale),
+_lastTransform       (tt._lastTransform),
+_coordinateAlign     (tt._coordinateAlign) {
+}
+
 bool TextTransform::finalize() {
 	if(!_finalizeGeometry(this)) return false;
 

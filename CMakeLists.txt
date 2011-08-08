@@ -62,6 +62,11 @@ SET(SRC_RENDERER_FILES
 	src/renderers/Shadow.cpp
 )
 
+SET(SRC_SERIALIZER_FILES
+	src/serializers/GlyphRenderer.cpp
+	src/serializers/LibraryWrapper.cpp
+)
+
 SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/Context
 	${osgPango_SOURCE_DIR}/include/osgPango/Export
@@ -82,6 +87,7 @@ SOURCE_GROUP("Header Files" FILES ${HEADER_FILES})
 SOURCE_GROUP("Source Files" FILES ${SRC_FILES})
 SOURCE_GROUP("Source Files\\Layers" FILES ${SRC_LAYER_FILES})
 SOURCE_GROUP("Source Files\\Renderers" FILES ${SRC_RENDERER_FILES})
+SOURCE_GROUP("Source Files\\Serializers" FILES ${SRC_SERIALIZER_FILES})
 
 INCLUDE_DIRECTORIES(include
 	${OPENSCENEGRAPH_INCLUDE_DIR}
@@ -99,7 +105,13 @@ LINK_DIRECTORIES(
 	${PANGOCAIRO_LIBRARY_DIRS}
 )
 
-ADD_LIBRARY(osgPango SHARED ${SRC_FILES} ${SRC_LAYER_FILES} ${SRC_RENDERER_FILES} ${HEADER_FILES})
+ADD_LIBRARY(osgPango SHARED
+	${SRC_FILES}
+	${SRC_LAYER_FILES}
+	${SRC_RENDERER_FILES}
+	${SRC_SERIALIZER_FILES}
+	${HEADER_FILES}
+)
 
 # Add debug postfix to OSG libraries so we link to the right ones in debug.
 # Cairo, pango, pangocairo and the gtk libs are C-only libraries so the same
@@ -144,6 +156,8 @@ FOREACH(INCLUDEFILE ${HEADER_FILES})
 	)
 ENDFOREACH(INCLUDEFILE)
 
+ADD_SUBDIRECTORY(applications/osgpango-gr-cache)
+
 ADD_SUBDIRECTORY(examples/osgpangoanimation)
 ADD_SUBDIRECTORY(examples/osgpangocomplexrenderer)
 ADD_SUBDIRECTORY(examples/osgpangodistancefield)
@@ -176,7 +190,7 @@ SET(CPACK_SOURCE_IGNORE_FILES
 	".*release/"
 )
 
-SET(OSGPANGO_VERSION "0.0.1")
+SET(OSGPANGO_VERSION "2.2.0")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME "osgPango-${OSGPANGO_VERSION}")
 
 INCLUDE(CPack)

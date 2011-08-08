@@ -111,11 +111,12 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		cairo_identity_matrix(c);
 
 		// Set position in image and then move write position to origin of glyph. 
-		// Each GlyphLayer can assume that writes on right position if don't apply any effect.
+		// Each GlyphLayer can assume that writes on right position if no effects are
+		// applied.
 		cairo_translate(c, _x + extents[0], _y + extents[1]);
 
 		if(!_renderer->renderLayer(layerIndex, c, &g, w, h)) osg::notify(osg::WARN) 
-			<< "The GlyphRenderer object '" /* << renderer->getName() << */ "' failed to render "
+			<< "The GlyphRenderer object '" << _renderer->getName() << "' failed to render "
 			<< "a glyph to the internal surface."
 			<< std::endl
 		;

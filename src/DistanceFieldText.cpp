@@ -9,10 +9,12 @@ namespace osgPango {
 class ApplyScaleStateVisitor: public osg::NodeVisitor {
 public:	
 	ApplyScaleStateVisitor(osg::Vec3::value_type scale, GlyphRendererDistanceField* renderer):
+	NodeVisitor(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN),
 	_scale    (scale),
 	_renderer (renderer) {
+		setVisitorType(osg::NodeVisitor::UPDATE_VISITOR);
 	}
-	
+
 	void apply(osg::Geode& geode) {
 		if(!_renderer.valid()) return;
 		
@@ -42,7 +44,7 @@ void DistanceFieldText::calculatePosition() {
 	}
 
 	ApplyScaleStateVisitor ssv(_scale, gr);
-
+		
 	this->accept(ssv);
 }
 

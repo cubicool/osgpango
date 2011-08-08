@@ -302,7 +302,11 @@ private:
 
 class OSGPANGO_EXPORT GlyphLayerDistanceField: public GlyphLayer {
 public:
-	GlyphLayerDistanceField();
+	GlyphLayerDistanceField(
+		unsigned int scanSize,
+		unsigned int blockSize,
+		double       padding
+	);
 	
 	virtual bool render(
 		cairo_t*       c,
@@ -312,6 +316,11 @@ public:
 	);
 
 	virtual osg::Vec4 getExtraGlyphExtents() const;
+
+protected:
+	unsigned int _scanSize;
+	unsigned int _blockSize;
+	double       _padding;
 };
 
 }

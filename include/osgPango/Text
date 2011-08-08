@@ -82,6 +82,7 @@ public:
 	};
 	
 	Text(ColorMode = COLOR_MODE_MARKUP_OVERWRITE);
+	Text(const Text& text);
 
 	virtual ~Text();
 
@@ -138,11 +139,11 @@ public:
 	}
 
 	//! This is the "master" addText method which all others directly call. However,
-	//! it's argument list can be unwieldy, so we provide the easier-to-use wrappers above.
+	//! its argument list can be unwieldy, so we provide the easier-to-use wrappers above.
 	//! Furthermore, this is the version any subclasses should override if they chose
-	//! to modify Text behavior.
+	//! to modify Text behavior (unless they want to define their own methods).
 	virtual void addText(
-		String::Encoding,
+		String::Encoding   encoding,
 		const std::string& str,
 		const std::string& descr,
 		int                x  = 0, 
@@ -218,7 +219,7 @@ public:
 
 protected:
 	// TODO: Investigate removing group here...
-	bool _finalizeGeometry(osg::Group* group);
+	bool _finalizeGeometry    (osg::Group* group);
 	void _updateOriginAndSize (int x, int y, PangoLayout* layout, const osg::Vec4& extents);
 
 	GlyphGeometryMap _ggMap;

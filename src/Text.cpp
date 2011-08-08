@@ -40,6 +40,32 @@ _colorMode(cm) {
 	clear();
 }
 
+/*
+	GlyphGeometryMap _ggMap;
+	osg::Vec2        _size;
+	osg::Vec2        _origin;
+	int              _baseline;
+	float            _alpha;
+	bool             _init;
+	bool             _finalized;
+	std::string      _glyphRenderer;
+	ColorMode        _colorMode;
+	ColorPalette     _palette;
+*/
+
+Text::Text(const Text& text):
+_ggMap         (text._ggMap),
+_size          (text._size),
+_origin        (text._origin),
+_baseline      (text._baseline),
+_alpha         (text._alpha),
+_init          (text._init),
+_finalized     (text._finalized),
+_glyphRenderer (text._glyphRenderer),
+_colorMode     (text._colorMode),
+_palette       (text._palette) {
+}
+
 Text::~Text() {
 }
 
