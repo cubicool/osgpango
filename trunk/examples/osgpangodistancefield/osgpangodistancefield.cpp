@@ -21,20 +21,23 @@ const osg::Vec3::value_type SCALE_STEP    = 0.05f;
 
 class ScaleSetHandler: public osgGA::GUIEventHandler {
 public:
+	osgPango::DistanceFieldText* asText(osg::Node* potentialText) {
+		return dynamic_cast<osgPango::DistanceFieldText*>(potentialText);
+	}
+
 	osgPango::DistanceFieldText* getDistanceFieldText(osgGA::GUIActionAdapter& aa) {
+		osgPango::DistanceFieldText* text = 0;
+
 		osgViewer::View* view = dynamic_cast<osgViewer::View*>(&aa);
 
 		if(!view) return 0;
 		
 		osg::Camera* camera = dynamic_cast<osg::Camera*>(view->getSceneData());
 
-		if(!camera) return 0;
+		// If the camera isn't our toplevel object, maybe it's the text itself.
+		if(!camera) text = asText(view->getSceneData());
 		
-		osgPango::DistanceFieldText* text = dynamic_cast<osgPango::DistanceFieldText*>(
-			camera->getChild(0)
-		);
-
-		if(!text) return 0;
+		else text = dynamic_cast<osgPango::DistanceFieldText*>(camera->getChild(0));
 
 		return text;
 	}
@@ -43,8 +46,8 @@ public:
 		if(
 			ea.getEventType() != osgGA::GUIEventAdapter::KEYDOWN ||
 			(
-				ea.getKey() != '=' &&
-				ea.getKey() != '-'
+				ea.getKey() != osgGA::GUIEventAdapter::KEY_Up &&
+				ea.getKey() != osgGA::GUIEventAdapter::KEY_Down
 			)
 		) return false;
 
@@ -54,9 +57,9 @@ public:
 
 		osg::Vec3::value_type scale = text->getScale();
 
-		if(ea.getKey() == '=') scale += SCALE_STEP;
+		if(ea.getKey() == osgGA::GUIEventAdapter::KEY_Up) scale += SCALE_STEP;
 
-		else if(ea.getKey() == '-') scale -= SCALE_STEP;
+		else if(ea.getKey() == osgGA::GUIEventAdapter::KEY_Down) scale -= SCALE_STEP;
 		
 		OSG_NOTICE << "Scale: " << scale << std::endl;
 
@@ -90,17 +93,34 @@ int main(int argc, char** argv) {
 
 	context.init();
 
-	osgPango::GlyphRenderer* dfgr = new osgPango::GlyphRendererDistanceField(
-		osgPango::GlyphRendererDistanceField::MODE_LARGE
-	);
-
-	context.addGlyphRenderer("distancefield", dfgr);
+	// These arguments are VERY IMPORTANT in the generation of distance field text.
+	context.addGlyphRenderer("distancefield", new osgPango::GlyphRendererDistanceField(
+		// The first argument is the "scan size", which determines the range of the 
+		// distance field. A larger value means that smoothing can occur at larger scales,
+		// but will usually require more padding.
+		100,
+		// The second argument is the "block size", which is essentially the scale of the
+		// glyph. Internally, the glyph surface will be scaled up by this value and then
+		// passed to the distance field generation algorighthm. Higher values produce
+		// larger--but higher quality--text.
+		32,
+		// This is the padding value each glyph recieves. It will determine largely on the
+		// two previous values, in addition to the size of the actual font being rendered.
+		3.0f,
+		// Finally, this value represents the scale denominator that will be used in the
+		// shader's smoothstepping min and max values. In 2D orthographic projections,
+		// there is a relationship between the block_size and this value; in 3D
+		// projections (currently unsupported), the relationship will be derived form the
+		// distance of the viewer to the DistanceFieldText object.
+		2.0f
+	));
 
 	osgPango::DistanceFieldText* t = new osgPango::DistanceFieldText();
 
 	t->setGlyphRenderer("distancefield");
-	t->addText("<span font='sans 128px'>osg</span>");
+	t->addText("<span font='sans 64px'>Up/Down Arrow Keys</span>");
 	t->setCoordinateAlign(osgPango::TextTransform::COORDINATE_ALIGN_NONE);
+	t->setMatrix(osg::Matrix::translate(20.0f, 20.0f, 0.0f));
 	t->finalize();
 
 	bool perspective = false;
@@ -129,7 +149,7 @@ int main(int argc, char** argv) {
 
 	int r = viewer.run();
 
-	context.writeCachesToPNGFiles("osgpangoviewer");
+	context.writeCachesToPNGFiles("osgpangodistancefield");
 
 	return r;
 }

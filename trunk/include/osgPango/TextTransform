@@ -11,6 +11,8 @@ namespace osgPango {
 
 class TextTransform: public Text, public osg::MatrixTransform {
 public:
+	META_Object(osgPango, TextTransform);
+
 	//! These are the alignment enums within TextInterface (not Text itself, since
 	//! Text is virtual and has no way of positioning itself) that define how the
 	//! text is arranged RELATIVE TO ITS POSITION. They're pretty much
@@ -53,6 +55,7 @@ public:
 	};
 
 	TextTransform(ColorMode cm = COLOR_MODE_MARKUP_OVERWRITE);
+	TextTransform(const TextTransform& tt, const osg::CopyOp& copyOp);
 
 	//! Necessary override required by Text; it's purpose is to commit
 	//! any and all text changes internally and ready the object for display.

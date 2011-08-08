@@ -25,6 +25,14 @@ _textureHeight (DEFAULT_CACHE_HEIGHT),
 _minFilter     (osg::Texture::LINEAR) {
 }
 
+GlyphRenderer::GlyphRenderer(const GlyphRenderer& gr, const osg::CopyOp& copyOp):
+osg::Object(gr, copyOp),
+_pixelSpacing  (gr._pixelSpacing),
+_textureWidth  (gr._textureWidth),
+_textureHeight (gr._textureHeight),
+_minFilter     (gr._minFilter) {
+}
+
 osg::Vec4 GlyphRenderer::getExtraGlyphExtents() const {
 	if(!_layers.size()) return osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		
@@ -199,8 +207,8 @@ bool GlyphRenderer::_setFragmentShader(osg::Geode* geode, const std::string& sha
 }
 
 guint GlyphRenderer::_hashFont(PangoFont* font) const {
-	PangoFontDescription* d = pango_font_describe(font);
-	guint              hash = pango_font_description_hash(d);
+	PangoFontDescription* d    = pango_font_describe(font);
+	guint                 hash = pango_font_description_hash(d);
 
 	pango_font_description_free(d);
 

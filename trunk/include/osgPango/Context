@@ -44,7 +44,7 @@ public:
 	virtual void operator()(GlyphRenderer* renderer) = 0;
 };
 
-//! TODO: DOCUMENT THE SHIT OUT OF THIS!!!
+//! TODO: DOCUMENT THE CRAP OUT OF THIS!!!
 class OSGPANGO_EXPORT ContextDrawable {
 public:
 	//! Anything that wants to be called by the Context (or rather, "layed out") must define
