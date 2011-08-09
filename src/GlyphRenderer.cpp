@@ -15,21 +15,16 @@
 
 namespace osgPango {
 
-const unsigned int DEFAULT_CACHE_WIDTH  = 256;
-const unsigned int DEFAULT_CACHE_HEIGHT = 256;
-
 GlyphRenderer::GlyphRenderer():
-_pixelSpacing  (1.0f),
-_textureWidth  (DEFAULT_CACHE_WIDTH),
-_textureHeight (DEFAULT_CACHE_HEIGHT),
-_minFilter     (osg::Texture::LINEAR) {
+_pixelSpacing (1.0f),
+_textureSize  (osg::Vec2s(DEFAULT_TEXTURE_WIDTH, DEFAULT_TEXTURE_HEIGHT)),
+_minFilter    (osg::Texture::LINEAR) {
 }
 
 GlyphRenderer::GlyphRenderer(const GlyphRenderer& gr, const osg::CopyOp& copyOp):
 osg::Object(gr, copyOp),
 _pixelSpacing  (gr._pixelSpacing),
-_textureWidth  (gr._textureWidth),
-_textureHeight (gr._textureHeight),
+_textureSize   (gr._textureSize),
 _minFilter     (gr._minFilter) {
 }
 
@@ -180,8 +175,10 @@ GlyphCache* GlyphRenderer::getOrCreateGlyphCache(PangoFont* font) {
 
 	if(ct != _gc.end()) return ct->second;
 	
-	GlyphCache* cache = new GlyphCache(this, _textureWidth, _textureHeight);
+	GlyphCache* cache = new GlyphCache(this);
 	
+	cache->setHash(hashFont);
+
 	_gc[hashFont] = cache;
 
 	return cache;

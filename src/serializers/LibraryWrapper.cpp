@@ -4,6 +4,7 @@
 #include <osgDB/Registry>
 
 USE_SERIALIZER_WRAPPER(osgPango_GlyphRenderer)
+USE_SERIALIZER_WRAPPER(osgPango_GlyphCache)
 
 extern "C" void wrapper_serializer_library_osgPango(void) {
 	// When is this called?

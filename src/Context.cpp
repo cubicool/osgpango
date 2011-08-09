@@ -178,33 +178,6 @@ void Context::drawLayout(ContextDrawable* drawable, PangoLayout* layout, int x, 
 	_drawable = 0;
 }
 
-void Context::writeCachesToPNGFiles(const std::string& path) const {
-	for(GlyphRendererMap::const_iterator i = _grMap.begin(); i != _grMap.end(); i++) {
-		GlyphRenderer* r = i->second.get();
-
-		std::string prefix = path + "_" + i->first;
-		
-		for(
-			GlyphRenderer::FontGlyphCacheMap::const_iterator j = r->getGlyphCaches().begin();
-			j != r->getGlyphCaches().end();
-			j++
-		) {
-			GlyphCache* gc = j->second.get();
-			
-			std::ostringstream ss;
-			
-			ss 
-				<< prefix
-				<< "_"
-				<< j->first
-				<< "_"
-			;
-			
-			gc->writeImagesAsFiles(ss.str());
-		}
-	}
-}
-
 unsigned long Context::getMemoryUsageInBytes() const {
 	unsigned long bytes = 0;
 

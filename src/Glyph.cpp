@@ -31,17 +31,16 @@ ur     (_ur),
 ul     (_ul) {
 }
 
-GlyphCache::GlyphCache(
-	GlyphRenderer* renderer,
-	unsigned int   width,
-	unsigned int   height
-):
-_renderer   (renderer),
-_x          (0.0f),
-_y          (0.0f),
-_h          (0.0f),
-_imgWidth   (width),
-_imgHeight  (height) {
+GlyphCache::GlyphCache(GlyphRenderer* renderer):
+_renderer (renderer),
+_hash     (0) {
+}
+
+GlyphCache::GlyphCache(const GlyphCache& gc, const osg::CopyOp& copyOp):
+osg::Object(gc, copyOp),
+_renderer (gc._renderer),
+_xyh      (gc._xyh),
+_hash     (gc._hash) {
 }
 
 const CachedGlyph* GlyphCache::getCachedGlyph(unsigned int i) {
@@ -54,6 +53,15 @@ const CachedGlyph* GlyphCache::getCachedGlyph(unsigned int i) {
 };
 
 const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo* gi) {
+	if(!_renderer) {
+		OSG_WARN
+			<< "Cannot call GlyphCache::createCachedGlyph with a NULL GlyphRenderer!"
+			<< std::endl
+		;
+
+		return 0;
+	}
+
 	unsigned int   glyph = gi->glyph;
 	PangoRectangle r;
 
@@ -76,7 +84,12 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	double addw = extents[2] + _renderer->getPixelSpacing();
 	double addh = extents[3] + _renderer->getPixelSpacing();
 
-	if(w + addw >= _imgWidth || h + addh >= _imgHeight) {
+	// unsigned int ts.x();
+	// unsigned int ts.y();
+
+	const osg::Vec2s& ts = _renderer->getTextureSize();
+
+	if(w + addw >= ts.x() || h + addh >= ts.y()) {
 		osg::notify(osg::WARN)
 			<< "The single glyph " << glyph 
 			<< " cannot fit on the allocated texture size; this is likely a critical"
@@ -87,14 +100,19 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 		return 0;
 	}
 
+	// TODO: This is kinda' a hack.
+	float& _x = _xyh.x();
+	float& _y = _xyh.y();
+	float& _h = _xyh.z();
+
 	// If our remaining space isn't enough to acomodate another glyph, jump to another "row."
-	if(_x + w + addw >= _imgWidth) {
+	if(_x + w + addw >= ts.x()) {
 		_x  = _renderer->getPixelSpacing();
 		_y += _h + addh;
 	}
 
 	// Make sure we have enough vertical space, too.
-	if(_y + h + addh >= _imgHeight || !_layers.size()) _newImageAndTexture();
+	if(_y + h + addh >= ts.y() || !_layers.size()) _newImageAndTexture();
 	
 	cairo_scaled_font_t* sf  = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
 
@@ -127,13 +145,14 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 
 	// TODO: Why can't I destroy this here? Is it because the 'font' object has it locked up?
 	// cairo_scaled_font_destroy(sf);
-	
+
+	// Set this rows max height, if its larger.
 	if(h > _h) _h = h;
 
-	double tx = _x / _imgWidth;
-	double ty = (_imgHeight - (h + extents[3]) - _y) / _imgHeight;
-	double tw = (_x + w + extents[2]) / _imgWidth;
-	double th = (_imgHeight - _y) / _imgHeight;
+	double tx = _x / ts.x();
+	double ty = (ts.y() - (h + extents[3]) - _y) / ts.y();
+	double tw = (_x + w + extents[2]) / ts.x();
+	double th = (ts.y() - _y) / ts.y();
 	
 	if(!_layers.size()) {
 		osg::notify(osg::WARN)
@@ -162,16 +181,6 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	return const_cast<const CachedGlyph*>(&_glyphs[glyph]);
 }
 
-void GlyphCache::writeImagesAsFiles(const std::string& prefix) const {
-	for(unsigned int i = 0; i < _layers.size(); i++) {
-		std::ostringstream str;
-
-		str << i;
-		
-		_writeImageVectorFiles(prefix + "layer" + str.str() + "_", "", _layers[i]);
-	}
-}
-
 unsigned long GlyphCache::getMemoryUsageInBytes() const {
 	unsigned long bytes = 0;
 
@@ -187,55 +196,38 @@ unsigned long GlyphCache::getMemoryUsageInBytes() const {
 bool GlyphCache::_newImageAndTexture() {
 	if(!_layers.size()) _layers.resize(_renderer->getNumLayers());
 	
+	const osg::Vec2s& ts = _renderer->getTextureSize();
+
 	for(unsigned int i = 0; i < _layers.size(); i++) {
 		osgCairo::Image* img = new osgCairo::Image(
-			_imgWidth, 
-			_imgHeight, 
+			ts.x(), 
+			ts.y(), 
 			_renderer->getImageFormatForLayer(i)
 		);
 	
 		if(!img || !img->valid()) return false;
 	
+		std::ostringstream os;
+
+		os << _renderer->getName() << "_" << _hash << "_" << i << "_" << _layers[i].size() << ".png";
+
+		img->setFileName(os.str());
+
 		osg::Texture2D* texture = _renderer->createTexture(img);
-		
+
 		_layers[i].push_back(std::make_pair(img, texture));
 	}
 
 	// Whenever a new image is created we reset our _x, _y, and _h values.
 	// It's important that you do not create a new image unless you understand that this
 	// will happen and how it will affect everything.
-	_x = _renderer->getPixelSpacing();
-	_y = _renderer->getPixelSpacing();
-	_h = 0.0f;
+	_xyh.set(
+		_renderer->getPixelSpacing(),
+		_renderer->getPixelSpacing(),
+		0.0f
+	);
 
 	return true;
-}
-
-void GlyphCache::_writeImageVectorFiles(
-	const std::string& prefix,
-	const std::string& postfix,
-	const Images&      images
-) const {
-	unsigned int num = 0;
-
-	for(Images::const_iterator i = images.begin(); i != images.end(); i++) {
-		// This should never, ever happen. :(
-		if(!i->first.get()) continue;
-
-		std::ostringstream ss;
-
-		ss << prefix << num << postfix << ".png";
-
-		osgCairo::util::writeToPNG(i->first->getSurface(), ss.str().c_str());
-
-		osg::notify(osg::NOTICE)
-			<< "Wrote " << ss.str()
-			<< "; " << i->first.get()->getImageSizeInBytes() / 1024.0f
-			<< " KB internally." << std::endl
-		;
-
-		num++;
-	}
 }
 
 osgCairo::Image* GlyphCache::_getImage(unsigned int index, unsigned int layerIndex) const {
@@ -271,6 +263,11 @@ _numQuads(0) {
 	setColorBinding(osg::Geometry::BIND_OVERALL);
 	setVertexArray(new osg::Vec3Array());
 	setTexCoordArray(0, new osg::Vec2Array());
+}
+
+GlyphGeometry::GlyphGeometry(const GlyphGeometry& gg, const osg::CopyOp& copyOp):
+osg::Geometry(gg, copyOp),
+_numQuads(gg._numQuads) {
 }
 
 bool GlyphGeometry::finalize() {

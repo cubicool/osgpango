@@ -40,27 +40,31 @@ struct OSGPANGO_EXPORT CachedGlyph {
 	osg::Vec2    ul;
 };
 
-//! There is one GlyphCache object PER FONT object (determined by the font hash). GlyphRenderer objects
-//! contain the GlyphCaches.
-class OSGPANGO_EXPORT GlyphCache: public osg::Referenced {	
+//! There is one GlyphCache object PER FONT object (determined by the font hash). GlyphRenderer
+//! objects contain the GlyphCaches.
+class OSGPANGO_EXPORT GlyphCache: public osg::Object {
 public:
 	//! This type maps the glyph's numeric index to the CachedGlyph structure.
 	typedef std::map<unsigned int, CachedGlyph> GlyphMap;
 
-	//! This type represents the osgCairo::Image and Texture2D stored internally for a single "page"
-	//! of the glyph texture atlas.
-	typedef std::pair<osg::ref_ptr<osgCairo::Image>, osg::ref_ptr<osg::Texture> > CairoAndTexture;
+	//! This type represents the osgCairo::Image and Texture2D stored internally for a single
+	//! "page" of the glyph texture atlas.
+	typedef std::pair<osg::ref_ptr<osgCairo::Image>, osg::ref_ptr<osg::Texture> > CairoTexture;
 
 	//! This type contains a single Image/Texture combo for EACH page of the texture atlas.
-	typedef std::vector<CairoAndTexture> Images;
+	typedef std::vector<CairoTexture> Images;
 
 	//! Since a GlyphRenderer may contain many layers per glyph, this last type represents each
 	//! layer, numerically ordered.
 	typedef std::vector<Images> Layers;
 
-	//! This constructor is generally only called by the GlyphRenderer; it passes itself in as the 
-	//! "parent" and also, optionally, defines a size for the Image/Tetures used internally.
-	GlyphCache(GlyphRenderer* renderer = 0, unsigned int textureWidth = 0, unsigned int textureHeight = 0);
+	META_Object(osgPango, GlyphCache);
+
+	//! This constructor is generally only called by the GlyphRenderer; it passes itself in as
+	//! the "parent"; a GlyphCache cannot be created without a parent GlypRenderer.
+	GlyphCache(GlyphRenderer* renderer = 0);
+
+	GlyphCache(const GlyphCache& gc, const osg::CopyOp& copyOp);
 
 	//! Returns the CachedGlyph structure data associated with the given glyph index.
 	const CachedGlyph* getCachedGlyph(unsigned int glyph);
@@ -68,10 +72,6 @@ public:
 	//! Creates the CachedGlyph (if it doesn't exists) based on the passed in glyph information
 	//! and returns it; if the glyph already exists, it is simply returned.
 	const CachedGlyph* createCachedGlyph(PangoFont* font, PangoGlyphInfo* glyphInfo);
-
-	//! A utility function for dumping all of the internal osgCairo::Image data to disk. The format
-	//! of the resultant images is prepended with the string @prefix.
-	void writeImagesAsFiles(const std::string& prefix) const;
 
 	//! Returns the amount of GPU memory usage in bytes, taking into account all layers.
 	unsigned long getMemoryUsageInBytes () const;
@@ -82,14 +82,6 @@ public:
 	
 	const osg::Texture* getTexture(unsigned int index, unsigned int layerIndex) const {
 		return _getTexture(index, layerIndex);
-	}
-
-	unsigned int getImageWidth() const {
-		return _imgWidth;
-	}
-
-	unsigned int getImageHeight() const {
-		return _imgHeight;
 	}
 
 	const GlyphRenderer* getGlyphRenderer() const {
@@ -112,32 +104,31 @@ public:
 		return _glyphs;
 	}
 
-	//! Fetches the current XYH position (or perhaps, "cursor", if you prefer) of the GlyphCache's
-	//! internal rendering backend.
-	void getXYH(double& x, double& y, double& h) const {
-		x = _x;
-		y = _y;
-		h = _h;
+	//! Fetches the current XYH position (or perhaps, "cursor", if you prefer) of the
+	//! GlyphCache's internal rendering backend.
+	const osg::Vec3f& getXYH() const {
+		return _xyh;
 	} 
 
-	/*
-	TODO: Jaromir, do you need/use this???
-	//! Why in the world would you call this? :)
-	void setXYH(double x, double y, double h) {
-		_x = x;
-		_y = y;
-		_h = h;
+	//! This should only ever be used by the OSG serialization routines; don't go messing
+	//! about!
+	void setXYH(const osg::Vec3f& xyh) {
+		_xyh = xyh;
 	}
-	*/
+
+	//! Returns the hash key used to map this particular GlyphCache object inside the
+	//! parent GlyphRenderer.
+	guint getHash() const {
+		return _hash;
+	}
+
+	//! Sets the hash key; this is only used by the serialization routines.
+	void setHash(guint hash) {
+		_hash = hash;
+	}
 
 private:
 	bool _newImageAndTexture();
-
-	void _writeImageVectorFiles(
-		const std::string&,
-		const std::string&,
-		const Images&
-	) const;
 
 	osgCairo::Image* _getImage   (unsigned int, unsigned int) const;
 	osg::Texture*    _getTexture (unsigned int, unsigned int) const;
@@ -145,16 +136,10 @@ private:
 	//! The "renderer" object, not bound to any local data.
 	const GlyphRenderer* _renderer;
 
-	Layers _layers;
-	
-	//! A map of external Pango glyph indexes to their internally CachedGlyph data structures.
-	GlyphMap _glyphs;
-
-	double       _x;
-	double       _y;
-	double       _h;
-	unsigned int _imgWidth;
-	unsigned int _imgHeight;
+	Layers     _layers;
+	GlyphMap   _glyphs;
+	osg::Vec3f _xyh;
+	guint      _hash;
 };
 
 //! This is a small subclass of osg::Geometry that simplifies a lot of the tedious Geometry
@@ -162,6 +147,9 @@ private:
 class OSGPANGO_EXPORT GlyphGeometry: public osg::Geometry {
 public:
 	GlyphGeometry();
+	GlyphGeometry(const GlyphGeometry& gg, const osg::CopyOp& copyOp);
+
+	META_Object(osgPango, GlyphGeometry);
 
 	bool finalize          ();
 	bool pushCachedGlyphAt (const CachedGlyph* glyph, const osg::Vec2& position);

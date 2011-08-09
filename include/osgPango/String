@@ -6,6 +6,11 @@
 
 #include <osgText/String>
 
+namespace osgPango {
+
 typedef osgText::String String;
 
+}
+
 #endif
+
