@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 
 	int r = viewer.run();
 
-	context.writeCachesToPNGFiles("osgpangodistancefield");
+	// context.writeCachesToPNGFiles("osgpangodistancefield");
 
 	return r;
 }

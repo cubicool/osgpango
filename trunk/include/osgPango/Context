@@ -141,11 +141,6 @@ public:
 	//! in turn, invoke the drawGlyphs method of the ContextDrawable in question.
 	void drawLayout(ContextDrawable* drawable, PangoLayout* layout, int x, int y);
 	
-	//! Write all the current caches of fonts and their effects to files prefixed with
-	//! the string path parameter. This is great for debugging when you want to see
-	//! how your textures are being created and arranged internally by the engine.
-	void writeCachesToPNGFiles(const std::string& path) const;
-	
 	//! Returns the numbers of bytes used by each Image object in each GlyphCache's 
 	//! layer container.
 	unsigned long getMemoryUsageInBytes() const;
@@ -167,10 +162,10 @@ public:
 	//! An empty string is key the GlyphRendererMap's default renderer. This gets setup
 	//! when the Context is created.
 	const GlyphRenderer* getDefaultGlyphRenderer() const {
-		return _getGlyphRenderer("");
+		return _getGlyphRenderer("DEFAULT");
 	}
 
-	//! Set the GlyphRenderer using the string "".
+	//! Set the GlyphRenderer using the string "DEFAULT".
 	void setDefaultGlyphRenderer(GlyphRenderer* renderer);
 
 	//! Add a newly created GlyphRenderer object to the internal cache of known 

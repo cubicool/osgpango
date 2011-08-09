@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
 	// Run the viewer until ESC is pressed.
 	viewer.run();
 
-	if(dumpTextures) context.writeCachesToPNGFiles("osgpangoviewer");
+	// if(dumpTextures) context.writeCachesToPNGFiles("osgpangoviewer");
 
 	return 0;
 }

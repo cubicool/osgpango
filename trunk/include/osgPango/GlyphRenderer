@@ -23,10 +23,17 @@ struct OSGPANGO_EXPORT GlyphGeometryState {
 typedef std::pair<osg::Geometry*, GlyphGeometryState> GeometryAndState;
 typedef std::list<GeometryAndState>                   GeometryList;
 
+const unsigned int DEFAULT_TEXTURE_WIDTH  = 256;
+const unsigned int DEFAULT_TEXTURE_HEIGHT = 256;
+
 //! Our base class for all GlyphRenderer objects. This object doesn't actually know how to
 //! draw anything; use GlyphRendererDefault for that.
 class OSGPANGO_EXPORT GlyphRenderer: public osg::Object {
 public:
+	//! Maps the result of _hashFont() to a GlyphCache atlas object. Each GlyphRenderer
+	//! maintains its own cache, which diverges greatly from the API in 1.0.0.
+	typedef std::map<guint, osg::ref_ptr<GlyphCache> > FontGlyphCacheMap;
+
 	META_Object(osgPango, GlyphRenderer);
 
 	GlyphRenderer();
@@ -58,18 +65,37 @@ public:
 	//! already been sorted properly prior to calling this routine.
 	virtual bool updateOrCreateState(osg::Geometry* geometry, const GlyphGeometryState& state) const;
 
+	//! Allows the user to retrieve a RW pointer to the internal GlyphCache using a
+	//! PangoFont pointer. If the GlyphCache has not yet been created, a null pointer
+	//! will be returned.
+	GlyphCache* getGlyphCache(PangoFont* font) const;
+
+	//! This method behaves identically to getGlyphCache, except that if the GlyphCache
+	//! objet has not yet been created it will be.
+	GlyphCache* getOrCreateGlyphCache(PangoFont* font);
+
+	//! Returns a RW reference to the internal GlyphCache map; this should really
+	//! only EVER be needed by the serializer; if you're calling it directly, something
+	//! is very wrong.
+	FontGlyphCacheMap& getGlyphCaches() {
+		return _gc;
+	}
+
+	//! Returns a RO reference to the internal GlyphCache map.
+	const FontGlyphCacheMap& getGlyphCaches() const {
+		return _gc;
+	}
+
 	//! This will allow you to change (dynamically as you see fit) the size of the
 	//! glyph caching textures used internally. The compiled-in defaults (which
 	//! you can change in Context.cpp) are 256x256. However, you may have some
 	//! bizarre case where you need more. :)
-	void setTextureSize(unsigned int width, unsigned int height) {
-		_textureWidth  = width;
-		_textureHeight = height;
+	void setTextureSize(const osg::Vec2s& size) {
+		_textureSize = size;
 	}
 	
-	void getTextureSize(unsigned int& width, unsigned int& height) const {
-		width  = _textureWidth;
-		height = _textureHeight;
+	const osg::Vec2s& getTextureSize() const {
+		return _textureSize;
 	}
 
 	//! This method simple creates and returns a new Texture2D object using the @image argument
@@ -110,12 +136,6 @@ public:
 	//! Clears the entire GlyphLayer vector.
 	void clearLayers();
 
-	//! Returns the string name of this GlyphRenderer, as it is referred to (and mapped by)
-	//! in the Context singleton.
-	const std::string& getName() const {
-		return _name;
-	}
-
 	virtual unsigned int getNumLayers() const {
 		return _layers.size();
 	}
@@ -133,35 +153,15 @@ public:
 protected:
 	friend class Text;
 	friend class Context;
-
-	//! Maps the result of _hashFont() to a GlyphCache atlas object. Each GlyphRenderer
-	//! maintains its own cache, which diverges greatly from the API in 1.0.0.
-	typedef std::map<guint, osg::ref_ptr<GlyphCache> > FontGlyphCacheMap;
-
-	//! Allows subclasses to retrieve a RW pointer to the internal GlyphCache using a
-	//! PangoFont pointer. If the GlyphCache has not yet been created, a null pointer
-	//! will be returned.
-	GlyphCache* getGlyphCache(PangoFont* font) const;
-
-	//! This method behaves identically to getGlyphCache, except that if the GlyphCache
-	//! objet has not yet been created it will be.
-	GlyphCache* getOrCreateGlyphCache(PangoFont* font);
-	
-	//! Returns a READ ONLY reference to the internal GlyphCache map.
-	const FontGlyphCacheMap& getGlyphCaches() const {
-		return _gc;
-	}
 	
 	bool  _setFragmentShader (osg::Geode*, const std::string&) const;
 	guint _hashFont          (PangoFont* font) const;
 
 	std::vector<osg::ref_ptr<GlyphLayer> > _layers;
 	unsigned int                           _pixelSpacing;
-	unsigned int                           _textureWidth;
-	unsigned int                           _textureHeight;
+	osg::Vec2s                             _textureSize;
 	osg::Texture::FilterMode               _minFilter;
 	FontGlyphCacheMap                      _gc;
-	std::string                            _name;
 };
 
 class OSGPANGO_EXPORT GlyphRendererDefault: public GlyphRenderer {
