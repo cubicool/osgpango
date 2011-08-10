@@ -1,6 +1,8 @@
 // -*-c++-*- Copyright (C) 2010 osgPango Development Team
 // $Id$
 
+#include <osg/ArgumentParser>
+#include <osgDB/ReadFile>
 #include <osgDB/WriteFile>
 #include <osgPango/Context>
 #include <osgPango/String>
@@ -28,9 +30,18 @@ public:
 
 			const osgPango::CachedGlyph* cg = gc->getCachedGlyph(gi->glyph);
 
-			if(!cg) cg = gc->createCachedGlyph(font, gi);
+			if(!cg) {
+				OSG_NOTICE << "Creating cached glyph: " << gi->glyph << std::endl;
 
-			if(!cg) continue;
+				cg = gc->createCachedGlyph(font, gi);
+				
+				if(!cg) OSG_WARN << "Failed to create cached glyph!" << std::endl;
+			}
+
+			else OSG_NOTICE
+				<< "Found exisiting cached glyph: " << gi->glyph
+				<< std::endl
+			;
 		}
 	}
 
@@ -71,11 +82,30 @@ private:
 
 int main(int argc, char** argv) {
 	osgPango::Context::instance().init();
+	
+	osg::ArgumentParser args(&argc, argv);
 
-	osgPango::GlyphRenderer* renderer = new osgPango::GlyphRendererDefault();
+	osgPango::GlyphRenderer* renderer = 0; 
+	
+	// Test loading a saved renderer...
+	if(args.argc() >= 2) {
+		OSG_NOTICE << "Loading: " << args[1] << std::endl;
 
-	renderer->setName("renderer");
-	renderer->setTextureSize(osg::Vec2s(512, 256));
+		renderer = dynamic_cast<osgPango::GlyphRendererDefault*>(osgDB::readObjectFile(args[1]));
+
+		if(!renderer) {
+			OSG_NOTICE << "Failed to read the cache." << std::endl;
+
+			return 1;
+		}
+	}
+
+	else {
+		renderer = new osgPango::GlyphRendererDefault();
+
+		renderer->setName("renderer");
+		renderer->setTextureSize(osg::Vec2s(512, 256));
+	}
 
 	CacheContextDrawable cache(renderer);
 
