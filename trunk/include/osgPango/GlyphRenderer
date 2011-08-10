@@ -23,8 +23,8 @@ struct OSGPANGO_EXPORT GlyphGeometryState {
 typedef std::pair<osg::Geometry*, GlyphGeometryState> GeometryAndState;
 typedef std::list<GeometryAndState>                   GeometryList;
 
-const unsigned int DEFAULT_TEXTURE_WIDTH  = 256;
-const unsigned int DEFAULT_TEXTURE_HEIGHT = 256;
+const short DEFAULT_TEXTURE_WIDTH  = 256;
+const short DEFAULT_TEXTURE_HEIGHT = 256;
 
 //! Our base class for all GlyphRenderer objects. This object doesn't actually know how to
 //! draw anything; use GlyphRendererDefault for that.
@@ -166,7 +166,10 @@ protected:
 
 class OSGPANGO_EXPORT GlyphRendererDefault: public GlyphRenderer {
 public:
+	META_Object(osgPango, GlyphRendererDefault);
+
 	GlyphRendererDefault();
+	GlyphRendererDefault(const GlyphRendererDefault& gr, const osg::CopyOp& copyOp);
 	
 	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };

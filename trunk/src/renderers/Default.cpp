@@ -9,6 +9,13 @@ GlyphRendererDefault::GlyphRendererDefault() {
 	addLayer(new GlyphLayer());
 }
 
+GlyphRendererDefault::GlyphRendererDefault(
+	const GlyphRendererDefault& gr,
+	const osg::CopyOp&          copyOp
+):
+GlyphRenderer(gr, copyOp) {
+}
+
 bool GlyphRendererDefault::updateOrCreateState(int pass, osg::Geode* geode) const {
 	if(!GlyphRenderer::updateOrCreateState(pass, geode)) return false;
 

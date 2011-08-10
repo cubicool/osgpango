@@ -65,6 +65,7 @@ SET(SRC_RENDERER_FILES
 SET(SRC_SERIALIZER_FILES
 	src/serializers/Glyph.cpp
 	src/serializers/GlyphRenderer.cpp
+	src/serializers/GlyphRendererDefault.cpp
 	src/serializers/LibraryWrapper.cpp
 )
 

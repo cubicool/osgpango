@@ -11,19 +11,47 @@
 static bool checkLayers(const osgPango::GlyphCache& gc) {
 	const osgPango::GlyphCache::Layers& layers = gc.getLayers();
 
-	return true;
-
-	// return layers.size() != 0;
+	return layers.size() != 0;
 } 
 
 static bool readLayers(osgDB::InputStream& is, osgPango::GlyphCache& gc) {
 	osgPango::GlyphCache::Layers& layers = gc.getLayers();
-	
+
+	unsigned int layerSize = is.readSize();
+	unsigned int imgSize   = is.readSize();
+
+	is >> osgDB::BEGIN_BRACKET;
+
+	for(unsigned int l = 0; l < layerSize; l++) {
+		unsigned int layerNum;
+
+		is >> osgDB::PROPERTY("Layer") >> layerNum >> osgDB::BEGIN_BRACKET;
+
+		for(unsigned int i = 0; i < imgSize; i++) {
+			unsigned int imgNum;
+
+			is >> osgDB::PROPERTY("Image") >> imgNum >> osgDB::BEGIN_BRACKET;
+
+			osg::Texture* texture = dynamic_cast<osg::Texture*>(is.readObject());
+
+			if(texture)
+
+			is >> osgDB::END_BRACKET;
+		}
+
+		is >> osgDB::END_BRACKET;
+	}
+
+	is >> osgDB::END_BRACKET;
+
 	return true; 
 }
 
 static bool writeLayers(osgDB::OutputStream& os, const osgPango::GlyphCache& gc) {
 	const osgPango::GlyphCache::Layers& layers = gc.getLayers();
+
+	os.writeSize(layers.size());
+	os.writeSize(layers[0].size());
 
 	os << osgDB::BEGIN_BRACKET << std::endl;
 
@@ -60,9 +88,7 @@ static bool writeLayers(osgDB::OutputStream& os, const osgPango::GlyphCache& gc)
 static bool checkGlyphMap(const osgPango::GlyphCache& gc) {
 	const osgPango::GlyphCache::GlyphMap& gmap = gc.getGlyphMap();
 
-	return true;
-
-	// return gmap.size() != 0;
+	return gmap.size() != 0;
 } 
 
 static bool readGlyphMap(osgDB::InputStream& is, osgPango::GlyphCache& gc) {

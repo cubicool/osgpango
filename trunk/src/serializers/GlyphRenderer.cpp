@@ -11,14 +11,10 @@
 static bool checkTextureSize(const osgPango::GlyphRenderer& gr) {
 	const osg::Vec2s& ts = gr.getTextureSize();
 
-	return true;
-
-	/*
 	return (
 		ts.x() != osgPango::DEFAULT_TEXTURE_WIDTH || 
 		ts.y() != osgPango::DEFAULT_TEXTURE_HEIGHT
 	);
-	*/
 }
 
 static bool readTextureSize(osgDB::InputStream& is, osgPango::GlyphRenderer& gr) {
@@ -39,9 +35,7 @@ static bool writeTextureSize(osgDB::OutputStream& os, const osgPango::GlyphRende
 
 // ---------------------------------------------------------------------------------- MinFilterMode
 static bool checkMinFilterMode(const osgPango::GlyphRenderer& gr) {
-	return true;
-
-	// return gr.getMinFilterMode() != osg::Texture::LINEAR;
+	return gr.getMinFilterMode() != osg::Texture::LINEAR;
 } 
 
 static bool readMinFilterMode(osgDB::InputStream& is, osgPango::GlyphRenderer& gr) {
@@ -64,19 +58,31 @@ static bool writeMinFilterMode(osgDB::OutputStream& os, const osgPango::GlyphRen
 static bool checkFontGlyphCacheMap(const osgPango::GlyphRenderer& gr) {
 	const osgPango::GlyphRenderer::FontGlyphCacheMap& fgcm = gr.getGlyphCaches();
 
-	return true;
-
-	// return fgcm.size() != 0;
+	return fgcm.size() != 0;
 } 
 
 static bool readFontGlyphCacheMap(osgDB::InputStream& is, osgPango::GlyphRenderer& gr) {
 	osgPango::GlyphRenderer::FontGlyphCacheMap& fgcm = gr.getGlyphCaches();
+
+	unsigned int size = is.readSize();
+
+	is >> osgDB::BEGIN_BRACKET;
+
+	for(unsigned int i = 0; i < size; i++) {
+		osgPango::GlyphCache* gc = dynamic_cast<osgPango::GlyphCache*>(is.readObject());
+
+		if(!gc) OSG_WARN << "SHIT" << std::endl;
+	}
 	
+	is >> osgDB::END_BRACKET;
+
 	return true; 
 }
 
 static bool writeFontGlyphCacheMap(osgDB::OutputStream& os, const osgPango::GlyphRenderer& gr) {
 	const osgPango::GlyphRenderer::FontGlyphCacheMap& fgcm = gr.getGlyphCaches();
+
+	os.writeSize(fgcm.size());
 
 	os << osgDB::BEGIN_BRACKET << std::endl;
 
