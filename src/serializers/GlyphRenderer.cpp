@@ -71,7 +71,15 @@ static bool readFontGlyphCacheMap(osgDB::InputStream& is, osgPango::GlyphRendere
 	for(unsigned int i = 0; i < size; i++) {
 		osgPango::GlyphCache* gc = dynamic_cast<osgPango::GlyphCache*>(is.readObject());
 
-		if(!gc) OSG_WARN << "SHIT" << std::endl;
+		if(!gc) {
+			OSG_WARN << "SHIT" << std::endl;
+
+			return false;
+		}
+
+		gc->setGlyphRenderer(&gr);
+
+		fgcm[gc->getHash()] = gc;
 	}
 	
 	is >> osgDB::END_BRACKET;

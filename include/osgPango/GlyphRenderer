@@ -102,24 +102,24 @@ public:
 	//! as its data source. You could override this method to enable mipmapping by default, for example.
 	virtual osg::Texture2D* createTexture(osg::Image* image) const;
 
+	unsigned int getPixelSpacing() const {
+		return _pixelSpacing;
+	}
+
 	//! Set the number of pixels to "pad" the active texture region per glyph; the default is 1.
 	void setPixelSpacing(unsigned int spacing) {
 		_pixelSpacing = spacing;
+	}
+
+	//! TODO: Mipmaps...
+	osg::Texture::FilterMode getMinFilterMode() const {
+		return _minFilter;
 	}
 
 	//! Sets the textures minFilterMode; this can be used to enable mipmapping, though it should
 	//! be remembered to also call setPixelSpacing. TODO: Finish this...
 	void setMinFilterMode(osg::Texture::FilterMode fm) {
 		_minFilter = fm;
-	}
-
-	unsigned int getPixelSpacing() const {
-		return _pixelSpacing;
-	}
-
-	//! TODO: Mipmaps...
-	osg::Texture::FilterMode getMinFilterMode() const {
-		return _minFilter;
 	}
 
 	//! Appends a GlyphLayer object onto the container of combined layers.
@@ -156,6 +156,7 @@ protected:
 	
 	bool  _setFragmentShader (osg::Geode*, const std::string&) const;
 	guint _hashFont          (PangoFont* font) const;
+	char* _describeFont      (PangoFont* font) const;
 
 	std::vector<osg::ref_ptr<GlyphLayer> > _layers;
 	unsigned int                           _pixelSpacing;

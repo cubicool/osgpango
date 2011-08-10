@@ -9,7 +9,7 @@ REGISTER_OBJECT_WRAPPER(
 	osgPango_GlyphRendererDefault,
 	new osgPango::GlyphRendererDefault(),
 	osgPango::GlyphRendererDefault,
-	"osgPango::GlyphRenderer osgPango::GlyphRendererDefault"
+	"osg::Object osgPango::GlyphRenderer osgPango::GlyphRendererDefault"
 ) {
 }
 

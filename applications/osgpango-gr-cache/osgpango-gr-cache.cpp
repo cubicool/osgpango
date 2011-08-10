@@ -1,6 +1,7 @@
 // -*-c++-*- Copyright (C) 2010 osgPango Development Team
 // $Id$
 
+#include <osg/io_utils>
 #include <osg/ArgumentParser>
 #include <osgDB/ReadFile>
 #include <osgDB/WriteFile>
@@ -80,6 +81,44 @@ private:
 	osg::ref_ptr<osgPango::GlyphRenderer> _gr;
 };
 
+void outputGlyphRendererInformation(
+	std::ostream&                  os,
+	const osgPango::GlyphRenderer* r
+) {
+	os
+	<< "RendererInformation" << std::endl
+	<< "==========================================" << std::endl
+	<< "   Name: " << r->getName() << std::endl
+	<< "   NumLayers: " << r->getNumLayers() << std::endl
+	<< "   PixelSpacing: " << r->getPixelSpacing() << std::endl
+	<< "   TextureSize: " << r->getTextureSize() << std::endl
+	<< std::endl
+	<< "Cache Information" << std::endl
+	<< "==========================================" << std::endl
+	;
+
+	const osgPango::GlyphRenderer::FontGlyphCacheMap& caches = r->getGlyphCaches();
+
+	for(
+		osgPango::GlyphRenderer::FontGlyphCacheMap::const_iterator c = caches.begin();
+		c != caches.end();
+		c++
+	) {
+		guint                       hash   = c->first;
+		const osgPango::GlyphCache* cache  = c->second.get();
+		
+		// Our data to display...
+		unsigned int memUsage = cache->getMemoryUsageInBytes() / 1024;
+
+		os
+		<< "   " << hash << std::endl
+		<< "      MemoryUsage: " << memUsage << "KB" << std::endl
+		<< "      ImagesPerLayer: " << cache->getLayers()[0].size() << std::endl
+		<< "      CachedGlyphs: " << cache->getGlyphMap().size() << std::endl
+		;
+	}
+}
+
 int main(int argc, char** argv) {
 	osgPango::Context::instance().init();
 	
@@ -98,6 +137,8 @@ int main(int argc, char** argv) {
 
 			return 1;
 		}
+
+		// outputGlyphRendererInformation(osg::notify(osg::NOTICE), renderer);
 	}
 
 	else {
