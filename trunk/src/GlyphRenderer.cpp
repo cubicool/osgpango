@@ -177,7 +177,12 @@ GlyphCache* GlyphRenderer::getOrCreateGlyphCache(PangoFont* font) {
 	
 	GlyphCache* cache = new GlyphCache(this);
 	
+	char* descr = _describeFont(font);
+
 	cache->setHash(hashFont);
+	cache->setDescription(descr);
+
+	g_free(descr);
 
 	_gc[hashFont] = cache;
 
@@ -210,6 +215,15 @@ guint GlyphRenderer::_hashFont(PangoFont* font) const {
 	pango_font_description_free(d);
 
 	return hash;
+}
+
+char* GlyphRenderer::_describeFont(PangoFont* font) const {
+	PangoFontDescription* d     = pango_font_describe(font);
+	char*                 descr = pango_font_description_to_string(d);
+
+	pango_font_description_free(d);
+
+	return descr;
 }
 
 }

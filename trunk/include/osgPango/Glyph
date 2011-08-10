@@ -61,7 +61,7 @@ public:
 	META_Object(osgPango, GlyphCache);
 
 	//! This constructor is generally only called by the GlyphRenderer; it passes itself in as
-	//! the "parent"; a GlyphCache cannot be created without a parent GlypRenderer.
+	//! the "parent"; a GlyphCache should not be created without a parent GlypRenderer.
 	GlyphCache(GlyphRenderer* renderer = 0);
 
 	GlyphCache(const GlyphCache& gc, const osg::CopyOp& copyOp);
@@ -85,8 +85,14 @@ public:
 	}
 
 	const GlyphRenderer* getGlyphRenderer() const {
-		return _renderer;
+		return _renderer.get();
 	}
+
+	//! Attempts to set the GlyphRenderer; returns true if the operation was successful.
+	//! Ideally, you will never even CREATE a GlyphCache without having access to a
+	//! parent GlyphRenderer, but in some cases (such as serialization), this is
+	//! unavoidable. However, this operation will fail if GlyphRenderer is already valid.
+	bool setGlyphRenderer(GlyphRenderer* renderer);
 
 	Layers& getLayers() { 
 		return _layers; 
@@ -127,6 +133,18 @@ public:
 		_hash = hash;
 	}
 
+	//! Returns the Pango font description string used to generate this
+	//! GlyphCache instances hash.
+	const std::string& getDescription() const {
+		return _description;
+	}
+
+	//! Sets the description string; this is only used by the backend and during
+	//! serialization.
+	void setDescription(const std::string& description) {
+		_description = description;
+	}
+
 private:
 	bool _newImageAndTexture();
 
@@ -134,12 +152,13 @@ private:
 	osg::Texture*    _getTexture (unsigned int, unsigned int) const;
 
 	//! The "renderer" object, not bound to any local data.
-	const GlyphRenderer* _renderer;
+	osg::observer_ptr<GlyphRenderer> _renderer;
 
-	Layers     _layers;
-	GlyphMap   _glyphs;
-	osg::Vec3f _xyh;
-	guint      _hash;
+	Layers      _layers;
+	GlyphMap    _glyphs;
+	osg::Vec3f  _xyh;
+	guint       _hash;
+	std::string _description;
 };
 
 //! This is a small subclass of osg::Geometry that simplifies a lot of the tedious Geometry

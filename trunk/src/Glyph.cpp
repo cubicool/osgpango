@@ -193,6 +193,14 @@ unsigned long GlyphCache::getMemoryUsageInBytes() const {
 	return bytes;
 }
 
+bool GlyphCache::setGlyphRenderer(GlyphRenderer* renderer) {
+	if(_renderer.valid()) return false;
+	
+	_renderer = renderer;
+
+	return true;
+}
+
 bool GlyphCache::_newImageAndTexture() {
 	if(!_layers.size()) _layers.resize(_renderer->getNumLayers());
 	
