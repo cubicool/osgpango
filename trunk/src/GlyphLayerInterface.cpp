@@ -45,7 +45,7 @@ cairo_surface_t* GlyphLayerInterfaceBlur::createBlurredSurface(
 
 	cairo_destroy(tc);
 
-	if(_deviation > 0.0f) osgCairo::util::gaussianBlur(tmp, _radius, _deviation);
+	if(_deviation > 0.0f) osgCairo::gaussianBlur(tmp, _radius, _deviation);
 
 	return tmp;
 }

@@ -138,6 +138,18 @@ osg::Texture2D* GlyphRenderer::createTexture(osg::Image* image) const {
 	return texture;
 }
 
+GlyphLayer* GlyphRenderer::getLayer(unsigned int layer) {
+	if(getNumLayers() <= layer) return 0;
+
+	else return _layers[layer];
+}
+
+const GlyphLayer* GlyphRenderer::getLayer(unsigned int layer) const {
+	if(getNumLayers() <= layer) return 0;
+
+	else return _layers[layer];
+}
+
 void GlyphRenderer::addLayer(GlyphLayer *layer) {
 	_layers.push_back(layer);
 }

@@ -17,7 +17,7 @@ G_DEFINE_TYPE(Renderer, renderer, PANGO_TYPE_RENDERER);
 static GObjectClass* _pangoClass = 0;
 
 void renderer_finalize(GObject* object) {
-	Renderer* priv = RENDERER(object);
+	// Renderer* priv = RENDERER(object);
 
 	G_OBJECT_CLASS(_pangoClass)->finalize(object);
 }
@@ -211,7 +211,7 @@ void Context::addGlyphRenderer(const std::string& name, GlyphRenderer* renderer)
 	
 	if(_onAddCallback) (*_onAddCallback)(renderer);
 
-	renderer->_name = name;
+	renderer->setName(name);
 }
 
 void Context::removeGlyphRenderer(const std::string& name) {

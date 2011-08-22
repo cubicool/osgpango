@@ -122,6 +122,10 @@ public:
 		_minFilter = fm;
 	}
 
+	GlyphLayer* getLayer(unsigned int layer);
+
+	const GlyphLayer* getLayer(unsigned int layer) const;
+
 	//! Appends a GlyphLayer object onto the container of combined layers.
 	void addLayer(GlyphLayer* layer);
 
@@ -151,12 +155,11 @@ public:
 	virtual cairo_format_t getImageFormatForLayer(unsigned int layer) const;
 
 protected:
-	friend class Text;
-	friend class Context;
+	bool _setFragmentShader(osg::Geode*, const std::string&) const;
 	
-	bool  _setFragmentShader (osg::Geode*, const std::string&) const;
-	guint _hashFont          (PangoFont* font) const;
-	char* _describeFont      (PangoFont* font) const;
+private:
+	guint _hashFont     (PangoFont* font) const;
+	char* _describeFont (PangoFont* font) const;
 
 	std::vector<osg::ref_ptr<GlyphLayer> > _layers;
 	unsigned int                           _pixelSpacing;
@@ -172,15 +175,23 @@ public:
 	GlyphRendererDefault();
 	GlyphRendererDefault(const GlyphRendererDefault& gr, const osg::CopyOp& copyOp);
 	
-	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
+	virtual bool updateOrCreateState(int pass, osg::Geode* geode) const;
 };
+
+const unsigned int DEFAULT_OUTLINE = 2;
 
 class OSGPANGO_EXPORT GlyphRendererOutline: public GlyphRenderer {
 public:
-	GlyphRendererOutline(unsigned int = 2);
+	META_Object(osgPango, GlyphRendererOutline);
 
-	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
+	GlyphRendererOutline(unsigned int outline = DEFAULT_OUTLINE);
+	GlyphRendererOutline(const GlyphRendererOutline& gro, const osg::CopyOp& copyOp);
+
+	virtual bool updateOrCreateState(int pass, osg::Geode* geode) const;
 };
+
+const unsigned int DEFAULT_SHADOW_XOFF = 1;
+const unsigned int DEFAULT_SHADOW_YOFF = 1;
 
 class OSGPANGO_EXPORT GlyphRendererShadow: public GlyphRenderer {
 public:
@@ -189,6 +200,11 @@ public:
 	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
 
+const unsigned int DEFAULT_SHADOW_BLUR_XOFF      = 0;
+const unsigned int DEFAULT_SHADOW_BLUR_YOFF      = 0;
+const unsigned int DEFAULT_SHADOW_BLUR_RADIUS    = 2;
+const unsigned int DEFAULT_SHADOW_BLUR_DEVIATION = 0;
+
 class OSGPANGO_EXPORT GlyphRendererShadowBlur: public GlyphRenderer {
 public:
 	GlyphRendererShadowBlur(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
@@ -196,12 +212,22 @@ public:
 	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
 
+const unsigned int DEFAULT_SHADOW_INSET_XOFF      = 0;
+const unsigned int DEFAULT_SHADOW_INSET_YOFF      = 0;
+const unsigned int DEFAULT_SHADOW_INSET_RADIUS    = 2;
+const unsigned int DEFAULT_SHADOW_INSET_DEVIATION = 0;
+
 class OSGPANGO_EXPORT GlyphRendererShadowInset: public GlyphRenderer {
 public:
 	GlyphRendererShadowInset(int = 0, int = 0, unsigned int = 2, unsigned int = 0);
 	
 	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
+
+const unsigned int DEFAULT_DISTANCE_FIELD_SCAN_SIZE         = 150;
+const unsigned int DEFAULT_DISTANCE_FIELD_BLOCK_SIZE        = 32;
+const double       DEFAULT_DISTANCE_FIELD_PADDING           = 3.0f;
+const double       DEFAULT_DISTANCE_FIELD_SCALE_DENOMINATOR = 1.0f;
 
 //! TODO: This is a cool class, is going to require a lot of documentation. :)
 class OSGPANGO_EXPORT GlyphRendererDistanceField: public GlyphRenderer {
