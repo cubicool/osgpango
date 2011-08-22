@@ -5,6 +5,7 @@
 #include <osgDB/ObjectWrapper>
 #include <osgDB/InputStream>
 #include <osgDB/OutputStream>
+#include <osgCairo/Util>
 #include <osgPango/Glyph>
 
 // ----------------------------------------------------------------------------------------- Layers
@@ -23,13 +24,11 @@ static bool readLayers(osgDB::InputStream& is, osgPango::GlyphCache& gc) {
 	is >> osgDB::BEGIN_BRACKET;
 
 	for(unsigned int l = 0; l < layerSize; l++) {
-		is >> osgDB::PROPERTY("Layer") >> osgDB::BEGIN_BRACKET;
-
 		layers.push_back(osgPango::GlyphCache::Images());
 
-		for(unsigned int i = 0; i < imgSize; i++) {
-			is >> osgDB::PROPERTY("CairoImage") >> osgDB::BEGIN_BRACKET;
+		is >> osgDB::PROPERTY("Layer") >> osgDB::BEGIN_BRACKET;
 
+		for(unsigned int i = 0; i < imgSize; i++) {
 			osgPango::GlyphCache::CairoTexture ct;
 
 			osg::Texture* texture = dynamic_cast<osg::Texture*>(is.readObject());
@@ -49,29 +48,17 @@ static bool readLayers(osgDB::InputStream& is, osgPango::GlyphCache& gc) {
 				return false;
 			}
 
-			/*
-			unsigned char* data = osgCairo::createNewImageDataAsCairoFormat(
-				image,
-				CAIRO_FORMAT_A8
-			);
+			osgCairo::Image* newImage = new osgCairo::Image();
 
-			if(!data) OSG_WARN << "No data..." << std::endl;
-			*/
+			if(newImage->allocateSurface(image)) {
+				// *
+				cairo_t* c = newImage->createContext();
 
-			osgCairo::Image* newImage = new osgCairo::Image(
-				image->s(),
-				image->t(),
-				CAIRO_FORMAT_A8,
-				static_cast<const unsigned char*>(image->getDataPointer())
-			);
-
-			// *
-			cairo_t* c = newImage->createContext();
-
-			cairo_arc(c, image->s() / 2.0f, image->t() / 2.0f, 100.0f, 0.0f, 2.0f * 3.14159f);
-			cairo_fill(c);
-			cairo_destroy(c);
-			// *
+				cairo_arc(c, image->s() / 2.0f, image->t() / 2.0f, 100.0f, 0.0f, 2.0f * 3.14159f);
+				cairo_fill(c);
+				cairo_destroy(c);
+				// *
+			}
 
 			newImage->setFileName(image->getFileName());
 
@@ -83,10 +70,8 @@ static bool readLayers(osgDB::InputStream& is, osgPango::GlyphCache& gc) {
 			ct.second = texture;
 
 			layers[l].push_back(ct);
-
-			is >> osgDB::END_BRACKET;
 		}
-
+		
 		is >> osgDB::END_BRACKET;
 	}
 
@@ -105,15 +90,14 @@ static bool writeLayers(osgDB::OutputStream& os, const osgPango::GlyphCache& gc)
 
 	// We have one Layer per "effect", essentially.
 	for(unsigned int l = 0; l < layers.size(); l++) {
-		os << "Layer" << osgDB::BEGIN_BRACKET << std::endl;
-
 		// Now we iterate over our Images, which we can have a variable number of
 		// depending on how numerous and how large the glyphs are.
-		for(unsigned int i = 0; i < layers[l].size(); i++) {
-			os << "CairoImage" << osgDB::BEGIN_BRACKET << std::endl;
 
-			osg::Image*   image   = layers[l][i].first.get();
-			osg::Texture* texture = layers[l][i].second.get();
+		os << "Layer" << osgDB::BEGIN_BRACKET << std::endl;
+
+		for(unsigned int i = 0; i < layers[l].size(); i++) {
+			osgCairo::Image* image   = layers[l][i].first.get();
+			osg::Texture*    texture = layers[l][i].second.get();
 
 			// TODO: SPEW ERRORS...
 			if(!image->getFileName().size()) {
@@ -122,12 +106,15 @@ static bool writeLayers(osgDB::OutputStream& os, const osgPango::GlyphCache& gc)
 				return false;
 			}
 
+			// TODO: Not necessary for A8 surfaces...
+			// image->unPreMultiply();
+
 			os.setWriteImageHint(osgDB::OutputStream::WRITE_EXTERNAL_FILE);
 			os.writeObject(texture);
-
-			os << osgDB::END_BRACKET << std::endl;
+			
+			// image->premultiply();
 		}
-
+		
 		os << osgDB::END_BRACKET << std::endl;
 	}
 	

@@ -48,7 +48,7 @@ bool GlyphLayerBevel::render(
 
 	cairo_destroy(cr);
 
-	cairo_surface_t* lightmap = osgCairo::util::createEmbossedSurface(
+	cairo_surface_t* lightmap = osgCairo::createEmbossedSurface(
 		bumpmap,
 		_azimuth,
 		_elevation,

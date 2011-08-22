@@ -12,11 +12,14 @@ namespace osgPango {
 
 //! The standard GlyphLayer base class. Its most important method is render(), which is called
 //! by the parent GlyphRenderer when a glyph needs to be rasterized.
-class OSGPANGO_EXPORT GlyphLayer: public osg::Referenced {
+class OSGPANGO_EXPORT GlyphLayer: public osg::Object {
 public:
+	META_Object(osgPango, GlyphLayer);
+
 	//! The standard default layer format is A8; in some cases, your subclass might want
 	//! RGB24 or ARGB32.
 	GlyphLayer(cairo_format_t format = CAIRO_FORMAT_A8);
+	GlyphLayer(const GlyphLayer& glyphLayer, const osg::CopyOp& copyOp);
 
 	//! Here is where your subclass renders the custom shape of glyph. You are given a
 	//! Cairo context to use with the understanding that the parent GlyphRenderer has already

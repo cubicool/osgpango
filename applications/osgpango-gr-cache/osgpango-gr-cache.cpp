@@ -32,17 +32,19 @@ public:
 			const osgPango::CachedGlyph* cg = gc->getCachedGlyph(gi->glyph);
 
 			if(!cg) {
-				OSG_NOTICE << "Creating cached glyph: " << gi->glyph << std::endl;
+				// OSG_NOTICE << "Creating cached glyph: " << gi->glyph << std::endl;
 
 				cg = gc->createCachedGlyph(font, gi);
 				
 				if(!cg) OSG_WARN << "Failed to create cached glyph!" << std::endl;
 			}
 
+			/*
 			else OSG_NOTICE
 				<< "Found exisiting cached glyph: " << gi->glyph
 				<< std::endl
 			;
+			*/
 		}
 	}
 
@@ -142,7 +144,7 @@ int main(int argc, char** argv) {
 	}
 
 	else {
-		renderer = new osgPango::GlyphRendererDefault();
+		renderer = new osgPango::GlyphRendererOutline(10);
 
 		renderer->setName("renderer");
 		renderer->setTextureSize(osg::Vec2s(512, 256));

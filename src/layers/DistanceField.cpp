@@ -42,7 +42,7 @@ bool GlyphLayerDistanceField::render(
 	cairo_glyph_path(cr, glyph, 1);
 	cairo_fill(cr);
 
-	cairo_surface_t* distanceField = osgCairo::util::createDistanceField(
+	cairo_surface_t* distanceField = osgCairo::createDistanceField(
 		surface,
 		_scanSize,
 		_blockSize

@@ -10,6 +10,11 @@ GlyphLayer::GlyphLayer(cairo_format_t format):
 _imageFormat(format) {
 }
 
+GlyphLayer::GlyphLayer(const GlyphLayer& gl, const osg::CopyOp& copyOp):
+osg::Object(gl, copyOp),
+_imageFormat(gl._imageFormat) {
+}
+
 bool GlyphLayer::render(
 	cairo_t*       c,
 	cairo_glyph_t* glyph,

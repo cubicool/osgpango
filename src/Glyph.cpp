@@ -121,12 +121,11 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	// Render glyph to layers.
 	for(unsigned int layerIndex = 0; layerIndex < _renderer->getNumLayers(); layerIndex++) {
 		osgCairo::Image*  img = _layers[layerIndex].back().first.get();
-		cairo_t*          c   = img->createContext();
+		cairo_t*          c   = img->createContext(false);
 
 		if(cairo_status(c)) continue;
 
 		cairo_set_scaled_font(c, sf);
-		cairo_identity_matrix(c);
 
 		// Set position in image and then move write position to origin of glyph. 
 		// Each GlyphLayer can assume that writes on right position if no effects are
@@ -138,6 +137,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 			<< "a glyph to the internal surface."
 			<< std::endl
 		;
+		
 		cairo_destroy(c);
 		
 		img->dirty();
@@ -217,7 +217,17 @@ bool GlyphCache::_newImageAndTexture() {
 	
 		std::ostringstream os;
 
-		os << _renderer->getName() << "_" << _hash << "_" << i << "_" << _layers[i].size() << ".png";
+		// TODO: Make the file extension configurable.
+		os
+			<< _renderer->getName()
+			<< "_"
+			<< _hash
+			<< "_"
+			<< i
+			<< "_"
+			<< _layers[i].size()
+			<< ".png"
+		;
 
 		img->setFileName(os.str());
 

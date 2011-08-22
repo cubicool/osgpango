@@ -7,13 +7,6 @@
 namespace osgPango {
 
 GlyphRendererShadow::GlyphRendererShadow(int offsetX, int offsetY) {
-	unsigned int xt = 0;
-	unsigned int yt = 0;
-
-	if(offsetX < 0) xt = std::abs(static_cast<double>(offsetX));
-
-	if(offsetY < 0) yt = std::abs(static_cast<double>(offsetY));
-	
 	addLayer(new GlyphLayer());
 	addLayer(new GlyphLayerShadow(offsetX, offsetY));
 }
