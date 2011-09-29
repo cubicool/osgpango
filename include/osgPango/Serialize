@@ -1,0 +1,43 @@
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_SERIALIZE
+#define OSGPANGO_SERIALIZE
+
+#define OFFSET_CHECK(TYPE, INDEX) \
+static bool checkOffset(const TYPE& t) { \
+	const osgPango::GlyphLayerInterfaceOffset* offset = \
+		dynamic_cast<const osgPango::GlyphLayerInterfaceOffset*>(t.getLayer(INDEX)) \
+	; \
+	if(offset) return \
+		offset->getOffsetX() != osgPango::DEFAULT_SHADOW_XOFFSET && \
+		offset->getOffsetY() != osgPango::DEFAULT_SHADOW_YOFFSET \
+	; \
+	return false; \
+} 
+
+#define OFFSET_READ(TYPE, INDEX) \
+static bool readOffset(osgDB::InputStream& is, TYPE& t) { \
+	osgPango::GlyphLayerInterfaceOffset* offset = \
+		dynamic_cast<osgPango::GlyphLayerInterfaceOffset*>(t.getLayer(INDEX)) \
+	; \
+	if(!offset) return false; \
+	int xOffset, yOffset; \
+	is >> xOffset >> yOffset; \
+	offset->setOffsetX(xOffset); \
+	offset->setOffsetY(yOffset); \
+	return true; \
+}
+
+#define OFFSET_WRITE(TYPE, INDEX) \
+static bool writeOffset(osgDB::OutputStream& os, const TYPE& t) { \
+	const osgPango::GlyphLayerInterfaceOffset* offset = \
+		dynamic_cast<const osgPango::GlyphLayerInterfaceOffset*>(t.getLayer(INDEX)) \
+	; \
+	if(!offset) return false; \
+	os << offset->getOffsetX() << offset->getOffsetY() << std::endl; \
+	return true; \
+}
+
+#endif
+

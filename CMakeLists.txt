@@ -65,9 +65,10 @@ SET(SRC_RENDERER_FILES
 SET(SRC_SERIALIZER_FILES
 	src/serializers/Glyph.cpp
 	src/serializers/GlyphRenderer.cpp
-	src/serializers/GlyphRendererDefault.cpp
-	src/serializers/GlyphRendererOutline.cpp
 	src/serializers/LibraryWrapper.cpp
+	src/serializers/renderers/Default.cpp
+	src/serializers/renderers/Outline.cpp
+	src/serializers/renderers/Shadow.cpp
 )
 
 SET(HEADER_FILES
@@ -77,6 +78,7 @@ SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/GlyphLayerInterface
 	${osgPango_SOURCE_DIR}/include/osgPango/GlyphLayer
 	${osgPango_SOURCE_DIR}/include/osgPango/GlyphRenderer
+	${osgPango_SOURCE_DIR}/include/osgPango/Serialize
 	${osgPango_SOURCE_DIR}/include/osgPango/ShaderGenerator
 	${osgPango_SOURCE_DIR}/include/osgPango/ShaderManager
 	${osgPango_SOURCE_DIR}/include/osgPango/String

@@ -30,7 +30,7 @@ public:
 	}
 	
 protected:
-	GlyphLayerInterfaceOffset(int, int);
+	GlyphLayerInterfaceOffset(int offsetX, int offsetY);
 
 	int _xOffset;
 	int _yOffset;

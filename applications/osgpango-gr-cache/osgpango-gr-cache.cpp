@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
 	if(args.argc() >= 2) {
 		OSG_NOTICE << "Loading: " << args[1] << std::endl;
 
-		renderer = dynamic_cast<osgPango::GlyphRendererDefault*>(osgDB::readObjectFile(args[1]));
+		renderer = dynamic_cast<osgPango::GlyphRenderer*>(osgDB::readObjectFile(args[1]));
 
 		if(!renderer) {
 			OSG_NOTICE << "Failed to read the cache." << std::endl;
@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
 	}
 
 	else {
-		renderer = new osgPango::GlyphRendererOutline(10);
+		renderer = new osgPango::GlyphRendererShadow();
 
 		renderer->setName("renderer");
 		renderer->setTextureSize(osg::Vec2s(512, 256));
@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		"abcdefghijklmnopqrstuvwxyz"
 		"1234567890",
-		"Sans 100px"
+		"Sans 40px"
 	);
 
 	if(!osgDB::writeObjectFile(*renderer, "renderer.osgt")) {
