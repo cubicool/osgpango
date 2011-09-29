@@ -9,7 +9,7 @@
 
 namespace osgPango {
 
-class TextTransform: public Text, public osg::MatrixTransform {
+class OSGPANGO_EXPORT TextTransform: public Text, public osg::MatrixTransform {
 public:
 	META_Object(osgPango, TextTransform);
 

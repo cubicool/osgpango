@@ -190,18 +190,25 @@ public:
 	virtual bool updateOrCreateState(int pass, osg::Geode* geode) const;
 };
 
-const unsigned int DEFAULT_SHADOW_XOFF = 1;
-const unsigned int DEFAULT_SHADOW_YOFF = 1;
+const int DEFAULT_SHADOW_XOFFSET = 1;
+const int DEFAULT_SHADOW_YOFFSET = 1;
 
 class OSGPANGO_EXPORT GlyphRendererShadow: public GlyphRenderer {
 public:
-	GlyphRendererShadow(int = 1, int = 1);
+	META_Object(osgPango, GlyphRendererShadow);
+
+	GlyphRendererShadow(
+		int xOffset = DEFAULT_SHADOW_XOFFSET,
+		int yOffset = DEFAULT_SHADOW_YOFFSET
+	);
+
+	GlyphRendererShadow(const GlyphRendererShadow& grs, const osg::CopyOp& copyOp);
 
 	virtual bool updateOrCreateState(int pass, osg::Geode*) const;
 };
 
-const unsigned int DEFAULT_SHADOW_BLUR_XOFF      = 0;
-const unsigned int DEFAULT_SHADOW_BLUR_YOFF      = 0;
+const int          DEFAULT_SHADOW_BLUR_XOFFSET   = 0;
+const int          DEFAULT_SHADOW_BLUR_YOFFSET   = 0;
 const unsigned int DEFAULT_SHADOW_BLUR_RADIUS    = 2;
 const unsigned int DEFAULT_SHADOW_BLUR_DEVIATION = 0;
 

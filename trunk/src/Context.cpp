@@ -81,6 +81,10 @@ bool Context::init(
 	// Add our custom attribute types here.
 	// pango_attr_type_register("cache");
 
+	// TODO: THIS???
+	// pango_context_set_base_gravity(_pContext, PANGO_GRAVITY_WEST);
+	// pango_context_set_gravity_hint(_pContext, PANGO_GRAVITY_HINT_STRONG);
+
 	return true;
 }
 
@@ -133,7 +137,7 @@ void Context::drawGlyphs(
 	int               x,
 	int               y
 ) {
-	ContextDrawable* drawable  = instance()._drawable;
+	ContextDrawable* drawable = instance()._drawable;
 
 	if(!drawable) return;
 	
