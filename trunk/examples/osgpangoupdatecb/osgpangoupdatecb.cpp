@@ -92,8 +92,8 @@ public:
 
 			os << FONT << pal.second << "</span>";
 
-			oldTransform->clear();
-			oldTransform->addText(os.str().c_str());
+			// oldTransform->clear();
+			oldTransform->setText(os.str().c_str());
 			oldTransform->setPositionAlignment(pal.first, false);
 			oldTransform->finalize();
 		}
@@ -149,7 +149,7 @@ int main(int ac, char **av) {
 	textTransform->setMatrix(osg::Matrixd::translate(pos));
 	textTransform->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER);
 	textTransform->setGlyphRenderer("outline");
-	textTransform->addText(FONT "POS_ALIGN_CENTER_CENTER</span>");
+	textTransform->setText(FONT "POS_ALIGN_CENTER_CENTER</span>");
 	textTransform->finalize();
 
 	geode->addDrawable(new osg::ShapeDrawable(new osg::Sphere(pos, 4.0f)));

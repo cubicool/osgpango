@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
 	osgPango::DistanceFieldText* t = new osgPango::DistanceFieldText();
 
 	t->setGlyphRenderer("distancefield");
-	t->addText("<span font='sans 64px'>Up/Down Arrow Keys</span>");
+	t->setText("<span font='sans 64px'>Up/Down Arrow Keys</span>");
 	t->setCoordinateAlign(osgPango::TextTransform::COORDINATE_ALIGN_NONE);
 	t->setMatrix(osg::Matrix::translate(20.0f, 20.0f, 0.0f));
 	t->finalize();

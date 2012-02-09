@@ -1,0 +1,41 @@
+// -*-c++-*- Copyright (C) 2011 osgPango Development Team
+// $Id$
+
+#ifndef OSGPANGO_VERTICAL_TEXT
+#define OSGPANGO_VERTICAL_TEXT
+
+#include <osgPango/TextTransform>
+
+namespace osgPango {
+
+//! This class derives from TextTransform but overrides a few methods
+//! in order to facilitate vertically-aligned text (as best as Pango
+//! can do in the first place, which isn't impressive).
+class OSGPANGO_EXPORT VerticalText: public TextTransform {
+public:
+	enum VerticalRotation {
+		ROTATE_CW,
+		ROTATE_CCW
+	};
+
+	VerticalText(VerticalRotation rotation = ROTATE_CW):
+	_rotation(rotation) {
+	}
+
+protected:
+	virtual void _setText(
+		String::Encoding   encoding,
+		const std::string& str,
+		const std::string& descr,
+		const TextOptions& to = TextOptions()
+	);
+
+	virtual osg::Matrix getAlignmentTransform() const;
+
+private:
+	VerticalRotation _rotation;
+};
+
+}
+
+#endif

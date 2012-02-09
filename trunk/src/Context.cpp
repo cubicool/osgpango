@@ -58,8 +58,8 @@ bool Context::init(
 
 	if(!_pfMap) _pfMap = pango_cairo_font_map_new();
 	
-	if(_pfMap && !_pContext) _pContext = pango_cairo_font_map_create_context(
-		PANGO_CAIRO_FONT_MAP(_pfMap)
+	if(_pfMap && !_pContext) _pContext = pango_font_map_create_context(
+		PANGO_FONT_MAP(_pfMap)
 	);
 
 	if(!_pfMap || !_pContext) return false;
@@ -171,7 +171,10 @@ void Context::drawLayout(ContextDrawable* drawable, PangoLayout* layout, int x, 
 	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(instance()._mutex);
 
 	_drawable = drawable;
-	
+
+	pango_context_set_base_gravity(_pContext, _gravity);
+	pango_context_set_gravity_hint(_pContext, _gravityHint);
+
 	pango_renderer_draw_layout(
 		PANGO_RENDERER(_renderer),
 		layout,
@@ -239,11 +242,13 @@ void Context::reset() {
 }
 
 Context::Context():
-_pfMap    (0),
-_pContext (0),
-_renderer (0),
-_drawable (0),
-_color    (ColorPair(osg::Vec3(1.0f, 1.0f, 1.0f), osg::Vec3(0.0f, 0.0f, 0.0f))) {
+_pfMap       (0),
+_pContext    (0),
+_gravity     (PANGO_GRAVITY_AUTO),
+_gravityHint (PANGO_GRAVITY_HINT_NATURAL),
+_renderer    (0),
+_drawable    (0),
+_color       (ColorPair(osg::Vec3(1.0f, 1.0f, 1.0f), osg::Vec3(0.0f, 0.0f, 0.0f))) {
 	setDefaultGlyphRenderer(new GlyphRendererDefault());
 }
 

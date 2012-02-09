@@ -41,6 +41,7 @@ SET(SRC_FILES
 	src/Text.cpp
 	src/TextTransform.cpp
 	src/Util.cpp
+	src/VerticalText.cpp
 )
 
 SET(SRC_LAYER_FILES
@@ -86,6 +87,7 @@ SET(HEADER_FILES
 	${osgPango_SOURCE_DIR}/include/osgPango/TextTransform
 	${osgPango_SOURCE_DIR}/include/osgPango/Util
 	${osgPango_SOURCE_DIR}/include/osgPango/Version
+	${osgPango_SOURCE_DIR}/include/osgPango/VerticalText
 )
 
 SOURCE_GROUP("Header Files" FILES ${HEADER_FILES})
@@ -172,6 +174,7 @@ ADD_SUBDIRECTORY(examples/osgpangoglsl)
 ADD_SUBDIRECTORY(examples/osgpangosimplerenderer)
 #ADD_SUBDIRECTORY(examples/osgpangothreaded)
 ADD_SUBDIRECTORY(examples/osgpangoupdatecb)
+ADD_SUBDIRECTORY(examples/osgpangovertical)
 ADD_SUBDIRECTORY(examples/osgpangoviewer)
 
 CONFIGURE_FILE(

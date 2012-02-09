@@ -23,7 +23,7 @@ public:
 		}
 	}
 
-	void transform(bool pixelAlign)  {
+	void transform(bool coordAlign)  {
 		for(
 			DrawableSet::iterator i = _drawables.begin();
 			i != _drawables.end();
@@ -37,7 +37,7 @@ public:
 		
 			if(!geometry) continue;
 		
-			if(pixelAlign) {
+			if(coordAlign) {
 				// Here we do some pixel-alignment calculations. What this
 				// means is that we iterate through all of vertices that make
 				// up our text and make sure they occur on integer-compatible
@@ -105,20 +105,36 @@ void TextTransform::clear() {
 }
 
 void TextTransform::calculatePosition() {
+	osg::Matrix alignmentTransform = getAlignmentTransform();
+
+	ApplyTransformsVisitor nv(_lastTransform * alignmentTransform);
+
+	this->accept(nv);
+
+	nv.transform(isCoordinateAligned());
+
+	_lastTransform = osg::Matrix::inverse(alignmentTransform);
+}
+
+bool TextTransform::isCoordinateAligned() const {
+	bool coordAlign = _coordinateAlign == COORDINATE_ALIGN_ALWAYS;
+
+	if(_coordinateAlign == COORDINATE_ALIGN_AUTO) {
+		coordAlign = fmodf(_scale, static_cast<int>(_scale)) == 0.0f;
+	}
+
+	return coordAlign;
+}
+
+osg::Matrix TextTransform::getAlignmentTransform() const {
 	// We need to have been finalized at least once to calculate a proper position.
-	if(!_finalized) return;
+	if(!_finalized) return osg::Matrix::identity();
 
 	osg::Vec3   origin(getOriginTranslated(), 0.0f);
 	osg::Vec3   originBaseline(getOriginBaseline(), 0.0f);
 	osg::Vec3   size(getSize(), 0.0f);
 	osg::Matrix axisMatrix(osg::Matrix::identity());
 	osg::Matrix scaleMatrix(osg::Matrix::scale(osg::Vec3(_scale, _scale, 1.0f)));
-
-	bool pixelAlign = _coordinateAlign == COORDINATE_ALIGN_ALWAYS;
-
-	if(_coordinateAlign == COORDINATE_ALIGN_AUTO) {
-		pixelAlign = fmodf(_scale, static_cast<int>(_scale)) == 0.0f;
-	}
 
 	if(_positionAlignment == POS_ALIGN_CENTER_BOTTOM) 
 		origin.x() -= size.x() / 2.0f
@@ -181,7 +197,7 @@ void TextTransform::calculatePosition() {
 	origin *= _scale;
 	
 	// If we want coordinate alignment, do it now for the origin.
-	if(pixelAlign) roundVec3(origin);
+	if(isCoordinateAligned()) roundVec3(origin);
 
 	// Handle _axisAlignment...
 	if(_axisAlignment == AXIS_ALIGN_XZ_PLANE) axisMatrix = osg::Matrix(
@@ -219,15 +235,7 @@ void TextTransform::calculatePosition() {
 		 0.0f,  0.0f,  0.0f, 1.0f
 	);
 	
-	osg::Matrix alignmentTransform = scaleMatrix * osg::Matrix::translate(origin) * axisMatrix;
-
-	ApplyTransformsVisitor nv(_lastTransform * alignmentTransform);
-
-	this->accept(nv);
-
-	nv.transform(pixelAlign);
-
-	_lastTransform = osg::Matrix::inverse(alignmentTransform);
+	return scaleMatrix * osg::Matrix::translate(origin) * axisMatrix;
 }
 
 }
