@@ -130,6 +130,10 @@ TARGET_LINK_LIBRARIES(osgPango
 	optimized osg
 	debug     osgText${CMAKE_DEBUG_POSTFIX}
 	optimized osgText
+	debug     osgDB${CMAKE_DEBUG_POSTFIX}
+	optimized osgDB
+	debug     osgUtil${CMAKE_DEBUG_POSTFIX}
+	optimized osgUtil
 	debug     osgCairo${CMAKE_DEBUG_POSTFIX}
 	optimized osgCairo
         debug     cairo
