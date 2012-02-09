@@ -41,11 +41,13 @@ struct GlyphLayerLines: public osgPango::GlyphLayer {
 		// Now, we draw our lines to the temporary surface.
 		cairo_set_line_width(tc, 1.0f);
 
+		/*
 		for(unsigned int w = 0; w < width; w += 3) {
 			cairo_move_to(tc, w + 0.5f, 0.0);
 			cairo_line_to(tc, w + 0.5f, height);
 			cairo_stroke(tc);
 		}
+		*/
 
 		for(unsigned int h = 0; h < height; h += 3) {
 			cairo_move_to(tc, 0.0f, h + 0.5f);
@@ -182,8 +184,7 @@ int main(int argc, char** argv) {
 
 	t->setColorPalette(cp);
 	t->setGlyphRenderer("complex");
-	t->addText("<span font='Verdana Bold 40'>This is a cow.</span>");
-	t->addText("<span font='Verdana Bold 40'>Yes, a cow.</span>", 0, -60);
+	t->setText("<span font='Verdana 56'>This is a cow.\n<b>MOOOOOOOOO!!!!!!</b></span>");
 	t->finalize();
 	t->setMatrix(osg::Matrixd::translate(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f)));
 	t->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER);

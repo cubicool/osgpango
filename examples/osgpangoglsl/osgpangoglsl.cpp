@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 	t->setAlpha(1.0f);
 	t->setColorPalette(cp);
 	t->setGlyphRenderer("multioutline");
-	t->addText(
+	t->setText(
 		"<span font='Cheri Liney 70'>I've got\na lovely bunch\nof coconuts!!!</span>"
 		// "<span font='Sans 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
 	);

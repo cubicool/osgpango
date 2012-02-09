@@ -99,57 +99,48 @@ public:
 
 	void setColorPalette(const ColorPalette&);
 	
-	//! This version of addText assumes you are using PangoMarkup and does not require
+	//! This version of setText assumes you are using PangoMarkup and does not require
 	//! that you pass in a font description. It uses the encoding defined by
 	//! OSGPANGO_ENCODING in the osgPango/Export header.
-	inline void addText(
+	inline void setText(
 		const std::string& str,
-		int                x  = 0,
-		int                y  = 0,
 		const TextOptions& to = TextOptions()
 	) {
-		addText(OSGPANGO_ENCODING, str, "", x, y, to);
+		_setText(OSGPANGO_ENCODING, str, "", to);
 	}
 
-	//! This version of addText does not allow PangoMarkup, and instead requires that
+	//! This version of setText does not allow PangoMarkup, and instead requires that
 	//! you pass an additional font description string (something like "verdana 100px").
 	//! It uses the encoding defined by OSGPANGO_ENCODING.
-	inline void addText(
+	inline void setText(
 		const std::string& str,
 		const std::string& descr,
-		int                x  = 0,
-		int                y  = 0,
 		const TextOptions& to = TextOptions()
 	) {
-		addText(OSGPANGO_ENCODING, str, descr, x, y, to);
+		_setText(OSGPANGO_ENCODING, str, descr, to);
 	}
 
 	//! Here you can specify the encoding as the first argument. We do it this way rather
 	//! than adding it on as a final option because having to always specify a default
 	//! TextOptions() is unwieldy and doesn't always make for the most readable code.
 	//! PangoMarkup usage is turned on.
-	inline void addText(
+	inline void setText(
 		String::Encoding   encoding,
 		const std::string& str,
-		int                x  = 0,
-		int                y  = 0,
 		const TextOptions& to = TextOptions()
 	) {
-		addText(encoding, str, "", x, y, to);
+		_setText(encoding, str, "", to);
 	}
 
-	//! This is the "master" addText method which all others directly call. However,
-	//! its argument list can be unwieldy, so we provide the easier-to-use wrappers above.
-	//! Furthermore, this is the version any subclasses should override if they chose
-	//! to modify Text behavior (unless they want to define their own methods).
-	virtual void addText(
+	//! This signature matches the protected _setText method.
+	inline void setText(
 		String::Encoding   encoding,
 		const std::string& str,
 		const std::string& descr,
-		int                x  = 0, 
-		int                y  = 0,
 		const TextOptions& to = TextOptions()
-	);
+	) {
+		_setText(encoding, str, descr, to);
+	}
 
 	void setAlpha(float alpha) {
 		_alpha = alpha;
@@ -219,8 +210,18 @@ public:
 
 protected:
 	// TODO: Investigate removing group here...
-	bool _finalizeGeometry    (osg::Group* group);
-	void _updateOriginAndSize (int x, int y, PangoLayout* layout, const osg::Vec4& extents);
+	bool _finalizeGeometry(osg::Group* group);
+
+	//! This is the "master" setText method which all others directly call. However,
+	//! its argument list can be unwieldy, so we provide the easier-to-use wrappers above.
+	//! Furthermore, this is the version any subclasses should override if they chose
+	//! to modify Text behavior (unless they want to define their own methods).
+	virtual void _setText(
+		String::Encoding   encoding,
+		const std::string& str,
+		const std::string& descr,
+		const TextOptions& to = TextOptions()
+	);
 
 	GlyphGeometryMap _ggMap;
 	osg::Vec2        _size;

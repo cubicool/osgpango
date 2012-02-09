@@ -271,7 +271,7 @@ int main(int argc, char** argv) {
 	if(to.width <= 0) to.width = WINDOW_WIDTH;
 
 	t->setGlyphRenderer(renderer);
-	t->addText(text, 0, 0, to);
+	t->setText(text, to);
 	
 	// TODO: Continue working on this API. :)
 	// t->setScale(2);

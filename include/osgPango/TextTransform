@@ -71,6 +71,10 @@ public:
 	//! This method sets the Matrix in the parent MatrixTransform class.
 	virtual void calculatePosition();
 
+	//! Performs some tests to determine (based on the CoordinateAlign) whether
+	//! or not this should be coordinate-aligned (pixel aligned).
+	bool isCoordinateAligned() const;
+
 	//! Returns the PositionAlignment enum currently in use.
 	PositionAlignment getPositionAlignment() const {
 		return _positionAlignment;
@@ -87,6 +91,11 @@ public:
 	CoordinateAlign getCoordinateAlign() const {
 		return _coordinateAlign;
 	}
+
+	//! This method should return a matrix that calculatePosition will (by default,
+	//! at least, unless it has also been overridden) will use when determining the
+	//! matrix.
+	virtual osg::Matrix getAlignmentTransform() const;
 
 	//! Sets the PositionAlignment enum to use for modifying the position of
 	//! the Text, modifying it's absolute placement. The default PositionAlignment
@@ -115,7 +124,9 @@ public:
 		_coordinateAlign = align;
 	}
 
-protected:	
+protected:
+
+
 	PositionAlignment     _positionAlignment;
 	AxisAlignment         _axisAlignment;
 	osg::Vec3::value_type _scale;

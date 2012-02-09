@@ -94,7 +94,7 @@ void Text::drawGlyphs(PangoFont* font, PangoGlyphString* glyphs, int x, int y) {
 
 		else osg::notify(osg::WARN)
 			<< "You have set the ColorMode to COLOR_MODE_PALETTE_ONLY on a Text object but "
-			<< "did not actually provide the ColorPalette before calling addText(); this will "
+			<< "did not actually provide the ColorPalette before calling setText(); this will "
 			<< "cause strange effects and create extraneous StateSet objects, but is not fatal."
 			<< std::endl
 		;
@@ -159,14 +159,14 @@ void Text::setColorPalette(const ColorPalette& cp) {
 	_palette = cp;
 }
 
-void Text::addText(
+void Text::_setText(
 	String::Encoding   encoding,
 	const std::string& str,
 	const std::string& descr,
-	int                x,
-	int                y,
 	const TextOptions& to
-) {	
+) {
+	if(_init) clear();
+
 	GlyphRenderer* gr = Context::instance().getGlyphRenderer(_glyphRenderer);
 
 	if(!gr) return;
@@ -193,9 +193,20 @@ void Text::addText(
 
 	to.setupPangoLayout(layout);
 	
-	Context::instance().drawLayout(this, layout, x, y);
+	Context::instance().drawLayout(this, layout, 0, 0);
 
-	_updateOriginAndSize(x, y, layout, gr->getExtraGlyphExtents());
+	// Get text dimensions and whatnot; we'll accumulate this data after each rendering
+	// to keep it accurate.
+	PangoRectangle rect;
+
+	pango_layout_get_pixel_extents(layout, &rect, 0);
+
+	_origin.set(-rect.x, rect.y);
+	_size.set(rect.width, rect.height);
+
+	// We've run ONCE, so we're initialized to some state. Everything else from
+	// here is based on this position, greater or lower.
+	_init = true;
 	
 	g_object_unref(layout);
 }
@@ -315,38 +326,6 @@ bool Text::_finalizeGeometry(osg::Group* group) {
 	_ggMap.clear();
 	
 	return true;
-}
-
-void Text::_updateOriginAndSize(int x, int y, PangoLayout* layout, const osg::Vec4& extents) {
-	// Get text dimensions and whatnot; we'll accumulate this data after each rendering
-	// to keep it accurate.
-	PangoRectangle rect;
-
-	pango_layout_get_pixel_extents(layout, &rect, 0);
-
-	osg::Vec2::value_type ox = -(x + rect.x);
-	osg::Vec2::value_type oy = y + rect.y;
-	osg::Vec2::value_type sw = rect.width;
-	osg::Vec2::value_type sh = rect.height;
-
-	if(!_init) {
-		_origin.set(ox, oy);
-		_size.set(sw, sh);
-	}
-	
-	else {
-		if(ox > _origin[0]) _origin[0] = ox;
-
-		if(oy > _origin[1]) _origin[1] = oy;
-
-		if(sw > _size[0]) _size[0] = sw;
-
-		if(sh > _size[1]) _size[1] = sh;
-	}
-
-	// We've run ONCE, so we're initialized to some state. Everything else from
-	// here is based on this position, greater or lower.
-	_init = true;
 }
 
 }

@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
 	osgPango::TextTransform* t = new osgPango::TextTransform();
 
 	t->setGlyphRenderer("outline");
-	t->addText(
+	t->setText(
 		"<span font='Georgia Bold 50' color='black' bgcolor='white'>"
 		"osgPango\nand\nosgAnimation"
 		"</span>"

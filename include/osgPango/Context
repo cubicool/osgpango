@@ -181,7 +181,23 @@ public:
 	const GlyphRendererMap& getGlyphRenderers() const {
 		return _grMap;
 	}
-	
+
+	void setGravity(PangoGravity gravity) {
+		_gravity = gravity;
+	}
+
+	void setGravityHint(PangoGravityHint hint) {
+		_gravityHint = hint;
+	}
+
+	PangoGravity getGravity() const {
+		return _gravity;
+	}
+
+	PangoGravityHint getGravityHint() const {
+		return _gravityHint;
+	}
+
 	//! Returns the currently set color and effects color ColorPair object set on
 	//! the Context. If this makes you feel dirty, you probably know too much about
 	//! how osgPango and Pango work together. :)
@@ -235,6 +251,8 @@ private:
 	GlyphRendererMap               _grMap;
 	PangoFontMap*                  _pfMap;
 	PangoContext*                  _pContext;
+	PangoGravity                   _gravity;
+	PangoGravityHint               _gravityHint;
 	Renderer*                      _renderer;
 	ContextDrawable*               _drawable;
 	OpenThreads::Mutex             _mutex;
