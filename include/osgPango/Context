@@ -4,6 +4,8 @@
 #ifndef OSGPANGO_CONTEXT
 #define OSGPANGO_CONTEXT
 
+#define PANGO_ENABLE_BACKEND 1
+
 #include <pango/pangocairo.h>
 
 #include <osgPango/GlyphRenderer>
@@ -37,7 +39,7 @@ struct OSGPANGO_EXPORT RendererClass {
 //! This lets you do things  at load/unload time. One user, for example, informed
 //! me that he used this callback to implement static loading/unloading for already-cached
 //! glyphs. INTERESTING...
-class RendererCallback : public osg::Object {
+class RendererCallback: public osg::Object {
 public:
 	//! You just get a pointer to the GlyphRenderer; if you need its name, you can 
 	//! retrieve it via ::getName().

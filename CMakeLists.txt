@@ -30,64 +30,64 @@ SET(OSGCAIRO_INCLUDE_DIR "" CACHE PATH "Location of the osgCairo include headers
 SET(OSGCAIRO_LIB_DIR "" CACHE PATH "Location of the osgCairo library objects.")
 
 SET(SRC_FILES
-	src/Context.cpp
-	src/DistanceFieldText.cpp
-	src/Glyph.cpp
-	src/GlyphLayerInterface.cpp
-	src/GlyphLayer.cpp
-	src/GlyphRenderer.cpp
-	src/ShaderGenerator.cpp
-	src/ShaderManager.cpp
-	src/Text.cpp
-	src/TextTransform.cpp
-	src/Util.cpp
-	src/VerticalText.cpp
+	"src/Context.cpp"
+	"src/DistanceFieldText.cpp"
+	"src/Glyph.cpp"
+	"src/GlyphLayerInterface.cpp"
+	"src/GlyphLayer.cpp"
+	"src/GlyphRenderer.cpp"
+	"src/ShaderGenerator.cpp"
+	"src/ShaderManager.cpp"
+	"src/Text.cpp"
+	"src/TextTransform.cpp"
+	"src/Util.cpp"
+	"src/VerticalText.cpp"
 )
 
 SET(SRC_LAYER_FILES
-	src/layers/Bitmap.cpp
-	src/layers/Bevel.cpp
-	src/layers/DistanceField.cpp
-	src/layers/Outline.cpp
-	src/layers/ShadowBlur.cpp
-	src/layers/ShadowInset.cpp
-	src/layers/Shadow.cpp
+	"src/layers/Bitmap.cpp"
+	"src/layers/Bevel.cpp"
+	"src/layers/DistanceField.cpp"
+	"src/layers/Outline.cpp"
+	"src/layers/ShadowBlur.cpp"
+	"src/layers/ShadowInset.cpp"
+	"src/layers/Shadow.cpp"
 )
 
 SET(SRC_RENDERER_FILES
-	src/renderers/Default.cpp
-	src/renderers/DistanceField.cpp
-	src/renderers/Outline.cpp
-	src/renderers/ShadowBlur.cpp
-	src/renderers/ShadowInset.cpp
-	src/renderers/Shadow.cpp
+	"src/renderers/Default.cpp"
+	"src/renderers/DistanceField.cpp"
+	"src/renderers/Outline.cpp"
+	"src/renderers/ShadowBlur.cpp"
+	"src/renderers/ShadowInset.cpp"
+	"src/renderers/Shadow.cpp"
 )
 
 SET(SRC_SERIALIZER_FILES
-	src/serializers/Glyph.cpp
-	src/serializers/GlyphRenderer.cpp
-	src/serializers/LibraryWrapper.cpp
-	src/serializers/renderers/Default.cpp
-	src/serializers/renderers/Outline.cpp
-	src/serializers/renderers/Shadow.cpp
+	"src/serializers/Glyph.cpp"
+	"src/serializers/GlyphRenderer.cpp"
+	"src/serializers/LibraryWrapper.cpp"
+	"src/serializers/renderers/Default.cpp"
+	"src/serializers/renderers/Outline.cpp"
+	"src/serializers/renderers/Shadow.cpp"
 )
 
 SET(HEADER_FILES
-	${osgPango_SOURCE_DIR}/include/osgPango/Context
-	${osgPango_SOURCE_DIR}/include/osgPango/Export
-	${osgPango_SOURCE_DIR}/include/osgPango/Glyph
-	${osgPango_SOURCE_DIR}/include/osgPango/GlyphLayerInterface
-	${osgPango_SOURCE_DIR}/include/osgPango/GlyphLayer
-	${osgPango_SOURCE_DIR}/include/osgPango/GlyphRenderer
-	${osgPango_SOURCE_DIR}/include/osgPango/Serialize
-	${osgPango_SOURCE_DIR}/include/osgPango/ShaderGenerator
-	${osgPango_SOURCE_DIR}/include/osgPango/ShaderManager
-	${osgPango_SOURCE_DIR}/include/osgPango/String
-	${osgPango_SOURCE_DIR}/include/osgPango/Text
-	${osgPango_SOURCE_DIR}/include/osgPango/TextTransform
-	${osgPango_SOURCE_DIR}/include/osgPango/Util
-	${osgPango_SOURCE_DIR}/include/osgPango/Version
-	${osgPango_SOURCE_DIR}/include/osgPango/VerticalText
+	"${osgPango_SOURCE_DIR}/include/osgPango/Context"
+	"${osgPango_SOURCE_DIR}/include/osgPango/Export"
+	"${osgPango_SOURCE_DIR}/include/osgPango/Glyph"
+	"${osgPango_SOURCE_DIR}/include/osgPango/GlyphLayerInterface"
+	"${osgPango_SOURCE_DIR}/include/osgPango/GlyphLayer"
+	"${osgPango_SOURCE_DIR}/include/osgPango/GlyphRenderer"
+	"${osgPango_SOURCE_DIR}/include/osgPango/Serialize"
+	"${osgPango_SOURCE_DIR}/include/osgPango/ShaderGenerator"
+	"${osgPango_SOURCE_DIR}/include/osgPango/ShaderManager"
+	"${osgPango_SOURCE_DIR}/include/osgPango/String"
+	"${osgPango_SOURCE_DIR}/include/osgPango/Text"
+	"${osgPango_SOURCE_DIR}/include/osgPango/TextTransform"
+	"${osgPango_SOURCE_DIR}/include/osgPango/Util"
+	"${osgPango_SOURCE_DIR}/include/osgPango/Version"
+	"${osgPango_SOURCE_DIR}/include/osgPango/VerticalText"
 )
 
 SOURCE_GROUP("Header Files" FILES ${HEADER_FILES})

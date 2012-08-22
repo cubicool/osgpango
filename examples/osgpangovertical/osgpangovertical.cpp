@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 	osgPango::VerticalText* t = new osgPango::VerticalText();
 	// osgPango::TextTransform* t = new osgPango::TextTransform();
 
-	t->setText("<span font='Sans Bold 30'>VERTICAL!!!</span>");
+	t->setText("<span font='Sans Bold 30'>VERTICAL!!!\nStuff and stuff...</span>");
 	t->finalize();
 	t->setMatrix(osg::Matrix::translate(WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f, 0.0f));
 	t->setPositionAlignment(osgPango::TextTransform::POS_ALIGN_CENTER_CENTER);

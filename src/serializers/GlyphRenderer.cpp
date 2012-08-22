@@ -66,7 +66,7 @@ static bool readFontGlyphCacheMap(osgDB::InputStream& is, osgPango::GlyphRendere
 
 	unsigned int size = is.readSize();
 
-	is >> osgDB::BEGIN_BRACKET;
+	is >> is.BEGIN_BRACKET;
 
 	for(unsigned int i = 0; i < size; i++) {
 		osgPango::GlyphCache* gc = dynamic_cast<osgPango::GlyphCache*>(is.readObject());
@@ -82,7 +82,7 @@ static bool readFontGlyphCacheMap(osgDB::InputStream& is, osgPango::GlyphRendere
 		fgcm[gc->getHash()] = gc;
 	}
 	
-	is >> osgDB::END_BRACKET;
+	is >> is.END_BRACKET;
 
 	return true; 
 }
@@ -92,7 +92,7 @@ static bool writeFontGlyphCacheMap(osgDB::OutputStream& os, const osgPango::Glyp
 
 	os.writeSize(fgcm.size());
 
-	os << osgDB::BEGIN_BRACKET << std::endl;
+	os << os.BEGIN_BRACKET << std::endl;
 
 	for(
 		osgPango::GlyphRenderer::FontGlyphCacheMap::const_iterator i = fgcm.begin();
@@ -102,7 +102,7 @@ static bool writeFontGlyphCacheMap(osgDB::OutputStream& os, const osgPango::Glyp
 		os.writeObject(i->second.get());
 	}
 	
-	os << osgDB::END_BRACKET << std::endl;
+	os << os.END_BRACKET << std::endl;
 
 	return true; 
 }

@@ -116,7 +116,7 @@ const CachedGlyph* GlyphCache::createCachedGlyph(PangoFont* font, PangoGlyphInfo
 	
 	cairo_scaled_font_t* sf  = pango_cairo_font_get_scaled_font(PANGO_CAIRO_FONT(font));
 
-	cairo_glyph_t g = { glyph, -r.x, -r.y };
+	cairo_glyph_t g = { glyph, -static_cast<double>(r.x), -static_cast<double>(r.y) };
 
 	// Render glyph to layers.
 	for(unsigned int layerIndex = 0; layerIndex < _renderer->getNumLayers(); layerIndex++) {

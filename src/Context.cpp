@@ -85,6 +85,8 @@ bool Context::init(
 	// pango_context_set_base_gravity(_pContext, PANGO_GRAVITY_WEST);
 	// pango_context_set_gravity_hint(_pContext, PANGO_GRAVITY_HINT_STRONG);
 
+	// OSG_NOTICE << "BACKEND: " << pango_font_map_get_shape_engine_type(_pfMap) << std::endl;
+
 	return true;
 }
 
