@@ -21,12 +21,12 @@ static bool readLayers(osgDB::InputStream& is, osgPango::GlyphCache& gc) {
 	unsigned int layerSize = is.readSize();
 	unsigned int imgSize   = is.readSize();
 
-	is >> osgDB::BEGIN_BRACKET;
+	is >> is.BEGIN_BRACKET;
 
 	for(unsigned int l = 0; l < layerSize; l++) {
 		layers.push_back(osgPango::GlyphCache::Images());
 
-		is >> osgDB::PROPERTY("Layer") >> osgDB::BEGIN_BRACKET;
+		is >> is.PROPERTY("Layer") >> is.BEGIN_BRACKET;
 
 		for(unsigned int i = 0; i < imgSize; i++) {
 			osgPango::GlyphCache::CairoTexture ct;
@@ -72,10 +72,10 @@ static bool readLayers(osgDB::InputStream& is, osgPango::GlyphCache& gc) {
 			layers[l].push_back(ct);
 		}
 		
-		is >> osgDB::END_BRACKET;
+		is >> is.END_BRACKET;
 	}
 
-	is >> osgDB::END_BRACKET;
+	is >> is.END_BRACKET;
 
 	return true; 
 }
@@ -86,14 +86,14 @@ static bool writeLayers(osgDB::OutputStream& os, const osgPango::GlyphCache& gc)
 	os.writeSize(layers.size());
 	os.writeSize(layers[0].size());
 
-	os << osgDB::BEGIN_BRACKET << std::endl;
+	os << os.BEGIN_BRACKET << std::endl;
 
 	// We have one Layer per "effect", essentially.
 	for(unsigned int l = 0; l < layers.size(); l++) {
 		// Now we iterate over our Images, which we can have a variable number of
 		// depending on how numerous and how large the glyphs are.
 
-		os << "Layer" << osgDB::BEGIN_BRACKET << std::endl;
+		os << "Layer" << os.BEGIN_BRACKET << std::endl;
 
 		for(unsigned int i = 0; i < layers[l].size(); i++) {
 			osgCairo::Image* image   = layers[l][i].first.get();
@@ -115,10 +115,10 @@ static bool writeLayers(osgDB::OutputStream& os, const osgPango::GlyphCache& gc)
 			// image->premultiply();
 		}
 		
-		os << osgDB::END_BRACKET << std::endl;
+		os << os.END_BRACKET << std::endl;
 	}
 	
-	os << osgDB::END_BRACKET << std::endl;
+	os << os.END_BRACKET << std::endl;
 
 	return true; 
 }
@@ -135,29 +135,29 @@ static bool readGlyphMap(osgDB::InputStream& is, osgPango::GlyphCache& gc) {
 
 	unsigned int numGlyphs = is.readSize();
 
-	is >> osgDB::BEGIN_BRACKET;
+	is >> is.BEGIN_BRACKET;
 
 	for(unsigned int g = 0; g < numGlyphs; g++) {
 		unsigned int glyphID;
 
-		is >> glyphID >> osgDB::BEGIN_BRACKET;
+		is >> glyphID >> is.BEGIN_BRACKET;
 
 		osgPango::CachedGlyph cg;
 
-		is >> osgDB::PROPERTY("img") >> cg.img;
-		is >> osgDB::PROPERTY("origin") >> cg.origin;
-		is >> osgDB::PROPERTY("size") >> cg.size;
-		is >> osgDB::PROPERTY("bl") >> cg.bl;
-		is >> osgDB::PROPERTY("br") >> cg.br;
-		is >> osgDB::PROPERTY("ur") >> cg.ur;
-		is >> osgDB::PROPERTY("ul") >> cg.ul;
+		is >> is.PROPERTY("img") >> cg.img;
+		is >> is.PROPERTY("origin") >> cg.origin;
+		is >> is.PROPERTY("size") >> cg.size;
+		is >> is.PROPERTY("bl") >> cg.bl;
+		is >> is.PROPERTY("br") >> cg.br;
+		is >> is.PROPERTY("ur") >> cg.ur;
+		is >> is.PROPERTY("ul") >> cg.ul;
 
-		is >> osgDB::END_BRACKET;
+		is >> is.END_BRACKET;
 
 		gmap[glyphID] = cg;
 	}
 	
-	is >> osgDB::END_BRACKET;
+	is >> is.END_BRACKET;
 
 	return true; 
 }
@@ -167,14 +167,14 @@ static bool writeGlyphMap(osgDB::OutputStream& os, const osgPango::GlyphCache& g
 
 	os.writeSize(gmap.size());
 
-	os << osgDB::BEGIN_BRACKET << std::endl;
+	os << os.BEGIN_BRACKET << std::endl;
 
 	for(
 		osgPango::GlyphCache::GlyphMap::const_iterator i = gmap.begin();
 		i != gmap.end();
 		i++
 	) {
-		os << i->first << osgDB::BEGIN_BRACKET << std::endl;
+		os << i->first << os.BEGIN_BRACKET << std::endl;
 
 		const osgPango::CachedGlyph& cg = i->second;
 
@@ -186,10 +186,10 @@ static bool writeGlyphMap(osgDB::OutputStream& os, const osgPango::GlyphCache& g
 		os << "ur" << cg.ur << std::endl;
 		os << "ul" << cg.ul << std::endl;
 
-		os << osgDB::END_BRACKET << std::endl;
+		os << os.END_BRACKET << std::endl;
 	}
 
-	os << osgDB::END_BRACKET << std::endl;
+	os << os.END_BRACKET << std::endl;
 
 	return true; 
 }
