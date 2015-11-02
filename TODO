@@ -1,8 +1,0 @@
-- Add Glyph loading from images/metadata; ESPECIALLY DISTANCE FIELD TEXT!
-
-- Add the ability to dump the caches in one large PNG, instead of a
-  bunch of pngs. This should be a "developer debug" image.
-
-- Add a wrapper around having to use <span> all the time; perhaps
-  a kind of ostream<< clone.
-
