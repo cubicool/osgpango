@@ -26,11 +26,11 @@ public:
 		TEXT_ALIGN_LEFT,
 		
 		//! Align all text by putting each row in the center of
-		//! it's permissable width.
+		//! it's permissible width.
 		TEXT_ALIGN_CENTER,
 		
 		//! Align all text by forcing each row to push as far as
-		//! is permissable with it's allocated width.
+		//! is permissible with it's allocated width.
 		TEXT_ALIGN_RIGHT,
 		
 		//! Align each row of text such that the first and last words
