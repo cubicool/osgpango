@@ -31,7 +31,7 @@ static bool readLayers(osgDB::InputStream& is, osgPango::GlyphCache& gc) {
 		for(unsigned int i = 0; i < imgSize; i++) {
 			osgPango::GlyphCache::CairoTexture ct;
 
-			osg::Texture* texture = dynamic_cast<osg::Texture*>(is.readObject());
+			osg::Texture* texture = dynamic_cast<osg::Texture*>(is.readObject().get());
 
 			if(!texture) {
 				// TODO: More verbose...
