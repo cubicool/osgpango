@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 	t->setColorPalette(cp);
 	t->setGlyphRenderer("multioutline");
 	t->setText(
-		"<span font='Cheri Liney 70'>I've got\na lovely bunch\nof coconuts!!!</span>"
+		"<span font='Cheri Liney 70'><b>osgPango</b>\nwith no FFP and\nanimated shaders!</span>"
 		// "<span font='Sans 70'>I've got\na lovely bunch\nof coconuts!!!</span>",
 	);
 
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
 
 	osg::Group*  group  = new osg::Group();
 	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
-	osg::Node*   node   = osgDB::readNodeFile("cow.osg");
+	// osg::Node*   node   = osgDB::readNodeFile("cow.osg");
 	
         viewer.addEventHandler(new osgViewer::StatsHandler());
         viewer.addEventHandler(new osgViewer::WindowSizeHandler());
@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
 
 	camera->addChild(t);
 
-	group->addChild(node);
+	// group->addChild(node);
 	group->addChild(camera);
 
 	viewer.setSceneData(group);

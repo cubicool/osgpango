@@ -16,10 +16,10 @@
 #include <osgPango/ShaderManager>
 
 const std::string LOREM_IPSUM(
-	"<span font='Verdana 20'>"
+	"<span font='Verdana 50'>"
 	"<span color='red'><b>Lorem ipsum dolor sit amet</b>, consectetur adipisicing elit, sed do eiusmod</span> "
-	"<span color='orange'>tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,</span> "	
-	"<span font='Verdana 15'><i>"
+	"<span color='orange'>tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,</span> "
+	"<span font='Verdana 35'><i>"
 	"<span color='yellow'>quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</span> "
 	"</i></span>"
 	"<span color='green'>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu</span> "
@@ -264,7 +264,8 @@ int main(int argc, char** argv) {
 
 		if(r) r->replaceLayer(0, l);
 
-		text = "<span font='Sans Bold 150px'>Bevel\nExample</span>";
+		// text = "<span font='Sans Bold 150px'>Bevel\nExample</span>";
+		text = "<span font='Sans Bold 150px' color='green'>HELLO\nxenon OF arcticus</span>";
 	}
 
 	// The user didn't set a width, so use our screen size.

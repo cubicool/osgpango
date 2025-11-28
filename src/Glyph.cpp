@@ -297,9 +297,9 @@ bool GlyphGeometry::finalize() {
 	setUseVertexBufferObjects(true);
 	*/
 
-	setDataVariance(osg::Object::DYNAMIC);
-	setUseDisplayList(false);
-	setUseVertexBufferObjects(false);
+	// setDataVariance(osg::Object::DYNAMIC);
+	// setUseDisplayList(false);
+	// setUseVertexBufferObjects(true);
 
 	return true;
 }

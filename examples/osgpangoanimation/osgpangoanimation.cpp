@@ -14,11 +14,11 @@
 
 #include <stdlib.h>
 
-const unsigned int WINDOW_WIDTH  = 720;
+const unsigned int WINDOW_WIDTH = 720;
 const unsigned int WINDOW_HEIGHT = 480;
 
 // A lot of this code is by:
-// 
+//
 // 	Cedric Pinson <mornifle@plopbyte.net>
 //
 // ...who is also the author of osgAnimation. Many thanks, Ced. :)
@@ -29,7 +29,7 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 	float _previous;
 
 	osg::ref_ptr<osg::Vec3Array> _originals;
-	std::vector<MyMotion>        _motions;
+	std::vector<MyMotion> _motions;
 
 	GlyphSampler():
 	_previous(0) {
@@ -41,33 +41,33 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 		if(nv->getVisitorType() != osg::NodeVisitor::UPDATE_VISITOR) return;
 
 		osg::Geometry* geom = dynamic_cast<osg::Geometry*>(drawable);
-		
+
 		if(!geom) return;
-		
+
 		osg::Vec3Array* verts = dynamic_cast<osg::Vec3Array*>(geom->getVertexArray());
-		
+
 		if(!verts) return;
 
 		if(!_originals.valid()) {
 			_originals = new osg::Vec3Array(*verts);
 
 			_motions.resize(_originals->size() / 4);
-			
+
 			for (unsigned int i = 0; i < _motions.size(); i++) {
 				float duration = 1;
-				
+
 				_motions[i] = MyMotion(0, duration, 3.14f, osgAnimation::Motion::LOOP);
-				
+
 				float offset = (rand() * 1.0f / (1.0f * RAND_MAX)) * duration;
-				
+
 				_motions[i].setTime(offset);
 			}
 		}
 
 		const osg::FrameStamp* f = nv->getFrameStamp();
 
-		double t  = f->getSimulationTime();
-		float  dt = t - _previous;
+		double t = f->getSimulationTime();
+		float dt = t - _previous;
 
 		_previous = t;
 
@@ -75,17 +75,19 @@ struct GlyphSampler: public osg::Drawable::UpdateCallback {
 			_motions[g / 4].update(dt);
 
 			float val = _motions[g / 4].getValue();
-		
-			(*verts)[g    ].y() = (*_originals)[g + 0].y() - mod * sin(val);
+
+			(*verts)[g].y() = (*_originals)[g + 0].y() - mod * sin(val);
 			(*verts)[g + 1].y() = (*_originals)[g + 1].y() - mod * sin(val);
 			(*verts)[g + 2].y() = (*_originals)[g + 2].y() + mod * sin(val);
 			(*verts)[g + 3].y() = (*_originals)[g + 3].y() + mod * sin(val);
 
-			(*verts)[g    ].x() = (*_originals)[g + 0].x() - mod * sin(val);
+			(*verts)[g].x() = (*_originals)[g + 0].x() - mod * sin(val);
 			(*verts)[g + 1].x() = (*_originals)[g + 1].x() + mod * sin(val);
 			(*verts)[g + 2].x() = (*_originals)[g + 2].x() + mod * sin(val);
 			(*verts)[g + 3].x() = (*_originals)[g + 3].x() - mod * sin(val);
 		}
+
+		verts->dirty();
 	}
 };
 
@@ -138,21 +140,20 @@ int main(int argc, char** argv) {
 	);
 
 	t->finalize();
-	
+
 	// TODO: OMG, this is horrible. :)
 	osg::Group* group = dynamic_cast<osg::Group*>(t->getChild(0));
-	
-	if(group) {
-		osg::Geode* geode = dynamic_cast<osg::Geode*>(group->getChild(0)); 
 
-	
+	if(group) {
+		osg::Geode* geode = dynamic_cast<osg::Geode*>(group->getChild(0));
+
 		if(geode) geode->getDrawable(0)->setUpdateCallback(new GlyphSampler());
 	}
 
 	osgViewer::Viewer viewer;
 
 	osg::Camera* camera = createOrthoCamera(WINDOW_WIDTH, WINDOW_HEIGHT);
-	
+
 	const osg::Vec2& size = t->getSize();
 
 	// t->setPosition(osg::Vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0.0f));

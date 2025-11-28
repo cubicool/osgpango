@@ -2,7 +2,7 @@
 // $Id$
 
 #ifndef OSGPANGO_DISTANCE_FIELD_TEXT
-#define OSGPANGO_DISTNACE_FIELD_TEXT
+#define OSGPANGO_DISTANCE_FIELD_TEXT
 
 #include <osgPango/TextTransform>
 
