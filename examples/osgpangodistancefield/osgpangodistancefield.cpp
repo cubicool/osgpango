@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
 		// passed to the distance field generation algorighthm. Higher values produce
 		// larger--but higher quality--text.
 		32,
-		// This is the padding value each glyph recieves. It will determine largely on the
+		// This is the padding value each glyph receives. It will determine largely on the
 		// two previous values, in addition to the size of the actual font being rendered.
 		3.0f,
 		// Finally, this value represents the scale denominator that will be used in the
